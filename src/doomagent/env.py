@@ -15,6 +15,12 @@ RESOLUTIONS = {(640, 480): vzd.ScreenResolution.RES_640X480,
                (320, 240): vzd.ScreenResolution.RES_320X240}
 DELTA_SIGN = 1.0  # flip to -1.0 if test_turn_directions[delta] shows that TURN_LEFT turns right
 
+if os.name == 'nt':
+    # ViZDoom's IPC waits on the system timer; at the default 15.6 ms a 640x480 step takes
+    # ~32 ms instead of ~5.5 ms. Sync mode, so the game itself is unchanged.
+    import ctypes
+    ctypes.windll.winmm.timeBeginPeriod(1)
+
 
 @dataclass(frozen=True)
 class Label:
