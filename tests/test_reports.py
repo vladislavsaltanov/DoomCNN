@@ -1,4 +1,6 @@
-from doomagent.reports import report_table_md
+from epfiles import make_ep
+
+from doomagent.reports import dataset_report, dataset_stats, mask_preview, report_table_md
 
 
 def summary(mean):
@@ -15,3 +17,27 @@ def test_table_has_header_rows_and_dashes_for_teacher():
     assert lines[0].startswith('| model') and len(lines) == 4
     assert '| teacher@id | 24.00 [23.00, 25.00] | -' in lines[2]
     assert '-2.00 [-3.00, -1.00]' in lines[3] and '1.5' in lines[3]
+
+
+def test_dataset_stats_counts(tmp_path):
+    make_ep(tmp_path, 1)
+    make_ep(tmp_path, 2, variant='tex_train_00')
+    s = dataset_stats([str(tmp_path)])
+    assert s['episodes'] == 2 and s['steps'] == 12
+    assert s['action_share'] == [1 / 3, 1 / 3, 1 / 3, 0.0, 0.0]
+    assert s['vis_share'] == 0.0 and abs(s['valid_share'] - 5 / 6) < 1e-9
+    assert s['variants'] == {'base': 1, 'tex_train_00': 1}
+
+
+def test_dataset_report_and_mask_preview_write_files(tmp_path):
+    make_ep(tmp_path, 1, vis=1)
+    dataset_report([str(tmp_path)], str(tmp_path / 'd.png'), str(tmp_path / 'd.md'))
+    mask_preview([str(tmp_path)], str(tmp_path / 'm.png'), n=2)
+    assert all((tmp_path / f).exists() for f in ('d.png', 'd.md', 'm.png'))
+
+
+def test_dataset_stats_action_share_on_valid_steps(tmp_path):
+    # the action loss sees only steps with ammo, so the report shows their label share too
+    make_ep(tmp_path, 1)  # actions 0,1,2,0,1,2; the last step has no ammo
+    s = dataset_stats([str(tmp_path)])
+    assert s['action_share_valid'] == [0.4, 0.4, 0.2, 0.0, 0.0]
