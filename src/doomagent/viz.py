@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import numpy as np
 
@@ -78,26 +80,46 @@ def video_frame_count(path):
 
 
 def play_episode(env, choose, seed, sink=None, window=False, speed=1.0, boxes_fn=None,
-                 cfg: Cfg = Cfg()):
+                 cfg: Cfg = Cfg(), every_tic=False):
+    # every_tic: one frame per game tic (35 per second) instead of one per agent step
     if hasattr(choose, 'reset'):
         choose.reset()
     obs, total, n, done = env.reset(seed), 0.0, 0, False
-    delay = max(1, int(1000 * cfg.frame_skip / 35 / speed))  # 35 game tics per second
+    tic_s = 1.0 / (35 * speed)  # 35 game tics per second
+    due = None
+
+    def show(frame, tics):
+        # write the frame, then hold it until the game clock says the next one is due
+        nonlocal due
+        if sink is not None:
+            sink.write(frame)
+        if not window:
+            return
+        cv2.imshow('DoomCNN', frame)
+        now = time.perf_counter()
+        if due is None or now - due > 0.1:  # first frame, or too late after a pause
+            due = now
+        due += tics * tic_s
+        key = cv2.waitKey(max(1, int((due - now) * 1000))) & 0xFF
+        if key == ord('q'):
+            raise KeyboardInterrupt
+        if key == ord(' '):
+            cv2.waitKey(0)
+            due = None
+
     while not done:
         priv = env.privileged()
         action, info = choose(obs, priv)
-        boxes = boxes_fn(priv) if boxes_fn else ()
-        frame = draw_overlay(env.screen(), action, info, boxes, obs[-1], cfg)
-        if sink is not None:
-            sink.write(frame)
-        if window:
-            cv2.imshow('DoomCNN', frame)
-            key = cv2.waitKey(delay) & 0xFF
-            if key == ord('q'):
-                raise KeyboardInterrupt
-            if key == ord(' '):
-                cv2.waitKey(0)
-        obs, r, done = env.step(int(action))
+        net = obs[-1]
+        if every_tic:
+            def tic(rgb, p):
+                boxes = boxes_fn(p) if boxes_fn else ()
+                show(draw_overlay(rgb, action, info, boxes, net, cfg), 1)
+            obs, r, done = env.step(int(action), on_tic=tic)
+        else:
+            boxes = boxes_fn(priv) if boxes_fn else ()
+            show(draw_overlay(env.screen(), action, info, boxes, net, cfg), cfg.frame_skip)
+            obs, r, done = env.step(int(action))
         total += r
         n += 1
     return total, n

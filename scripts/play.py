@@ -57,12 +57,12 @@ env = DoomEnv(cfg, get_variant(a.variant))
 sink = None
 if a.record:
     os.makedirs(os.path.dirname(a.record) or '.', exist_ok=True)
-    sink = VideoSink(a.record, 35 / cfg.frame_skip, (cfg.render_w, cfg.render_h))
+    sink = VideoSink(a.record, 35, (cfg.render_w, cfg.render_h))
 choose = make_chooser()
 try:
     for i in range(a.episodes):
         total, n = play_episode(env, choose, a.seed + i, sink, not a.no_window, a.speed,
-                                boxes_fn, cfg)
+                                boxes_fn, cfg, every_tic=True)
         print(f'variant={a.variant} seed={a.seed + i} reward={total:.1f} steps={n}')
 except KeyboardInterrupt:
     pass

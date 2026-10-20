@@ -115,8 +115,18 @@ class DoomEnv:
             self._frames.append(self._small)
         return self.obs
 
-    def step(self, action: int):
-        r = self.game.make_action(list(self._buttons[action]), self.cfg.frame_skip)
+    def step(self, action: int, on_tic=None):
+        # on_tic(rgb, privileged) runs after every tic of the frame skip: the viewer's path only
+        if on_tic is None:
+            r = self.game.make_action(list(self._buttons[action]), self.cfg.frame_skip)
+        else:
+            r = 0.0
+            for _ in range(self.cfg.frame_skip):
+                r += self.game.make_action(list(self._buttons[action]), 1)
+                if self.game.is_episode_finished():
+                    break
+                self._read()
+                on_tic(self._rgb, self._priv)
         done = bool(self.game.is_episode_finished())
         self._read()
         self._frames.append(self._small)
