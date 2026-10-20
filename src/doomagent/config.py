@@ -30,7 +30,7 @@ class Cfg:
     fine_turn_delta: float = 0.5  # FINE_LEFT/FINE_RIGHT value per tic: 2 deg per step, best of the S1 grid
     fine_zone: float = 0.15    # teacher steps finely when |offset| is within this (about 8.5 deg)
     aim_margin: float = 0.2    # teacher shoots when the crosshair is inside the box shrunk by this share per side
-    min_target_w: float = 5.0  # px at network resolution; narrower targets are tracked but not shot
+    min_target_w: float = 0.0  # px at network resolution; narrower targets are tracked but not shot
     noise_p: float = 0.10
     lam: float = 0.5           # visibility + offset heads
     lam_seg: float = 0.5       # enemy mask head

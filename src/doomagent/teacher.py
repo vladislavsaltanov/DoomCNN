@@ -10,9 +10,9 @@ from doomagent.config import FINE_LEFT, FINE_RIGHT, SHOOT, TURN_LEFT, TURN_RIGHT
 MONSTERS = {'ZombieMan', 'ShotgunGuy', 'ChaingunGuy', 'DoomImp', 'Demon', 'Spectre',
             'LostSoul', 'Cacodemon', 'HellKnight', 'BaronOfHell', 'Arachnotron',
             'PainElemental', 'Revenant', 'Fatso', 'Archvile', 'Cyberdemon',
-            'SpiderMastermind', 'WolfensteinSS'}
-NON_ENEMIES = {'DoomPlayer', 'Blood', 'BulletPuff', 'Clip', 'TeleportFog', 'DoomImpBall',
-               'MarineChainsawVzd'}
+            'SpiderMastermind', 'WolfensteinSS',
+            'MarineChainsawVzd'}  # ViZDoom's chainsaw marine: 3 of the 5 defend_the_center enemies
+NON_ENEMIES = {'DoomPlayer', 'Blood', 'BulletPuff', 'Clip', 'TeleportFog', 'DoomImpBall'}
 # the coarse direction of each turn action: scanning always goes coarse, towards the last turn
 COARSE_OF = {TURN_LEFT: TURN_LEFT, FINE_LEFT: TURN_LEFT,
              TURN_RIGHT: TURN_RIGHT, FINE_RIGHT: TURN_RIGHT}

@@ -12,11 +12,11 @@ from doomagent.variants import BASE
 
 # five actions: coarse turns scan, fine turns aim. Fine values are degrees per step (4 tics).
 CONFIGS = [
-    ('binary, fine 4 deg, zone 0.15, margin 0.2', Cfg()),
+    ('binary, fine 4 deg, zone 0.15, margin 0.2', replace(Cfg(), fine_turn_delta=1.0)),
     ('binary, fine 2 deg, zone 0.15, margin 0.2', replace(Cfg(), fine_turn_delta=0.5)),
     ('binary, fine 1 deg, zone 0.15, margin 0.2', replace(Cfg(), fine_turn_delta=0.25)),
     ('delta 16 deg, fine 4 deg, zone 0.15, margin 0.2',
-     replace(Cfg(), turn_mode='delta')),
+     replace(Cfg(), turn_mode='delta', fine_turn_delta=1.0)),
     ('delta 16 deg, fine 2 deg, zone 0.15, margin 0.2',
      replace(Cfg(), turn_mode='delta', fine_turn_delta=0.5)),
     ('binary, fine 2 deg, zone 0.10, margin 0.2',

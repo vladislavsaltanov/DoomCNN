@@ -23,6 +23,11 @@ def test_filters_corpses_and_non_monsters():
     assert len(enemies_from_labels(labels, 0.0, 0.0, 160)) == 1
 
 
+def test_chainsaw_marine_is_an_enemy():
+    # defend_the_center spawns chainsaw marines next to the demons; they kill the player
+    assert len(enemies_from_labels([lb('MarineChainsawVzd', 70, 20, 4, 0)], 0.0, 0.0, 160)) == 1
+
+
 def test_edges_sign_and_world_distance():
     e = enemies_from_labels([lb('ZombieMan', 0, 20, 3, 4)], 0.0, 0.0, 160)[0]
     assert math.isclose(e.left, -1.0) and math.isclose(e.right, -0.75)
