@@ -126,3 +126,33 @@ def mask_preview(dirs, out_png, n=4):
     fig.tight_layout()
     fig.savefig(out_png)
     plt.close(fig)
+
+
+# fixed categorical order (validated: CVD and normal-vision separation pass); runs keep their slot
+CATEGORICAL = ('#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6')
+
+
+def plot_bc_curves(logs, out_png, teacher=None):
+    # logs: {run name: path to <out>.log.json}; teacher: optional (lo, hi) val reward interval
+    fig, ax = plt.subplots(1, 2, figsize=(13, 4.2), facecolor=SURFACE)
+    for i, (name, path) in enumerate(logs.items()):
+        with open(path) as fh:
+            rows = json.load(fh)['log']
+        ep = [r['epoch'] for r in rows]
+        color = CATEGORICAL[i % len(CATEGORICAL)]
+        for a, key in ((ax[0], 'val_score'), (ax[1], 'kills_per_shot')):
+            ys = [r[key] for r in rows]
+            a.plot(ep, ys, color=color, linewidth=2, marker='o', markersize=4, label=name)
+            a.annotate(name, (ep[-1], ys[-1]), xytext=(4, 0), textcoords='offset points',
+                       color=MUTED, fontsize=7, va='center')
+    if teacher is not None:
+        ax[0].axhspan(teacher[0], teacher[1], color='#d9d8d3', alpha=0.6, linewidth=0,
+                      label='teacher 95% CI')
+    _style(ax[0], 'Val reward of the checkpoint (base graphics)')
+    _style(ax[1], 'Kills per shot')
+    for a in ax:
+        a.set_xlabel('epoch', color=MUTED, fontsize=8)
+    ax[0].legend(fontsize=7, frameon=False, labelcolor=MUTED)
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=130, facecolor=SURFACE)
+    plt.close(fig)

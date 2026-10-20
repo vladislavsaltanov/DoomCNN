@@ -1,6 +1,9 @@
+import json
+
 from epfiles import make_ep
 
-from doomagent.reports import dataset_report, dataset_stats, mask_preview, report_table_md
+from doomagent.reports import (dataset_report, dataset_stats, mask_preview, plot_bc_curves,
+                               report_table_md)
 
 
 def summary(mean):
@@ -41,3 +44,12 @@ def test_dataset_stats_action_share_on_valid_steps(tmp_path):
     make_ep(tmp_path, 1)  # actions 0,1,2,0,1,2; the last step has no ammo
     s = dataset_stats([str(tmp_path)])
     assert s['action_share_valid'] == [0.4, 0.4, 0.2, 0.0, 0.0]
+
+
+def test_plot_bc_curves_writes_png(tmp_path):
+    rows = [dict(epoch=1, val_score=1.0, kills_per_shot=0.5),
+            dict(epoch=2, val_score=2.0, kills_per_shot=0.6)]
+    p = tmp_path / 'a.log.json'
+    p.write_text(json.dumps(dict(config={}, log=rows)))
+    plot_bc_curves({'a': str(p)}, str(tmp_path / 'c.png'))
+    assert (tmp_path / 'c.png').exists()
