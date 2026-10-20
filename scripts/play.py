@@ -4,7 +4,7 @@ import os
 import cv2
 import numpy as np
 
-from doomagent.config import Cfg
+from doomagent.config import N_ACTIONS, Cfg
 from doomagent.env import DoomEnv
 from doomagent.variants import get_variant
 from doomagent.viz import VideoSink, play_episode
@@ -37,7 +37,7 @@ def make_chooser():
         return TeacherChooser()
     if a.who == 'random':
         rng = np.random.default_rng(a.seed)
-        return lambda obs, priv: (int(rng.integers(0, 3)), None)
+        return lambda obs, priv: (int(rng.integers(0, N_ACTIONS)), None)
     from doomagent.agent import load_agent
     agent = load_agent(a.who, cfg)
 

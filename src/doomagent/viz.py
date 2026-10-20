@@ -44,7 +44,8 @@ def draw_overlay(rgb, action, info=None, boxes=(), net_frame=None, cfg: Cfg = Cf
             text = name + (' <' if i == action else '')
         cv2.putText(img, text, (8, y), FONT, 0.5, color, 1, cv2.LINE_AA)
     if info is not None and info.get('vis') is not None:
-        cv2.putText(img, f'enemy {info["vis"]:.2f}', (8, 92), FONT, 0.5, (0, 200, 255), 1,
+        y = 22 + 22 * len(ACTION_NAMES) + 2  # below the action lines
+        cv2.putText(img, f'enemy {info["vis"]:.2f}', (8, y), FONT, 0.5, (0, 200, 255), 1,
                     cv2.LINE_AA)
         if info['vis'] > 0.5:
             x = int((info['off'] + 1.0) / 2.0 * W)

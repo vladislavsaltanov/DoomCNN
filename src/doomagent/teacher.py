@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from doomagent.config import SHOOT, TURN_LEFT, TURN_RIGHT, Cfg
+from doomagent.config import FINE_LEFT, FINE_RIGHT, SHOOT, TURN_LEFT, TURN_RIGHT, Cfg
 
 # Doom monster classes. scripts/discover_labels.py fails on any name that is in neither set:
 # classify it here instead of letting it pass silently.
@@ -13,6 +13,9 @@ MONSTERS = {'ZombieMan', 'ShotgunGuy', 'ChaingunGuy', 'DoomImp', 'Demon', 'Spect
             'SpiderMastermind', 'WolfensteinSS'}
 NON_ENEMIES = {'DoomPlayer', 'Blood', 'BulletPuff', 'Clip', 'TeleportFog', 'DoomImpBall',
                'MarineChainsawVzd'}
+# the coarse direction of each turn action: scanning always goes coarse, towards the last turn
+COARSE_OF = {TURN_LEFT: TURN_LEFT, FINE_LEFT: TURN_LEFT,
+             TURN_RIGHT: TURN_RIGHT, FINE_RIGHT: TURN_RIGHT}
 
 
 def is_enemy_name(name):
@@ -59,11 +62,13 @@ def is_aimed(e, margin):
     return e.left + m <= 0.0 <= e.right - m
 
 
-def _towards(offset, fallback):
+def _towards(offset, fallback, fine_zone=0.0):
+    # a coarse step would overshoot inside the fine zone, so the teacher steps finely there
+    fine = abs(offset) <= fine_zone
     if offset < 0:
-        return TURN_LEFT
+        return FINE_LEFT if fine else TURN_LEFT
     if offset > 0:
-        return TURN_RIGHT
+        return FINE_RIGHT if fine else TURN_RIGHT
     return fallback
 
 
@@ -77,7 +82,7 @@ def pick_target(enemies, lock_id=None, keep=1.25):
 
 
 def teacher_action(enemies, attack_ready, margin=0.2, scan=TURN_RIGHT, lock_id=None,
-                   skip_id=None, min_w=0.0):
+                   skip_id=None, min_w=0.0, fine_zone=0.0):
     if not enemies:
         return scan, None
     pool = enemies
@@ -87,7 +92,7 @@ def teacher_action(enemies, attack_ready, margin=0.2, scan=TURN_RIGHT, lock_id=N
     target = pick_target(pool, lock_id)
     if is_aimed(target, margin) and attack_ready and target.width_px >= min_w:
         return SHOOT, target.id
-    return _towards(target.offset, scan), target.id
+    return _towards(target.offset, scan, fine_zone), target.id
 
 
 def nearest_aux(enemies):
@@ -111,10 +116,10 @@ class Teacher:
         if priv.attack_ready:
             self.skip = None
         a, tid = teacher_action(enemies, priv.attack_ready, c.aim_margin, self.scan, self.lock,
-                                self.skip, c.min_target_w)
+                                self.skip, c.min_target_w, c.fine_zone)
         self.lock = tid
         if a == SHOOT:
             self.skip = tid
         else:
-            self.scan = a
+            self.scan = COARSE_OF[a]
         return a

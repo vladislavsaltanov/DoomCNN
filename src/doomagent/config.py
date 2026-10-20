@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-TURN_LEFT, TURN_RIGHT, SHOOT = 0, 1, 2
-N_ACTIONS = 3
-ACTION_NAMES = ('turn_left', 'turn_right', 'shoot')
+TURN_LEFT, TURN_RIGHT, SHOOT, FINE_LEFT, FINE_RIGHT = 0, 1, 2, 3, 4
+N_ACTIONS = 5
+ACTION_NAMES = ('turn_left', 'turn_right', 'shoot', 'fine_left', 'fine_right')
 
 TRAIN_SEEDS = tuple(range(1000, 1300))        # R0: teacher on the base graphics
 TRAIN_SEEDS_EXTRA = tuple(range(1300, 1600))  # R0: extra recording if needed
@@ -25,10 +25,12 @@ class Cfg:
     render_w: int = 640        # game render: demo, video, labels
     render_h: int = 480
     hud: bool = False
-    turn_mode: str = 'binary'  # 'binary' | 'delta', fixed in S1
+    turn_mode: str = 'binary'  # 'binary' | 'delta', coarse turns, fixed in S1
     turn_delta: float = 4.0    # TURN_LEFT_RIGHT_DELTA value in delta mode, fixed in S1
+    fine_turn_delta: float = 0.5  # FINE_LEFT/FINE_RIGHT value per tic: 2 deg per step, best of the S1 grid
+    fine_zone: float = 0.15    # teacher steps finely when |offset| is within this (about 8.5 deg)
     aim_margin: float = 0.2    # teacher shoots when the crosshair is inside the box shrunk by this share per side
-    min_target_w: float = 0.0  # px at network resolution; narrower targets are tracked but not shot
+    min_target_w: float = 5.0  # px at network resolution; narrower targets are tracked but not shot
     noise_p: float = 0.10
     lam: float = 0.5           # visibility + offset heads
     lam_seg: float = 0.5       # enemy mask head

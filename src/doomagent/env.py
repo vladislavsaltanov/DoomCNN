@@ -63,15 +63,16 @@ class DoomEnv:
         g.set_labels_buffer_enabled(True)
         g.set_depth_buffer_enabled(False)
         g.clear_available_buttons()
+        d, f = DELTA_SIGN * cfg.turn_delta, DELTA_SIGN * cfg.fine_turn_delta
         if cfg.turn_mode == 'binary':
             for b in (vzd.Button.TURN_LEFT, vzd.Button.TURN_RIGHT, vzd.Button.ATTACK):
                 g.add_available_button(b)
-            self._buttons = ([1, 0, 0], [0, 1, 0], [0, 0, 1])
+            g.add_available_button(vzd.Button.TURN_LEFT_RIGHT_DELTA, 180)  # fine turns only
+            self._buttons = ([1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -f], [0, 0, 0, f])
         elif cfg.turn_mode == 'delta':
             g.add_available_button(vzd.Button.TURN_LEFT_RIGHT_DELTA, 180)
             g.add_available_button(vzd.Button.ATTACK)
-            d = DELTA_SIGN * cfg.turn_delta
-            self._buttons = ([-d, 0], [d, 0], [0, 1])
+            self._buttons = ([-d, 0], [d, 0], [0, 1], [-f, 0], [f, 0])
         else:
             raise ValueError(cfg.turn_mode)
         g.clear_available_game_variables()

@@ -31,7 +31,7 @@ def test_stack_image_size(tmp_path):
 
 
 def test_overlay_draws_on_full_frame():
-    info = dict(probs=np.array([0.1, 0.2, 0.7]), vis=0.9, off=0.25,
+    info = dict(probs=np.array([0.05, 0.1, 0.5, 0.2, 0.15]), vis=0.9, off=0.25,
                 seg=np.zeros((11, 16), np.float32))
     box = NS(x=10, y=10, width=20, height=30)
     img = draw_overlay(np.zeros((480, 640, 3), np.uint8), 2, info, [box],

@@ -3,6 +3,7 @@ from collections import Counter
 
 import numpy as np
 
+from doomagent.config import N_ACTIONS
 from doomagent.env import DoomEnv
 from doomagent.teacher import MONSTERS, NON_ENEMIES
 from doomagent.variants import get_variant
@@ -15,7 +16,7 @@ for seed in range(5000, 5005):
     while not done:
         for lb in env.privileged().labels:
             names[lb.object_name] += 1
-        _, _, done = env.step(int(rng.integers(0, 3)))
+        _, _, done = env.step(int(rng.integers(0, N_ACTIONS)))
 env.close()
 print(names.most_common())
 print('dead-prefixed:', sorted(n for n in names if n.startswith('Dead'))
