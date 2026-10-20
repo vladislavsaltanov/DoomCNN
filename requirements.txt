@@ -1,0 +1,8 @@
+vizdoom>=1.2.3
+torch
+numpy
+gymnasium
+stable-baselines3>=2.3
+opencv-python
+matplotlib
+pytest
