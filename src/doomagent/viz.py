@@ -62,17 +62,37 @@ def draw_overlay(rgb, action, info=None, boxes=(), net_frame=None, cfg: Cfg = Cf
     return img
 
 
+_H264 = None
+
+
+def h264_args():
+    # ffmpeg output options for phone-playable H.264: the GPU encoder (NVENC) when the card has
+    # one, so encoding takes neither CPU nor CUDA time from training; libx264 otherwise
+    global _H264
+    if _H264 is None:
+        enc = subprocess.run(['ffmpeg', '-hide_banner', '-encoders'], capture_output=True,
+                             text=True).stdout
+        probe = subprocess.run(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i', 'color=s=256x256',
+                                '-frames:v', '1', '-c:v', 'h264_nvenc', '-f', 'null', '-'],
+                               capture_output=True) if 'h264_nvenc' in enc else None
+        if probe is not None and probe.returncode == 0:
+            _H264 = ['-c:v', 'h264_nvenc', '-preset', 'p5', '-cq', '23']
+        else:
+            _H264 = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '20']
+        _H264 += ['-pix_fmt', 'yuv420p', '-movflags', '+faststart']
+    return list(_H264)
+
+
 class VideoSink:
-    # H.264 (libx264, yuv420p, faststart) through ffmpeg when it is installed, so the videos
-    # play on phones; OpenCV's mp4v otherwise
+    # H.264 (yuv420p, faststart) through ffmpeg when it is installed, so the videos play on
+    # phones; OpenCV's mp4v otherwise
     def __init__(self, path, fps, size):
         self.proc = self.writer = None
         if shutil.which('ffmpeg'):
             w, h = size
             self.proc = subprocess.Popen(
                 ['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'bgr24',
-                 '-s', f'{w}x{h}', '-r', str(fps), '-i', '-', '-c:v', 'libx264', '-preset', 'medium',
-                 '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', path],
+                 '-s', f'{w}x{h}', '-r', str(fps), '-i', '-', *h264_args(), path],
                 stdin=subprocess.PIPE)
         else:
             self.writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'mp4v'), fps, size)

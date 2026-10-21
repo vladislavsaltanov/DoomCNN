@@ -24,7 +24,7 @@ from doomagent.env import DoomEnv
 from doomagent.model import StudentCNN
 from doomagent.teacher import Teacher, enemies_from_labels, is_enemy_name, nearest_aux
 from doomagent.variants import get_variant
-from doomagent.viz import VideoSink
+from doomagent.viz import VideoSink, h264_args
 
 W, H = 1280, 720
 RU = {'turn_left': 'влево', 'turn_right': 'вправо', 'shoot': 'выстрел', 'fine_left': 'чуть влево',
@@ -189,6 +189,20 @@ def play(model, label, variant_name, seed, sink, cfg):
     return st['reward'], step
 
 
+def duration(path):
+    return float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                                 '-of', 'csv=p=0', path], capture_output=True, text=True).stdout)
+
+
+def side_by_side(left, right, out):
+    # 960x540 each; the shorter video holds its last frame exactly until the longer one ends
+    dl, dr = duration(left), duration(right)
+    pad = lambda d: f',tpad=stop_mode=clone:stop_duration={max(dl, dr) - d:.3f}'  # noqa: E731
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', left, '-i', right, '-filter_complex',
+                    f'[0:v]scale=960:540{pad(dl)}[a];[1:v]scale=960:540{pad(dr)}[b];'
+                    '[a][b]hstack=inputs=2[v]', '-map', '[v]', *h264_args(), out], check=True)
+
+
 def record(model_path, label, variants, seed, out, cfg):
     model = load_model(model_path, cfg)
     sink = VideoSink(out, 35, (W, H))
@@ -219,11 +233,5 @@ if __name__ == '__main__':
         left, right = os.path.join(tmp, 'a.mp4'), os.path.join(tmp, 'b.mp4')
         record(a.model, a.label or name(a.model), a.variants, a.seed, left, cfg)
         record(a.compare, a.compare_label or name(a.compare), a.variants, a.seed, right, cfg)
-        # side by side at 960x540 each; the shorter game holds its last frame
-        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', left, '-i', right, '-filter_complex',
-                        '[0:v]scale=960:540,tpad=stop=-1:stop_mode=clone[a];'
-                        '[1:v]scale=960:540,tpad=stop=-1:stop_mode=clone[b];'
-                        '[a][b]hstack=inputs=2:shortest=0[v]', '-map', '[v]', '-shortest',
-                        '-c:v', 'libx264', '-crf', '20', '-pix_fmt', 'yuv420p',
-                        '-movflags', '+faststart', a.out], check=True)
+        side_by_side(left, right, a.out)
     print('written', a.out)
