@@ -19,6 +19,45 @@ if os.name == 'nt':
     # ViZDoom's IPC waits on the system timer; at the default 15.6 ms a 640x480 step takes
     # ~32 ms instead of ~5.5 ms. Sync mode, so the game itself is unchanged.
     import ctypes
+    from ctypes import wintypes
+
+    class _Throttling(ctypes.Structure):
+        _fields_ = [('Version', wintypes.ULONG), ('ControlMask', wintypes.ULONG),
+                    ('StateMask', wintypes.ULONG)]
+
+    class _ProcEntry(ctypes.Structure):
+        _fields_ = [('dwSize', wintypes.DWORD), ('cntUsage', wintypes.DWORD),
+                    ('th32ProcessID', wintypes.DWORD), ('th32DefaultHeapID', ctypes.c_void_p),
+                    ('th32ModuleID', wintypes.DWORD), ('cntThreads', wintypes.DWORD),
+                    ('th32ParentProcessID', wintypes.DWORD), ('pcPriClassBase', ctypes.c_long),
+                    ('dwFlags', wintypes.DWORD), ('szExeFile', ctypes.c_wchar * 260)]
+
+    _k32 = ctypes.windll.kernel32
+    _k32.GetCurrentProcess.restype = wintypes.HANDLE
+    _k32.OpenProcess.restype = wintypes.HANDLE
+    _k32.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    _k32.SetProcessInformation.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p,
+                                           wintypes.DWORD]
+
+    def _unthrottle(handle):
+        # Windows 11 stops honoring timeBeginPeriod for windowless background processes after
+        # a few seconds (steps then take ~100 ms) and may put them on efficiency cores:
+        # opt out of both (ProcessPowerThrottling; EXECUTION_SPEED | IGNORE_TIMER_RESOLUTION)
+        s = _Throttling(1, 0x1 | 0x4, 0)
+        return bool(_k32.SetProcessInformation(handle, 4, ctypes.byref(s), ctypes.sizeof(s)))
+
+    def _child_pids(exe):
+        snap, e, out = _k32.CreateToolhelp32Snapshot(0x2, 0), _ProcEntry(), []
+        e.dwSize = ctypes.sizeof(e)
+        ok = _k32.Process32FirstW(snap, ctypes.byref(e))
+        while ok:
+            if e.th32ParentProcessID == os.getpid() and e.szExeFile.lower() == exe:
+                out.append(e.th32ProcessID)
+            ok = _k32.Process32NextW(snap, ctypes.byref(e))
+        _k32.CloseHandle(snap)
+        return out
+
+    _unthrottle(_k32.GetCurrentProcess())
     ctypes.windll.winmm.timeBeginPeriod(1)
 
 
@@ -87,6 +126,13 @@ class DoomEnv:
             g.add_available_game_variable(v)
         g.init()
         self.game = g
+        self.unthrottled = False
+        if os.name == 'nt':
+            for pid in _child_pids('vizdoom.exe'):  # this env's game process (and older ones)
+                h = _k32.OpenProcess(0x0200, False, pid)  # PROCESS_SET_INFORMATION
+                if h:
+                    self.unthrottled = _unthrottle(h) or self.unthrottled
+                    _k32.CloseHandle(h)
         self._frames = deque(maxlen=cfg.stack)
         self._rgb = np.zeros((cfg.render_h, cfg.render_w, 3), np.uint8)
         self._small = np.zeros((cfg.height, cfg.width), np.uint8)

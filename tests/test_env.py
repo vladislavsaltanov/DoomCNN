@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pytest
 
@@ -71,3 +73,15 @@ def test_turn_directions(mode):
     left, right = _angle_change(e, TURN_LEFT), _angle_change(e, TURN_RIGHT)
     e.close()
     assert left > 0 > right
+
+
+@pytest.mark.skipif(os.name != 'nt', reason='Windows power throttling only')
+def test_env_unthrottles_its_vizdoom_process():
+    # Windows 11 stops honoring the 1 ms timer for windowless background processes after a few
+    # seconds, and every ViZDoom step then waits on the 15.6 ms timer (5 ms -> 100 ms per step)
+    from doomagent.env import DoomEnv
+    e = DoomEnv(Cfg())
+    try:
+        assert e.unthrottled
+    finally:
+        e.close()
