@@ -1,6 +1,6 @@
 # Запуск проекта на Windows
 
-Проект писался и проверялся на macOS. На Windows он ещё не запускался, поэтому первый шаг — тесты. Код сам выбирает видеокарту NVIDIA (CUDA), если она есть.
+Проект начинался на macOS, обучение S3–S8 шло на Windows 11 с RTX 3060 Ti. Код сам выбирает видеокарту NVIDIA (CUDA), если она есть. Особенности Windows, найденные по ходу (таймер Windows 11, память, кодировка видео), учтены в коде и описаны в `research_log.md`.
 
 ## 1. Что поставить
 
@@ -25,8 +25,8 @@ cd C:\Projects\DoomCNN
 py -3.12 -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
 # PyTorch с CUDA: точную команду возьмите на pytorch.org/get-started (Stable, Windows, Pip, CUDA).
-# Пример для CUDA 12.8:
-.venv\Scripts\python -m pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu128
+# Проверено: torch 2.14.1 со сборкой CUDA 13.2 (сборки cu128 для этой версии нет):
+.venv\Scripts\python -m pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu132
 .venv\Scripts\python -m pip install -r requirements-lock.txt
 .venv\Scripts\python -m pip install -e .
 ```
@@ -97,3 +97,7 @@ py -3.12 -m venv .venv
 > Прочитай docs/handoff-2026-10-21-windows.md и продолжай.
 
 В handoff описано, где остановились, правила работы по срезам и что делать дальше.
+
+## Видео
+
+Видео пишутся в H.264 через ffmpeg (NVENC, если есть видеокарта NVIDIA), иначе запасным кодеком OpenCV, который не открывается на iPhone. Поставьте ffmpeg и добавьте его в PATH.
