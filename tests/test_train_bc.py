@@ -21,3 +21,7 @@ def test_train_smoke_saves_best_checkpoint(tmp_path):
     assert out.exists()
     log = json.loads((tmp_path / 'best.pt.log.json').read_text())
     assert log['log'][0]['epoch'] == 1 and 'val_score' in log['log'][0]
+    # live progress for the dashboard: batches of the running epoch and the recent loss
+    prog = json.loads((tmp_path / 'best.pt.progress.json').read_text())
+    assert prog['epoch'] == 1 and prog['batch'] == prog['n_batches'] > 0
+    assert prog['points'] and {'batch', 'loss', 'ce'} <= set(prog['points'][-1])

@@ -135,6 +135,17 @@ def runs_state():
     return out
 
 
+def train_progress():
+    # the newest batch-level progress file written by train_bc, if it is fresh
+    files = sorted(glob.glob('runs/*.pt.progress.json'), key=os.path.getmtime)
+    if not files or time.time() - os.path.getmtime(files[-1]) > 10 * 60:
+        return None
+    d = _read_json(files[-1])
+    if d:
+        d['name'] = os.path.basename(files[-1])[:-len('.pt.progress.json')]
+    return d
+
+
 def project_state():
     log = ''
     try:
@@ -238,6 +249,12 @@ class Activity:
             left = per_epoch * (ROUND_EPOCHS - ep) if per_epoch else None
             # between evaluations, estimate the running epoch from the measured pace
             est = min(ROUND_EPOCHS, ep + (now - t_eval) / per_epoch) if ep else None
+            prog = _read_json(f'runs/r{k}.pt.progress.json')
+            if prog and os.path.getmtime(f'runs/r{k}.pt.progress.json') >= last_t:
+                est = prog['epoch'] - 1 + prog['batch'] / max(prog['n_batches'], 1)
+                frac = est / ROUND_EPOCHS
+                if frac > 0.03:  # elapsed time already includes the evaluations so far
+                    left = (now - last_t) * (1 - frac) / frac
             dirs = last.split(' on ', 1)[1].split() if ' on ' in last else []
             steps = sum((_read_json(os.path.join(p, 'meta.json')) or {}).get('steps', 0)
                         for p in dirs)
@@ -245,7 +262,10 @@ class Activity:
                      text=f'Раунд {k}: ученик r{k} дообучается от r{k - 1} на всех данных '
                           + (f'({steps:,} примеров) '.replace(',', ' ') if steps else '')
                           + f'{ROUND_EPOCHS} эпох; каждые 2 эпохи он играет 110 проверочных '
-                          f'эпизодов (база и 8 val-вариантов). Готово эпох: {ep} из {ROUND_EPOCHS}.')
+                          f'эпизодов (база и 8 val-вариантов). '
+                          + (f'Сейчас эпоха {min(int(est) + 1, ROUND_EPOCHS)} из {ROUND_EPOCHS}'
+                             f' ({est / ROUND_EPOCHS:.0%} раунда), проверено эпох: {ep}.'
+                             if est is not None else f'Готово эпох: {ep} из {ROUND_EPOCHS}.'))
             if left is not None and round_s is None:
                 round_s = (now - last_t) + left + 120  # this round, plus recording the next one
         if round_s:
@@ -276,6 +296,7 @@ class Live:
         self.version = 0
         self.state = dict(status='остановлено')
         self.history = deque(maxlen=30)
+        self.series = deque(maxlen=400)  # per step: network vs teacher and vs the game's truth
         threading.Thread(target=self._loop, daemon=True).start()
 
     def control(self, **kw):
@@ -331,7 +352,7 @@ class Live:
 
     def _loop(self):
         from doomagent.env import DoomEnv
-        from doomagent.teacher import Teacher, is_enemy_name
+        from doomagent.teacher import Teacher, enemies_from_labels, is_enemy_name, nearest_aux
         from doomagent.variants import get_variant
         env = model = None
         env_name = model_name = None
@@ -362,6 +383,7 @@ class Live:
             obs, total, step, done = env.reset(seed), 0.0, 0, False
             teacher.reset()
             agree = steps_cmp = 0
+            self.series.clear()
             kills = 0
             tic_s = 1.0 / (35 * max(0.1, float(req['speed'])))
             due = time.perf_counter()
@@ -390,6 +412,14 @@ class Live:
                     if time.perf_counter() - due > 0.25:
                         due = time.perf_counter()
 
+                vis_t, off_t = nearest_aux(enemies_from_labels(priv.labels, priv.px, priv.py,
+                                                               self.cfg.width))
+                self.series.append(dict(
+                    step=step, agree=int(action == label),
+                    p_teacher=None if info is None else float(info['probs'][int(label)]),
+                    vis_p=None if info is None else info['vis'], vis_t=vis_t,
+                    off_p=None if info is None or info['vis'] < 0.5 else info['off'],
+                    off_t=off_t if vis_t else None))
                 obs, r, done = env.step(int(action), on_tic=tic)
                 total += r
                 kills += max(r, 0)
@@ -462,6 +492,8 @@ def make_handler(system, live, activity):
                 return self._mjpeg('net')
             if u.path == '/api/system':
                 return self._send(dict(now=system.now, hist=list(system.hist)))
+            if u.path == '/api/trainlive':
+                return self._send(train_progress() or {})
             if u.path == '/api/activity':
                 return self._send(activity())
             if u.path == '/api/project':
@@ -471,7 +503,8 @@ def make_handler(system, live, activity):
             if u.path == '/api/live':
                 with live.lock:
                     req = {k: v for k, v in live.req.items() if k != 'changed'}
-                return self._send(dict(state=live.state, req=req, history=list(live.history)))
+                return self._send(dict(state=live.state, req=req, history=list(live.history),
+                                       series=list(live.series)))
             if u.path == '/api/options':
                 models = ['teacher'] + sorted(glob.glob('runs/*.pt'), key=os.path.getmtime,
                                               reverse=True)

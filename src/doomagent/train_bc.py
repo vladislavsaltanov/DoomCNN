@@ -1,5 +1,7 @@
 import argparse
 import json
+import os
+import time
 
 import torch
 from torch.utils.data import DataLoader
@@ -24,6 +26,30 @@ def to_device(batch, dev):
     return {k: (v.float() if v.dtype == torch.float64 else v).to(dev) for k, v in batch.items()}
 
 
+class Progress:
+    # live progress for the dashboard: batch position and the mean loss of every 25 batches;
+    # rewritten atomically so a reader never sees half a file
+    def __init__(self, path, n_batches, every=25, keep=4000):
+        self.path, self.n_batches, self.every, self.keep = path, n_batches, every, keep
+        self.points, self.window, self.total = [], {}, 0
+
+    def add(self, epoch, batch, parts):
+        self.total += 1
+        for k, v in parts.items():
+            self.window[k] = self.window.get(k, 0.0) + v
+        if batch % self.every and batch != self.n_batches:
+            return
+        m = max(1, batch % self.every or self.every)
+        self.points.append(dict(batch=self.total, epoch=epoch,
+                                **{k: v / m for k, v in self.window.items()}))
+        self.points, self.window = self.points[-self.keep:], {}
+        tmp = self.path + '.tmp'
+        with open(tmp, 'w') as fh:
+            json.dump(dict(epoch=epoch, batch=batch, n_batches=self.n_batches, t=time.time(),
+                           points=self.points), fh)
+        os.replace(tmp, self.path)
+
+
 def train(dirs, out, epochs, lam=0.5, lam_seg=0.5, shoot_w=1.0, hflip=True, aug=False,
           eval_every=2, val=None, init=None, lr=3e-4, seed=0, batch_size=128, workers=0,
           eval_workers=1, cfg: Cfg = Cfg()):
@@ -40,6 +66,7 @@ def train(dirs, out, epochs, lam=0.5, lam_seg=0.5, shoot_w=1.0, hflip=True, aug=
                   hflip=hflip, aug=aug, init=init, lr=lr, seed=seed,
                   val=[(v.name, len(s)) for v, s in val])
     best, log = -1e9, []
+    progress = Progress(str(out) + '.progress.json', len(dl))
     for epoch in range(1, epochs + 1):
         model.train()
         sums, n = {}, 0
@@ -55,9 +82,11 @@ def train(dirs, out, epochs, lam=0.5, lam_seg=0.5, shoot_w=1.0, hflip=True, aug=
             opt.zero_grad()
             loss.backward()
             opt.step()
-            for k, v in dict(parts, loss=loss.item()).items():
+            step = dict(parts, loss=loss.item())
+            for k, v in step.items():
                 sums[k] = sums.get(k, 0.0) + v
             n += 1
+            progress.add(epoch, n, step)
         if epoch % eval_every == 0 or epoch == epochs:
             chooser = (StudentChooser(model.state_dict(), cfg) if eval_workers > 1
                        else pixel_only(model.act))
