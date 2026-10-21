@@ -30,19 +30,38 @@ def parse_pairs(items):
     return dict(x.split('=', 1) for x in items or [])
 
 
-def run_report(agent_paths, out_path, baseline='bc0', cfg: Cfg = Cfg()):
+def chooser_for(path, cfg: Cfg = Cfg()):
+    # a picklable chooser for worker processes: a .pt student, or a PPO .zip whose actor is
+    # copied into a StudentCNN (same layers; the auxiliary heads do not choose actions)
+    import torch
+
+    from doomagent.agent import StudentChooser
+    from doomagent.model import StudentCNN
+    if path.endswith('.zip'):
+        from stable_baselines3 import PPO
+        from doomagent.ppo import policy_state
+        state = policy_state(PPO.load(path, device='cpu'), StudentCNN(cfg).state_dict())
+    else:
+        state = torch.load(path, map_location='cpu')
+    return StudentChooser(state, cfg)
+
+
+def run_report(agent_paths, out_path, baseline='bc0', cfg: Cfg = Cfg(), workers=1):
     from doomagent.agent import load_agent
     from doomagent.evaluate import evaluate_plan, paired_diff_ci, pixel_only, summarize
     from doomagent.teacher import Teacher
     from doomagent.variants import test_plans
     agents = {n: load_agent(p, cfg) for n, p in agent_paths.items()}
     choosers = {'teacher': Teacher(cfg)}
-    choosers.update({n: pixel_only(a.act) for n, a in agents.items()})
+    if workers > 1:
+        choosers.update({n: chooser_for(p, cfg) for n, p in agent_paths.items()})
+    else:
+        choosers.update({n: pixel_only(a.act) for n, a in agents.items()})
     report = {}
     for split, plan in test_plans().items():
         if not plan:
             continue
-        results = {n: evaluate_plan(plan, c, cfg) for n, c in choosers.items()}
+        results = {n: evaluate_plan(plan, c, cfg, workers=workers) for n, c in choosers.items()}
         rewards = {n: [r['reward'] for r in res] for n, res in results.items()}
         for name, res in results.items():
             s = summarize(res)
@@ -65,11 +84,12 @@ if __name__ == '__main__':
     r.add_argument('--agent', action='append', help='name=path (.pt student or .zip PPO)')
     r.add_argument('--baseline', default='bc0')
     r.add_argument('--out', default='results/test_report.json')
+    r.add_argument('--workers', type=int, default=1, help='processes for the episodes')
     b = sub.add_parser('budget')
     b.add_argument('--data', nargs='+', required=True)
     b.add_argument('--rl-steps', type=int, required=True)
     a = ap.parse_args()
     if a.cmd == 'report':
-        run_report(parse_pairs(a.agent), a.out, a.baseline)
+        run_report(parse_pairs(a.agent), a.out, a.baseline, workers=a.workers)
     else:
         print(budget(a.data, a.rl_steps))
