@@ -156,3 +156,18 @@ def plot_bc_curves(logs, out_png, teacher=None):
     fig.tight_layout()
     fig.savefig(out_png, dpi=130, facecolor=SURFACE)
     plt.close(fig)
+
+
+def rounds_summary(logs, min_gain=0.5, max_dagger=5):
+    rows, best, best_name, stall = [], -float('inf'), None, 0
+    for name, path in logs.items():
+        with open(path) as fh:
+            score = max(r['val_score'] for r in json.load(fh)['log'])
+        gain = None if best == -float('inf') else score - best
+        if gain is not None:
+            stall = stall + 1 if gain <= min_gain else 0
+        rows.append(dict(name=name, val_score=score, gain=gain))
+        if score > best:
+            best, best_name = score, name
+    stop = stall >= 2 or len(logs) - 1 >= max_dagger
+    return rows, stop, best_name

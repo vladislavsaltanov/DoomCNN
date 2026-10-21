@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from epfiles import make_ep
 
 from doomagent.reports import (dataset_report, dataset_stats, mask_preview, plot_bc_curves,
@@ -53,3 +55,23 @@ def test_plot_bc_curves_writes_png(tmp_path):
     p.write_text(json.dumps(dict(config={}, log=rows)))
     plot_bc_curves({'a': str(p)}, str(tmp_path / 'c.png'))
     assert (tmp_path / 'c.png').exists()
+
+
+from doomagent.reports import rounds_summary
+
+
+def _log(d, name, score):
+    p = d / f'{name}.pt.log.json'
+    p.write_text(json.dumps(dict(config={}, log=[dict(epoch=1, val_score=score)])))
+    return str(p)
+
+
+def test_rounds_summary_stops_after_two_small_gains(tmp_path):
+    logs = {n: _log(tmp_path, n, s) for n, s in (('r1', 10.0), ('r2', 10.3), ('r3', 10.6))}
+    rows, stop, best = rounds_summary(logs)
+    assert stop and best == 'r3' and rows[1]['gain'] == pytest.approx(0.3)
+
+
+def test_rounds_summary_continues_after_a_real_gain(tmp_path):
+    logs = {n: _log(tmp_path, n, s) for n, s in (('r1', 10.0), ('r2', 12.0))}
+    assert rounds_summary(logs)[1] is False
