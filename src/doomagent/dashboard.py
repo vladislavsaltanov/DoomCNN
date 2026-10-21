@@ -136,9 +136,41 @@ def runs_state():
 
 
 def current_checkpoint():
-    # the newest DAgger-round checkpoint: the one the running round saved last
-    files = glob.glob('runs/r*.pt')
+    # the newest checkpoint of the running stage: a DAgger round or a PPO run's best model
+    files = glob.glob('runs/r*.pt') + glob.glob('runs/ppo_*/best_model.zip')
     return max(files, key=os.path.getmtime).replace(os.sep, '/') if files else 'teacher'
+
+
+SB3_KEYS = ('total_timesteps', 'ep_rew_mean', 'ep_len_mean', 'value_loss', 'policy_gradient_loss',
+            'entropy_loss', 'explained_variance', 'approx_kl', 'fps')
+
+
+def sb3_series(path):
+    # the tables stable-baselines3 prints after every rollout, as a list of dicts
+    rows, cur = [], {}
+    try:
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            for line in fh:
+                m = re.match(r'\|\s+(\w+)\s+\|\s+([-+0-9.e]+)\s+\|', line)
+                if m and m[1] in SB3_KEYS:
+                    cur[m[1]] = float(m[2])
+                elif line.startswith('---') and cur.get('total_timesteps') is not None:
+                    rows.append(cur)
+                    cur = {}
+    except OSError:
+        pass
+    return rows
+
+
+def ppo_state():
+    out = []
+    for d in sorted(glob.glob('runs/ppo_*/')):
+        name = os.path.basename(d.rstrip('/\\'))
+        outf = f'runs/{name}.out'
+        last = os.path.getmtime(outf) if os.path.exists(outf) else 0
+        out.append(dict(name=name, val=_read_json(os.path.join(d, 'val_log.json')) or [],
+                        train=sb3_series(outf)[-400:], active=time.time() - last < 120))
+    return out
 
 
 def train_progress():
@@ -174,14 +206,16 @@ def project_state():
             recording.append(dict(name=os.path.basename(d.rstrip('/\\')),
                                   episodes=len(glob.glob(os.path.join(d, 'ep_*.npz')))))
     rounds = _tail('reports/rounds.md', 30)
-    s6 = _tail('runs/s6.log', 15)
-    # the first slice without a log entry; S6 is in progress once its runner has written a log
-    current = 'S6' if s6 and 'S6' not in seen else next((s for s, _ in SLICES if s not in seen),
-                                                          None)
+    s6, s7 = _tail('runs/s6.log', 15), _tail('runs/s7.log', 15)
+    # the first slice without a log entry; a slice is in progress once its runner writes a log
+    current = next((s for s, _ in SLICES if s not in seen), None)
+    for sid, log_lines in (('S6', s6), ('S7', s7)):
+        if log_lines and sid not in seen:
+            current = sid
     return dict(slices=[dict(id=s, q=q, done=s in seen and s != current, current=s == current)
                         for s, q in SLICES],
                 entries=entries[-8:], datasets=datasets, recording=recording,
-                rounds=rounds, s6_log=s6)
+                rounds=rounds, s6_log=s7 or s6)
 
 
 GOAL = ('Агент играет в defend_the_center только по пикселям на уровне учителя '
@@ -190,18 +224,45 @@ SLICE_GOALS = {
     'S6': 'Ученик сам играет на вариантах графики, учитель размечает его ошибки, ученик '
           'дообучается. Раунды идут, пока лучший val_score растёт больше чем на 0.5 '
           '(стоп: два раунда без роста или 5 раундов). Лучший раунд пойдёт в PPO (S7).',
-    'S7': 'Дообучение с подкреплением (PPO): берём, только если val_score выше имитации.',
+    'S7': 'PPO: лучший раунд DAgger (r4) доигрывает на награду игры — с обычной наградой и со '
+          'штрафом за кручение влево-вправо без врага. Плюс PPO с нуля при равном бюджете RL и '
+          'при равном полном бюджете. PPO берём, только если val_score выше уровня r4.',
     'S8': 'Финальная проверка на test-seed и test-вариантах, отчёт по критериям спека.'}
 ROUND_EPOCHS, ROUND_EPISODES, LAST_ROUND = 8, 100, 6
 
 
+S7_TEXT = {
+    'ppo_ft': 'r4 дообучается PPO на обычной награде игры (+1 за убийство, −1 за смерть). '
+              'Первые 20 тыс. шагов учится только критик.',
+    'ppo_ft_flip': 'r4 дообучается PPO с наградой игры и штрафом −0.1 за смену направления '
+                   'поворота, когда врага на экране нет.',
+    'ppo_scratch_rl': 'PPO с нуля, без имитации, при том же бюджете RL (200 тыс. шагов).',
+    'ppo_scratch_total': 'PPO с нуля при том же полном бюджете шагов игры, что ушёл на данные, '
+                         'DAgger и RL (446 573 шага).'}
+
+
+def _num(x):
+    return f'{x:,.0f}'.replace(',', ' ')  # 34 816
+
+
+def s7_queue():
+    # [(name, total env steps)] in queue order, read from the runner script
+    out = []
+    for line in _tail('runs/s7_queue.sh', 50):
+        m = re.match(r'run (\S+) \w+ .*--steps (\d+)', line)
+        if m:
+            w = re.search(r'--warmup (\d+)', line)
+            out.append((m[1], int(m[2]) + (int(w[1]) if w else 0)))
+    return out
+
+
 class Activity:
-    # what the S6 runner is doing now and how long it will take, from runs/s6.log and the
-    # training log of the running round
+    # what the S6 or S7 runner is doing now and how long it will take, from its log and the
+    # training logs of the running job
     @staticmethod
-    def _events():
+    def _events(path='runs/s6.log'):
         out = []
-        for line in _tail('runs/s6.log', 400):
+        for line in _tail(path, 400):
             m = re.match(r'(\d\d):(\d\d):(\d\d) (.*)', line)
             if not m:
                 continue
@@ -214,8 +275,43 @@ class Activity:
             out.append((t, text))
         return out
 
+    def _s7(self, now, ev):
+        d = dict(goal=GOAL, slice_goal=SLICE_GOALS['S7'], phase='idle', now=now,
+                 s6_elapsed=now - ev[0][0])
+        last_t, last = ev[-1]
+        if 'finished' in last:
+            d.update(phase='done', text='S7: все прогоны PPO завершены. ' + last)
+            return d
+        m = re.match(r'start (\S+)', last)
+        if not m:
+            d['text'] = last
+            return d
+        name, queue = m[1], s7_queue()
+        total = dict(queue).get(name, 200_000)
+        rows = sb3_series(f'runs/{name}.out')
+        done_steps = rows[-1]['total_timesteps'] if rows else 0
+        elapsed = now - last_t
+        rate = done_steps / elapsed if done_steps else None  # env steps per second, evals included
+        left = (total - done_steps) / rate if rate else None
+        names = [n for n, _ in queue]
+        later = names[names.index(name) + 1:] if name in names else []
+        rest = sum(dict(queue)[n] for n in later)
+        val = _read_json(f'runs/{name}/val_log.json') or []
+        best = max((v['val_score'] for v in val), default=None)
+        pos = f'{names.index(name) + 1} из {len(names)}' if name in names else '?'
+        d.update(phase='ppo', progress=done_steps / total, phase_left=left, phase_elapsed=elapsed,
+                 round_s=total / rate if rate else None,
+                 s6_left_max=(left + rest / rate) if rate else None,
+                 text=f'S7, прогон {pos} — {name}: {S7_TEXT.get(name, "")} '
+                      f'Шагов: {_num(done_steps)} из {_num(total)}'
+                      + (f'; лучший val_score пока {best:.2f}.' if best is not None else '.'))
+        return d
+
     def __call__(self):
         now = time.time()
+        ev7 = self._events('runs/s7.log')
+        if ev7:
+            return self._s7(now, ev7)
         ev = self._events()
         d = dict(goal=GOAL, slice_goal=SLICE_GOALS.get('S6'), phase='idle', now=now)
         if not ev:
@@ -317,7 +413,12 @@ class Live:
         torch.set_num_threads(2)
         from doomagent.model import StudentCNN
         m = StudentCNN(self.cfg)
-        m.load_state_dict(torch.load(model, map_location='cpu'))
+        if model.endswith('.zip'):  # a PPO best model: its actor as StudentCNN weights
+            from stable_baselines3 import PPO
+            from doomagent.ppo import policy_state
+            m.load_state_dict(policy_state(PPO.load(model, device='cpu'), m.state_dict()))
+        else:
+            m.load_state_dict(torch.load(model, map_location='cpu'))
         m.eval()
         return m
 
@@ -503,6 +604,8 @@ def make_handler(system, live, activity):
                 return self._mjpeg('net')
             if u.path == '/api/system':
                 return self._send(dict(now=system.now, hist=list(system.hist)))
+            if u.path == '/api/ppo':
+                return self._send(ppo_state())
             if u.path == '/api/trainlive':
                 return self._send(train_progress() or {})
             if u.path == '/api/activity':
@@ -517,7 +620,7 @@ def make_handler(system, live, activity):
                 return self._send(dict(state=live.state, req=req, history=list(live.history),
                                        series=list(live.series)))
             if u.path == '/api/options':
-                models = ['current', 'teacher'] + sorted(glob.glob('runs/*.pt'), key=os.path.getmtime,
+                models = ['current', 'teacher'] + sorted(glob.glob('runs/*.pt') + glob.glob('runs/ppo_*/best_model.zip'), key=os.path.getmtime,
                                               reverse=True)
                 return self._send(dict(models=[m.replace('\\', '/') for m in models],
                                        variants=variants_list()))

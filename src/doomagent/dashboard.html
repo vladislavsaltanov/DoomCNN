@@ -150,7 +150,7 @@
     </div>
     <div class="card grow">
       <div class="hrow"><h2 id="chartTitle">Награда на проверке по эпохам</h2>
-        <div class="tabs" id="chartTabs"><button class="sel" data-t="val">val_score</button><button data-t="loss">потери</button><button data-t="trainlive">обучение live</button><button data-t="game">игра live</button></div></div>
+        <div class="tabs" id="chartTabs"><button class="sel" data-t="val">val_score</button><button data-t="ppo">PPO</button><button data-t="loss">потери</button><button data-t="trainlive">обучение live</button><button data-t="game">игра live</button></div></div>
       <div class="chips" id="runChips"></div>
       <canvas class="chart" id="chart"></canvas>
       <canvas class="chart" id="offLive" style="display:none;min-height:70px;flex:.5 1 0"></canvas>
@@ -203,7 +203,7 @@ function lineChart(c, series, o = {}) {
   let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
   let y0 = o.ymin ?? Math.min(...pts.map(p => p[1])), y1 = o.ymax ?? Math.max(...pts.map(p => p[1]));
   if (o.band) { y0 = Math.min(y0, o.band[0]); y1 = Math.max(y1, o.band[1]); }
-  if (x1 === x0) x1 = x0 + 1; if (y1 === y0) y1 = y0 + 1;
+  if (x1 === x0) x1 = x0 + 1; if (y1 - y0 < (o.minSpan || 0)) { const c = (y0 + y1) / 2; y0 = c - o.minSpan / 2; y1 = c + o.minSpan / 2; } if (y1 === y0) y1 = y0 + 1;
   const pad = (y1 - y0) * .06; y0 -= pad; y1 += pad;
   const X = x => L + (x - x0) / (x1 - x0) * (W - L - R), Y = y => T + (1 - (y - y0) / (y1 - y0)) * (H - T - B);
   g.font = '11px system-ui'; g.strokeStyle = '#262c34'; g.fillStyle = '#8b95a3'; g.lineWidth = 1;
@@ -215,7 +215,7 @@ function lineChart(c, series, o = {}) {
   xs.forEach((x, i) => { if (i % xstep === 0) g.fillText(o.xfmt ? o.xfmt(x) : x, X(x) - 4, H - 5); });
   if (o.band) {
     g.fillStyle = 'rgba(79,209,139,.13)'; g.fillRect(L, Y(o.band[1]), W - L - R, Y(o.band[0]) - Y(o.band[1]));
-    g.fillStyle = '#4fd18b'; g.fillText('учитель', W - R + 4, Y((o.band[0] + o.band[1]) / 2) + 4);
+    g.fillStyle = '#4fd18b'; g.fillText(o.bandLabel || 'учитель', W - R + 4, Y((o.band[0] + o.band[1]) / 2) + 4);
   }
   series.forEach(s => {
     if (!s.points.length) return;
@@ -241,7 +241,7 @@ function spark(c, vals, max, color) {
 let optionsLoaded = false, reqSynced = false;
 async function loadOptions() {
   const o = await get('/api/options');
-  const mname = m => m === 'current' ? 'текущий чекпойнт (обучается сейчас)' : m === 'teacher' ? 'учитель' : m.replace('runs/', '');
+  const mname = m => m === 'current' ? 'текущий чекпойнт (обучается сейчас)' : m === 'teacher' ? 'учитель' : m.replace('runs/', '').replace('/best_model.zip', ' (PPO)');
   $('model').innerHTML = o.models.map(m => `<option value="${m}">${mname(m)}</option>`).join('');
   const groups = {}; o.variants.forEach(v => (groups[v.split] ??= []).push(v));
   const names = {base: 'базовая', train: 'train (была в обучении)', val: 'val (проверка)', test: 'test (не видела)'};
@@ -280,7 +280,7 @@ function showChart(t) {
   chartMode = t;
   document.querySelectorAll('#chartTabs button').forEach(x => x.classList.toggle('sel', x.dataset.t === t));
   $('runChips').style.display = t === 'val' ? 'flex' : 'none';
-  $('offLive').style.display = t === 'game' ? 'block' : 'none';
+  $('offLive').style.display = t === 'game' || (t === 'trainlive' && !trainLive.points && ppoRuns.some(r => r.active)) ? 'block' : 'none';
   drawRuns();
 }
 document.querySelectorAll('#chartTabs button').forEach(b => b.onclick = () => showChart(b.dataset.t));
@@ -300,7 +300,8 @@ function drawRuns() {
   const r = runs.find(x => x.name === $('runPick').value);
   if (chartMode === 'trainlive') drawTrainLive();
   if (chartMode === 'game') drawGameLive();
-  if (chartMode === 'trainlive' || chartMode === 'game') {
+  if (chartMode === 'ppo') { drawPpo(); }
+  else if (chartMode === 'trainlive' || chartMode === 'game') {
     // drawn by drawTrainLive / drawGameLive
   } else if (chartMode === 'val') {
     $('chartTitle').textContent = 'Награда на проверке (val_score) по эпохам';
@@ -324,7 +325,7 @@ $('runPick').onchange = drawRuns;
 async function pollActivity() {
   try {
     const a = await get('/api/activity');
-    $('goal').innerHTML = `${a.goal}<div class="sub"><b>S6:</b> ${a.slice_goal}</div>`;
+    $('goal').innerHTML = `${a.goal}<div class="sub"><b>${a.phase === 'ppo' || (a.text || '').startsWith('S7') ? 'S7' : 'S6'}:</b> ${a.slice_goal}</div>`;
     $('nowText').textContent = a.text;
     $('nowBar').style.width = ((a.progress ?? (a.phase === 'done' ? 1 : 0)) * 100).toFixed(1) + '%';
     $('tElapsed').textContent = dur(a.phase_elapsed);
@@ -402,7 +403,7 @@ function drawTrainLive() {
   if (chartMode !== 'trainlive') return;
   const d = trainLive;
   $('chartTitle').textContent = 'Обучение сейчас: потери по батчам';
-  if (!d.points) { lineChart($('chart'), []); $('runInfo').textContent = 'Нет свежих данных: график строится, пока идёт обучение, начиная с раунда r5 (r4 запущен до появления этого графика).'; return; }
+  if (!d.points) { drawPpoTrain(); return; }
   const nb = d.n_batches;
   lineChart($('chart'), ['loss', 'ce', 'bce', 'mse', 'seg'].map((p, i) => ({color: COLORS[i], label: p, bold: p === 'loss',
     points: ema(d.points.map(e => [Math.round(e.batch / nb * 100) / 100, e[p]]), 0.12)})), {ymin: 0, nodots: true, xfmt: x => 'эп ' + (Math.floor(x) + 1)});
@@ -414,8 +415,42 @@ async function pollTrainLive() {
   try { trainLive = await get('/api/trainlive'); drawTrainLive(); } catch (e) {}
   setTimeout(pollTrainLive, 3000);
 }
+
+// ---------------- PPO (S7)
+let ppoRuns = [];
+const PPO_RU = {ppo_ft: 'r4 + PPO', ppo_ft_flip: 'r4 + PPO + штраф', ppo_scratch_rl: 'PPO с нуля (RL)', ppo_scratch_total: 'PPO с нуля (всё)'};
+function drawPpo() {
+  if (chartMode !== 'ppo') return;
+  $('chartTitle').textContent = 'S7: награда на проверке (val_score) по шагам PPO';
+  const ft = ppoRuns.find(r => r.name === 'ppo_ft' && r.val.length);
+  const level = ft ? ft.val[0].val_score : null;
+  lineChart($('chart'), ppoRuns.map((r, i) => ({color: COLORS[i], label: PPO_RU[r.name] || r.name, bold: r.active,
+    points: r.val.map(v => [Math.round(v.timesteps / 1000), v.val_score])})),
+    {band: level != null ? [level - 0.05, level + 0.05] : null, bandLabel: 'r4', minSpan: 6, xfmt: x => x + 'k'});
+  $('runInfo').textContent = (level != null ? `Зелёная линия — уровень r4 до PPO (${level.toFixed(2)}). ` : '')
+    + 'Gate C: PPO берём, только если его val_score выше этой линии. Проверка каждые 20 тыс. шагов на базе и 8 val-вариантах; только настоящая награда игры, без штрафа.';
+}
+function drawPpoTrain() {
+  const r = ppoRuns.find(x => x.active) || ppoRuns[ppoRuns.length - 1];
+  if (!r || !r.train.length) { lineChart($('chart'), []); $('runInfo').textContent = 'Сейчас ничего не обучается.'; return; }
+  $('chartTitle').textContent = `Обучение сейчас: ${PPO_RU[r.name] || r.name} (PPO)`;
+  const x = e => Math.round(e.total_timesteps / 1000);
+  lineChart($('chart'), [{color: COLORS[2], label: 'награда в обучении', bold: true, points: ema(r.train.map(e => [x(e), e.ep_rew_mean]), 0.3)},
+                         {color: COLORS[1], label: 'длина эпизода / 10', points: ema(r.train.map(e => [x(e), e.ep_len_mean / 10]), 0.3)}],
+            {nodots: true, xfmt: v => v + 'k'});
+  lineChart($('offLive'), [{color: COLORS[0], label: 'value loss', points: ema(r.train.map(e => [x(e), e.value_loss]), 0.3)},
+                           {color: COLORS[3], label: '−entropy', points: ema(r.train.map(e => [x(e), -e.entropy_loss]), 0.3)},
+                           {color: COLORS[5], label: 'explained var', points: ema(r.train.map(e => [x(e), e.explained_variance]), 0.3)}],
+            {nodots: true, xfmt: v => v + 'k'});
+  const last = r.train[r.train.length - 1];
+  $('runInfo').textContent = `Сверху: средняя награда эпизода в обучении${r.name === 'ppo_ft_flip' ? ' (вместе со штрафом)' : ''} и длина эпизода. Снизу: потери критика, энтропия политики (насколько она ещё «пробует»), explained variance. Скорость ${Math.round(last.fps)} шагов/с.`;
+}
+async function pollPpo() {
+  try { ppoRuns = await get('/api/ppo'); if (!pollPpo.init && ppoRuns.some(r => r.active)) { pollPpo.init = true; showChart('ppo'); } drawPpo(); if (chartMode === 'trainlive' && !trainLive.points) { showChart('trainlive'); } } catch (e) {}
+  setTimeout(pollPpo, 10000);
+}
 setInterval(() => $('clock').textContent = new Date().toLocaleTimeString('ru'), 1000);
-loadOptions(); pollLive(); pollTrainLive(); pollRuns(); pollActivity(); pollProject(); pollSystem();
+loadOptions(); pollLive(); pollTrainLive(); pollPpo(); pollRuns(); pollActivity(); pollProject(); pollSystem();
 window.addEventListener('resize', () => { drawRuns(); drawGameLive(); drawTrainLive(); });
 </script>
 </body>
