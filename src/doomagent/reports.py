@@ -179,3 +179,20 @@ def rounds_summary(logs, min_gain=0.5, max_dagger=5):
             best, best_name = score, name
     stop = stall >= 2 or len(logs) - 1 >= max_dagger
     return rows, stop, best_name
+
+
+def plot_ppo_curves(logs, out_png, bc_level=None):
+    fig, ax = plt.subplots(figsize=(6, 3.5))
+    for name, path in logs.items():
+        with open(path) as fh:
+            rows = json.load(fh)
+        ax.plot([r['timesteps'] for r in rows], [r['val_score'] for r in rows], marker='o',
+                label=name)
+    if bc_level is not None:
+        ax.axhline(bc_level, linestyle='--', color='gray', label='imitation level')
+    ax.set_xlabel('env steps')
+    ax.set_ylabel('val score')
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out_png)
+    plt.close(fig)

@@ -75,3 +75,13 @@ def test_rounds_summary_stops_after_two_small_gains(tmp_path):
 def test_rounds_summary_continues_after_a_real_gain(tmp_path):
     logs = {n: _log(tmp_path, n, s) for n, s in (('r1', 10.0), ('r2', 12.0))}
     assert rounds_summary(logs)[1] is False
+
+
+from doomagent.reports import plot_ppo_curves
+
+
+def test_plot_ppo_curves_writes_png(tmp_path):
+    p = tmp_path / 'val_log.json'
+    p.write_text(json.dumps([dict(timesteps=0, val_score=1.0), dict(timesteps=10, val_score=2.0)]))
+    plot_ppo_curves({'ft': str(p)}, str(tmp_path / 'p.png'), bc_level=1.5)
+    assert (tmp_path / 'p.png').exists()
