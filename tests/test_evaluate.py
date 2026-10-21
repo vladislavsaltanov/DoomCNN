@@ -1,6 +1,7 @@
 from types import SimpleNamespace as NS
 
 from doomagent.config import SHOOT, TURN_LEFT, TURN_RIGHT
+from doomagent.variants import Variant
 from doomagent.evaluate import (bootstrap_ci, evaluate_plan, paired_diff_ci, pixel_only,
                                 run_episode, summarize, val_score)
 
@@ -81,3 +82,27 @@ def test_evaluate_plan_tags_variants_and_val_score_weights_them_equally():
     assert [r['variant'] for r in res] == ['a', 'a', 'a', 'b']
     score, per = val_score(res)
     assert per == {'a': 1.0, 'b': 3.0} and score == 2.0
+
+
+class SeedEnv(FakeEnv):
+    # module level so worker processes can unpickle it; the reward depends on the seed
+    def __init__(self, cfg, variant):
+        super().__init__([], [0])
+        self.base = 100.0 if variant.name == 'b' else 0.0
+
+    def reset(self, seed):
+        self.rewards, self.ammo, self.t = [self.base + seed, 1.0], [0, 0, 0], 0
+        return 'obs'
+
+
+def turn_left(obs, priv):
+    return TURN_LEFT
+
+
+def test_parallel_evaluate_plan_matches_serial():
+    plan = [(Variant('a'), tuple(range(7))), (Variant('b'), (40, 41, 42))]
+    serial = evaluate_plan(plan, turn_left, env_factory=SeedEnv)
+    parallel = evaluate_plan(plan, turn_left, env_factory=SeedEnv, workers=3)
+    assert parallel == serial
+    assert [(r['variant'], r['seed']) for r in parallel] == [
+        ('a', s) for s in range(7)] + [('b', s) for s in (40, 41, 42)]

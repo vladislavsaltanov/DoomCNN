@@ -47,3 +47,24 @@ def test_labels_come_from_teacher_not_executor(tmp_path):
     # wherever the enemy is visible, the mask is not empty
     vis = z['vis'].astype(bool)
     assert np.unpackbits(masks[vis], axis=-1).reshape(vis.sum(), -1).any(axis=1).mean() > 0.9
+
+
+def teacher_label(obs, priv, label):
+    # module level so worker processes can unpickle it
+    return label
+
+
+@pytest.mark.vizdoom
+def test_parallel_record_matches_serial(tmp_path):
+    from doomagent.record import record_dataset
+    from doomagent.variants import BASE
+    plan = [(BASE, (1000, 1001, 1002))]
+    record_dataset(str(tmp_path / 's'), plan, teacher_label)
+    record_dataset(str(tmp_path / 'p'), plan, teacher_label, workers=2)
+    for seed in (1000, 1001, 1002):
+        for suffix in ('.frames.npy', '.masks.npy'):
+            a, b = (np.load(tmp_path / d / f'ep_base_{seed}{suffix}') for d in ('s', 'p'))
+            assert np.array_equal(a, b)
+        a, b = (np.load(tmp_path / d / f'ep_base_{seed}.npz') for d in ('s', 'p'))
+        assert all(np.array_equal(a[k], b[k]) for k in a.files)
+    assert (tmp_path / 'p' / 'meta.json').read_text() == (tmp_path / 's' / 'meta.json').read_text()

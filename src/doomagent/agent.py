@@ -36,3 +36,22 @@ class PPOAgent:
 
 def load_agent(path, cfg: Cfg = Cfg()):
     return PPOAgent(path) if str(path).endswith('.zip') else StudentAgent(path, cfg)
+
+
+class StudentChooser:
+    # a picklable chooser(obs, priv) for parallel evaluation: the weights travel to the worker
+    # process and the model is built there on first use, on the same device as StudentAgent
+    def __init__(self, state_dict, cfg: Cfg = Cfg()):
+        self.state = {k: v.detach().cpu() for k, v in state_dict.items()}
+        self.cfg, self.model = cfg, None
+
+    def __getstate__(self):
+        return dict(self.__dict__, model=None)
+
+    def __call__(self, obs, priv):
+        if self.model is None:
+            dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+            self.model = StudentCNN(self.cfg).to(dev)
+            self.model.load_state_dict(self.state)
+            self.model.eval()
+        return self.model.act(obs)

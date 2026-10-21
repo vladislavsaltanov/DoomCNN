@@ -188,3 +188,4 @@ _vizdoom.ini
 
 # videos are large; kept locally, not in git
 *.mp4
+.playwright-mcp/

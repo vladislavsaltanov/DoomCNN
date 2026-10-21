@@ -66,21 +66,39 @@ def write_meta(out_dir):
         json.dump(dict(episodes=n, steps=steps, variants=dict(per)), fh, indent=1)
 
 
-def record_dataset(out_dir, plan, executor, cfg: Cfg = Cfg(), resume=True):
+def _record_chunk(out_dir, variant, seeds, executor, cfg):
     from doomagent.env import DoomEnv
-    os.makedirs(out_dir, exist_ok=True)
     teacher = Teacher(cfg)
+    env = DoomEnv(cfg, variant)
+    try:
+        for s in seeds:
+            record_episode(env, s, executor, teacher, episode_prefix(out_dir, variant, s), cfg)
+    finally:
+        env.close()
+
+
+def record_dataset(out_dir, plan, executor, cfg: Cfg = Cfg(), resume=True, workers=1):
+    # workers > 1 needs a picklable executor without shared random state (noisy() draws from one
+    # generator across episodes, so its data would change); then the files equal the serial ones
+    os.makedirs(out_dir, exist_ok=True)
+    chunks = []
     for variant, seeds in plan:
         todo = [s for s in seeds
                 if not (resume and os.path.exists(episode_prefix(out_dir, variant, s) + '.npz'))]
-        if not todo:
-            continue
-        env = DoomEnv(cfg, variant)
-        try:
-            for s in todo:
-                record_episode(env, s, executor, teacher, episode_prefix(out_dir, variant, s), cfg)
-        finally:
-            env.close()
+        if todo:
+            chunks.append((variant, todo))
+    if workers <= 1:
+        for variant, todo in chunks:
+            _record_chunk(out_dir, variant, todo, executor, cfg)
+    else:
+        import multiprocessing as mp
+        from concurrent.futures import ProcessPoolExecutor
+        total = sum(len(t) for _, t in chunks)
+        size = max(1, -(-total // (2 * workers)))  # about two chunks per worker
+        parts = [(v, t[i:i + size]) for v, t in chunks for i in range(0, len(t), size)]
+        with ProcessPoolExecutor(workers, mp_context=mp.get_context('spawn')) as ex:
+            for f in [ex.submit(_record_chunk, out_dir, v, t, executor, cfg) for v, t in parts]:
+                f.result()
     write_meta(out_dir)
 
 

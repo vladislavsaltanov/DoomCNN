@@ -36,21 +36,35 @@ def run_episode(env, chooser, seed):
                 first_shot=first_shot)
 
 
-def evaluate_plan(plan, chooser, cfg: Cfg = Cfg(), env_factory=None):
+def _run_chunk(variant, seeds, chooser, cfg, env_factory):
     if env_factory is None:
         from doomagent.env import DoomEnv
         env_factory = DoomEnv
     out = []
-    for variant, seeds in plan:
-        env = env_factory(cfg, variant)
-        try:
-            for s in seeds:
-                r = run_episode(env, chooser, s)
-                r.update(variant=variant.name, seed=int(s))
-                out.append(r)
-        finally:
-            env.close()
+    env = env_factory(cfg, variant)
+    try:
+        for s in seeds:
+            r = run_episode(env, chooser, s)
+            r.update(variant=variant.name, seed=int(s))
+            out.append(r)
+    finally:
+        env.close()
     return out
+
+
+def evaluate_plan(plan, chooser, cfg: Cfg = Cfg(), env_factory=None, workers=1):
+    # workers > 1: episodes run in separate processes (chooser and env_factory must pickle);
+    # each episode depends only on its seed, so the results equal the serial ones, in plan order
+    if workers <= 1:
+        return [r for v, seeds in plan for r in _run_chunk(v, seeds, chooser, cfg, env_factory)]
+    import multiprocessing as mp
+    from concurrent.futures import ProcessPoolExecutor
+    total = sum(len(s) for _, s in plan)
+    size = max(1, -(-total // (2 * workers)))  # about two chunks per worker
+    chunks = [(v, tuple(seeds[i:i + size])) for v, seeds in plan for i in range(0, len(seeds), size)]
+    with ProcessPoolExecutor(workers, mp_context=mp.get_context('spawn')) as ex:
+        futures = [ex.submit(_run_chunk, v, s, chooser, cfg, env_factory) for v, s in chunks]
+        return [r for f in futures for r in f.result()]
 
 
 def val_score(results):

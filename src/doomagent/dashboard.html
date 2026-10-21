@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DoomCNN — панель</title>
+<style>
+  :root {
+    --bg: #0e1013; --panel: #161a1f; --line: #262c34; --text: #e6e9ee; --muted: #8b95a3;
+    --accent: #ffb547; --good: #4fd18b; --bad: #ff6b6b; --blue: #5aa9ff;
+    --c1: #5aa9ff; --c2: #ffb547; --c3: #4fd18b; --c4: #e879f9; --c5: #ff6b6b; --c6: #2dd4bf;
+    --c7: #a3a3ff; --c8: #f472b6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 14px 20px;
+           border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; }
+  header h1 { margin: 0; font-size: 18px; letter-spacing: .3px; }
+  header h1 span { color: var(--accent); }
+  .pill { padding: 3px 10px; border-radius: 999px; background: #222831; color: var(--muted); font-size: 12px; }
+  .pill.on { background: rgba(79,209,139,.15); color: var(--good); }
+  .pill.warn { background: rgba(255,181,71,.15); color: var(--accent); }
+  main { padding: 16px 20px 40px; display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  section h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); font-weight: 600; }
+  .span12 { grid-column: span 12; } .span8 { grid-column: span 8; } .span4 { grid-column: span 4; }
+  .span6 { grid-column: span 6; } .span5 { grid-column: span 5; } .span7 { grid-column: span 7; }
+  @media (max-width: 1100px) { .span8, .span4, .span6, .span5, .span7 { grid-column: span 12; } }
+  .livewrap { display: grid; grid-template-columns: minmax(0, 640px) minmax(260px, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .livewrap { grid-template-columns: 1fr; } }
+  .screen { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 6px; display: block; object-fit: contain; }
+  .net { width: 100%; background: #000; border-radius: 6px; display: block; margin-top: 10px; }
+  .caption { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .controls label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+  select, input, button { background: #0f1216; color: var(--text); border: 1px solid var(--line);
+                          border-radius: 6px; padding: 6px 8px; font: inherit; }
+  button { cursor: pointer; background: #222a33; }
+  button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 600; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .bars .b { display: grid; grid-template-columns: 82px 1fr 44px; align-items: center; gap: 8px; margin: 4px 0; font-size: 13px; }
+  .bars .track { height: 10px; background: #0f1216; border-radius: 5px; overflow: hidden; }
+  .bars .fill { height: 100%; background: var(--blue); border-radius: 5px; transition: width .12s; }
+  .bars .b.act .fill { background: var(--accent); } .bars .b.act { color: var(--accent); }
+  .bars .b.teach span:first-child::after { content: " ●"; color: var(--good); }
+  .kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .kv div { background: #0f1216; border-radius: 6px; padding: 6px 8px; }
+  .kv b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .kv small { color: var(--muted); font-size: 11px; }
+  .gauge { position: relative; height: 18px; background: #0f1216; border-radius: 9px; margin-top: 6px; }
+  .gauge i { position: absolute; top: 2px; width: 4px; height: 14px; background: var(--accent); border-radius: 2px; transition: left .12s; }
+  .gauge::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #444; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+  .tile { background: #0f1216; border-radius: 8px; padding: 8px 10px; }
+  .tile small { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; }
+  .tile b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; margin: 2px 0; }
+  .tile canvas { width: 100%; height: 34px; display: block; }
+  canvas.chart { width: 100%; height: 260px; display: block; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .chip { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); cursor: pointer; font-size: 12px; user-select: none; }
+  .chip.off { opacity: .35; }
+  .chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  .stepper { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; }
+  @media (max-width: 900px) { .stepper { grid-template-columns: repeat(3, 1fr); } }
+  .step { border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 12px; color: var(--muted); }
+  .step b { display: block; color: var(--text); font-size: 14px; }
+  .step.done { border-color: rgba(79,209,139,.4); } .step.done b::after { content: " ✓"; color: var(--good); }
+  .step.current { border-color: var(--accent); background: rgba(255,181,71,.08); }
+  .step.current b::after { content: " ◐"; color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  pre { background: #0f1216; border-radius: 6px; padding: 8px 10px; margin: 0; font-size: 12px; overflow: auto; max-height: 220px; color: #c9d1d9; }
+  .muted { color: var(--muted); }
+  .runinfo { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 3px; margin-right: 5px; vertical-align: middle; background: var(--c); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Doom<span>CNN</span></h1>
+  <span class="pill" id="stagePill">…</span>
+  <span class="pill" id="jobPill">…</span>
+  <span class="muted" style="margin-left:auto;font-size:12px" id="clock"></span>
+</header>
+<main>
+
+<section class="span12">
+  <h2>Живая игра: что видит и решает сеть</h2>
+  <div class="livewrap">
+    <div>
+      <img class="screen" id="screen" alt="экран игры">
+      <div class="caption">Экран 640×480 для зрителя. Красным — где сеть «видит» врага (голова маски), жёлтая линия — предсказанное смещение врага, зелёные рамки — враги по данным игры (сеть их не видит).</div>
+      <img class="net" id="net" alt="вход сети">
+      <div class="caption">Вход сети: 4 последних кадра 160×120 в оттенках серого (это всё, что получает сеть) и справа её карта врагов.</div>
+    </div>
+    <div>
+      <div class="controls">
+        <label>Модель<select id="model"></select></label>
+        <label>Графика<select id="variant"></select></label>
+        <label>Seed<input id="seed" type="number" value="5000"></label>
+        <label>Скорость<select id="speed"><option>0.5</option><option selected>1</option><option>2</option><option>4</option></select></label>
+      </div>
+      <div class="row" style="margin-bottom:12px">
+        <button class="primary" id="play">▶ Играть</button>
+        <button id="stop">■ Стоп</button>
+        <label class="muted" style="font-size:12px"><input type="checkbox" id="boxes" checked> рамки врагов</label>
+        <span class="muted" id="liveStatus" style="font-size:12px"></span>
+      </div>
+      <div class="muted" style="font-size:12px;margin-bottom:4px">Вероятности действий (оранжевое — выбор сети, ● — что сделал бы учитель)</div>
+      <div class="bars" id="bars"></div>
+      <div class="muted" style="font-size:12px;margin-top:10px">Враг в кадре: <b id="vis">–</b> · смещение до врага:</div>
+      <div class="gauge"><i id="offMark" style="left:50%"></i></div>
+      <div class="kv">
+        <div><small>награда</small><b id="kReward">–</b></div>
+        <div><small>убито</small><b id="kKills">–</b></div>
+        <div><small>шаг</small><b id="kStep">–</b></div>
+        <div><small>здоровье</small><b id="kHealth">–</b></div>
+        <div><small>патроны</small><b id="kAmmo">–</b></div>
+        <div><small>совпадение с учителем</small><b id="kAgree">–</b></div>
+      </div>
+      <table style="margin-top:12px" id="episodes"><thead><tr><th>модель</th><th>графика</th><th>seed</th><th>награда</th><th>совп.</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</section>
+
+<section class="span12">
+  <h2>Где мы в проекте</h2>
+  <div class="stepper" id="stepper"></div>
+</section>
+
+<section class="span8">
+  <h2>Обучение: награда на проверке (val_score) по эпохам</h2>
+  <div class="chips" id="runChips"></div>
+  <canvas class="chart" id="valChart"></canvas>
+  <div class="legend"><span style="--c:rgba(79,209,139,.5)">интервал учителя на базе 21.9–23.2</span></div>
+  <div class="runinfo" id="runInfo"></div>
+</section>
+
+<section class="span4">
+  <h2>Награда по вариантам графики</h2>
+  <select id="runPick" style="width:100%;margin-bottom:8px"></select>
+  <div class="bars" id="perVariant"></div>
+  <div class="caption">Лучший чекпойнт выбранного прогона. Учитель: ≈23 на базе и tex, 17–22 на spr/mix.</div>
+</section>
+
+<section class="span6">
+  <h2>Потери обучения выбранного прогона</h2>
+  <canvas class="chart" id="lossChart" style="height:200px"></canvas>
+  <div class="legend" id="lossLegend"></div>
+</section>
+
+<section class="span6">
+  <h2>Нагрузка компьютера</h2>
+  <div class="tiles" id="tiles"></div>
+</section>
+
+<section class="span7">
+  <h2>Раунды DAgger и журнал</h2>
+  <div id="rounds"></div>
+  <pre id="s6log" style="margin-top:10px"></pre>
+</section>
+
+<section class="span5">
+  <h2>Данные</h2>
+  <table id="datasets"><thead><tr><th>датасет</th><th>эпизодов</th><th>шагов</th><th>график</th></tr></thead><tbody></tbody></table>
+  <h2 style="margin-top:14px">Последние записи журнала</h2>
+  <table id="entries"><tbody></tbody></table>
+</section>
+
+<section class="span12">
+  <details><summary style="cursor:pointer;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.8px;font-weight:600">Варианты графики (S4): первый кадр каждого варианта</summary>
+  <img src="/file/artifacts/s4_variants.png" style="width:100%;border-radius:6px;margin-top:10px" alt="сетка вариантов графики" loading="lazy"></details>
+</section>
+
+</main>
+<script>
+const ACTIONS = ['turn_left', 'turn_right', 'shoot', 'fine_left', 'fine_right'];
+const RU = {turn_left: 'влево', turn_right: 'вправо', shoot: 'выстрел', fine_left: 'чуть влево', fine_right: 'чуть вправо'};
+const COLORS = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8'].map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+const $ = id => document.getElementById(id);
+const get = u => fetch(u).then(r => r.json());
+const fmt = (x, d = 1) => x == null || isNaN(x) ? '–' : Number(x).toFixed(d);
+
+// ---------------- canvas charts
+function setup(c) {
+  const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  c.width = r.width * dpr; c.height = r.height * dpr;
+  const g = c.getContext('2d'); g.scale(dpr, dpr); return [g, r.width, r.height];
+}
+function lineChart(c, series, o = {}) {
+  const [g, W, H] = setup(c), L = 38, R = 10, T = 10, B = 24;
+  const pts = series.flatMap(s => s.points);
+  if (!pts.length) { g.fillStyle = '#8b95a3'; g.fillText('нет данных', W / 2 - 30, H / 2); return; }
+  let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
+  let y0 = o.ymin ?? Math.min(...pts.map(p => p[1])), y1 = o.ymax ?? Math.max(...pts.map(p => p[1]));
+  if (o.band) { y0 = Math.min(y0, o.band[0]); y1 = Math.max(y1, o.band[1]); }
+  if (x1 === x0) x1 = x0 + 1; if (y1 === y0) y1 = y0 + 1;
+  const pad = (y1 - y0) * .06; y0 -= pad; y1 += pad;
+  const X = x => L + (x - x0) / (x1 - x0) * (W - L - R), Y = y => T + (1 - (y - y0) / (y1 - y0)) * (H - T - B);
+  g.font = '11px system-ui'; g.strokeStyle = '#262c34'; g.fillStyle = '#8b95a3'; g.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = y0 + (y1 - y0) * i / 4; g.beginPath(); g.moveTo(L, Y(y)); g.lineTo(W - R, Y(y)); g.stroke();
+    g.fillText(y.toFixed(Math.abs(y1 - y0) < 3 ? 2 : 0), 2, Y(y) + 4);
+  }
+  const xs = [...new Set(pts.map(p => p[0]))].sort((a, b) => a - b);
+  const step = Math.max(1, Math.ceil(xs.length / 10));
+  xs.forEach((x, i) => { if (i % step === 0) g.fillText(x, X(x) - 4, H - 6); });
+  if (o.band) { g.fillStyle = 'rgba(79,209,139,.13)'; g.fillRect(L, Y(o.band[1]), W - L - R, Y(o.band[0]) - Y(o.band[1])); }
+  series.forEach(s => {
+    if (!s.points.length) return;
+    g.strokeStyle = s.color; g.lineWidth = s.bold ? 2.5 : 1.6; g.globalAlpha = s.dim ? .35 : 1;
+    g.beginPath(); s.points.forEach((p, i) => i ? g.lineTo(X(p[0]), Y(p[1])) : g.moveTo(X(p[0]), Y(p[1]))); g.stroke();
+    g.fillStyle = s.color; s.points.forEach(p => { g.beginPath(); g.arc(X(p[0]), Y(p[1]), 2.5, 0, 7); g.fill(); });
+    const last = s.points[s.points.length - 1];
+    if (s.label) { g.fillText(s.label, Math.min(X(last[0]) + 5, W - 60), Y(last[1]) - 4); }
+    g.globalAlpha = 1;
+  });
+}
+function spark(c, vals, max, color) {
+  const [g, W, H] = setup(c); const v = vals.filter(x => x != null);
+  if (v.length < 2) return; const m = max ?? Math.max(...v, 1);
+  g.strokeStyle = color; g.lineWidth = 1.5; g.beginPath();
+  v.forEach((x, i) => { const px = i / (v.length - 1) * W, py = H - 2 - x / m * (H - 4); i ? g.lineTo(px, py) : g.moveTo(px, py); });
+  g.stroke(); g.lineTo(W, H); g.lineTo(0, H); g.closePath(); g.globalAlpha = .12; g.fillStyle = color; g.fill(); g.globalAlpha = 1;
+}
+
+// ---------------- live game
+let optionsLoaded = false;
+async function loadOptions() {
+  const o = await get('/api/options');
+  $('model').innerHTML = o.models.map(m => `<option value="${m}">${m === 'teacher' ? 'учитель (по данным игры)' : m.replace('runs/', '')}</option>`).join('');
+  const groups = {};
+  o.variants.forEach(v => (groups[v.split] ??= []).push(v));
+  const names = {base: 'базовая', train: 'train (видела в обучении)', val: 'val (проверка)', test: 'test (не видела)'};
+  $('variant').innerHTML = Object.entries(groups).map(([k, vs]) => `<optgroup label="${names[k] || k}">` + vs.map(v => `<option value="${v.name}">${v.name}</option>`).join('') + '</optgroup>').join('');
+  optionsLoaded = true;
+}
+function control(params) { return fetch('/api/control?' + new URLSearchParams(params)); }
+$('play').onclick = () => control({model: $('model').value, variant: $('variant').value, seed: $('seed').value, speed: $('speed').value, boxes: $('boxes').checked ? 1 : 0, running: 1});
+$('stop').onclick = () => control({running: 0});
+['model', 'variant', 'speed', 'boxes'].forEach(id => $(id).onchange = () => {
+  const p = {}; p[id] = id === 'boxes' ? ($('boxes').checked ? 1 : 0) : $(id).value; control(p);
+});
+$('screen').src = '/live/screen.mjpg'; $('net').src = '/live/net.mjpg';
+let reqSynced = false;
+async function pollLive() {
+  try {
+    const d = await get('/api/live'), s = d.state;
+    if (optionsLoaded && !reqSynced) { $('model').value = d.req.model; $('variant').value = d.req.variant; $('seed').value = d.req.seed; reqSynced = true; }
+    $('liveStatus').textContent = s.status + (s.status === 'играет' ? ` · seed ${s.seed}` : '');
+    const probs = s.probs || ACTIONS.map(a => a === s.action ? 1 : 0);
+    $('bars').innerHTML = ACTIONS.map((a, i) => `<div class="b ${a === s.action ? 'act' : ''} ${a === s.teacher ? 'teach' : ''}"><span>${RU[a]}</span><div class="track"><div class="fill" style="width:${(probs[i] * 100).toFixed(1)}%"></div></div><span>${fmt(probs[i], 2)}</span></div>`).join('');
+    $('vis').textContent = s.vis == null ? '–' : (s.vis * 100).toFixed(0) + '%';
+    $('offMark').style.left = s.off == null || s.vis < .5 ? '50%' : `calc(${((s.off + 1) / 2 * 100).toFixed(1)}% - 2px)`;
+    $('kReward').textContent = fmt(s.reward, 0); $('kKills').textContent = fmt(s.kills, 0); $('kStep').textContent = s.step ?? '–';
+    $('kHealth').textContent = fmt(s.health, 0); $('kAmmo').textContent = fmt(s.ammo, 0);
+    $('kAgree').textContent = s.agree == null ? '–' : (s.agree * 100).toFixed(0) + '%';
+    $('episodes').tBodies[0].innerHTML = d.history.slice(0, 8).map(e => `<tr><td>${e.model === 'teacher' ? 'учитель' : e.model.replace('runs/', '')}</td><td>${e.variant}</td><td>${e.seed}</td><td>${fmt(e.reward, 0)}</td><td>${(e.agree * 100).toFixed(0)}%</td></tr>`).join('');
+    if (d.req.running && s.seed != null) $('seed').value = s.seed;
+  } catch (e) {}
+  setTimeout(pollLive, 150);
+}
+
+// ---------------- training
+let runs = [], hidden = new Set(), picked = null;
+async function pollRuns() {
+  try { runs = await get('/api/runs'); } catch (e) { return setTimeout(pollRuns, 5000); }
+  // S3 ablations ran on base-only val, later runs on base + variants: keep them apart by default
+  if (!pollRuns.init) { runs.forEach(r => { if (r.name.startsWith('bc0') && r.name !== 'bc0') hidden.add(r.name); }); pollRuns.init = true; }
+  const active = runs.filter(r => r.active);
+  $('runChips').innerHTML = runs.map((r, i) => `<span class="chip ${hidden.has(r.name) ? 'off' : ''}" data-n="${r.name}"><span class="dot" style="background:${COLORS[i % COLORS.length]}"></span>${r.name}${r.active ? ' ◐' : ''}</span>`).join('');
+  document.querySelectorAll('#runChips .chip').forEach(c => c.onclick = () => { const n = c.dataset.n; hidden.has(n) ? hidden.delete(n) : hidden.add(n); drawRuns(); pollRunsChips(); });
+  const sel = $('runPick'), cur = sel.value;
+  sel.innerHTML = runs.map(r => `<option>${r.name}</option>`).join('');
+  sel.value = cur && runs.some(r => r.name === cur) ? cur : (active[0] || runs[runs.length - 1] || {}).name;
+  drawRuns();
+  $('runInfo').innerHTML = active.length ? active.map(r => `◐ <b>${r.name}</b> обучается: эпоха ${r.log.length ? r.log[r.log.length - 1].epoch : 0} из ${r.config.epochs || '?'} (проверка каждые 2 эпохи)`).join('<br>') : 'Сейчас ничего не обучается.';
+  setTimeout(pollRuns, 10000);
+}
+function pollRunsChips() { document.querySelectorAll('#runChips .chip').forEach(c => c.classList.toggle('off', hidden.has(c.dataset.n))); }
+function drawRuns() {
+  const series = runs.map((r, i) => ({name: r.name, color: COLORS[i % COLORS.length], label: hidden.has(r.name) ? null : r.name, bold: r.active,
+    points: hidden.has(r.name) ? [] : r.log.map(e => [e.epoch, e.val_score])}));
+  lineChart($('valChart'), series, {band: [21.9, 23.23]});
+  const r = runs.find(x => x.name === $('runPick').value);
+  if (!r || !r.log.length) { $('perVariant').innerHTML = '<span class="muted">нет данных</span>'; lineChart($('lossChart'), []); return; }
+  const best = r.log.reduce((a, b) => b.val_score > a.val_score ? b : a);
+  const pv = best.per_variant || {};
+  $('perVariant').innerHTML = `<div class="muted" style="font-size:12px;margin-bottom:4px">эпоха ${best.epoch}, val_score ${fmt(best.val_score, 2)}</div>` +
+    Object.entries(pv).map(([k, v]) => `<div class="b"><span style="font-size:12px">${k.replace('_val_', ' ')}</span><div class="track"><div class="fill" style="width:${Math.max(0, v / 25 * 100)}%;background:${k === 'base' ? 'var(--good)' : k.startsWith('tex') ? 'var(--blue)' : k.startsWith('spr') ? 'var(--c4)' : 'var(--accent)'}"></div></div><span>${fmt(v)}</span></div>`).join('');
+  const parts = ['loss', 'ce', 'bce', 'mse', 'seg'];
+  lineChart($('lossChart'), parts.map((p, i) => ({name: p, color: COLORS[i], label: p, points: r.log.filter(e => e[p] != null).map(e => [e.epoch, e[p]])})), {ymin: 0});
+  $('lossLegend').innerHTML = 'loss — общая; ce — по действиям; bce — «есть ли враг»; mse — смещение до врага; seg — маска врага';
+}
+$('runPick').onchange = drawRuns;
+
+// ---------------- project + system
+async function pollProject() {
+  try {
+    const p = await get('/api/project');
+    $('stepper').innerHTML = p.slices.map(s => `<div class="step ${s.done ? 'done' : ''} ${s.current ? 'current' : ''}"><b>${s.id}</b>${s.q}</div>`).join('');
+    const cur = p.slices.find(s => s.current);
+    $('stagePill').textContent = cur ? `сейчас: ${cur.id} — ${cur.q}` : 'все срезы закрыты';
+    $('stagePill').className = 'pill warn';
+    $('datasets').tBodies[0].innerHTML = p.datasets.map(d => `<tr><td>${d.name}</td><td>${d.episodes}</td><td>${(d.steps || 0).toLocaleString('ru')}</td><td>${d.variants}</td></tr>`).join('') +
+      p.recording.map(d => `<tr><td>${d.name} <span class="pill on">пишется</span></td><td>${d.episodes}</td><td>–</td><td>–</td></tr>`).join('');
+    $('entries').tBodies[0].innerHTML = p.entries.slice().reverse().map(e => `<tr><td class="muted" style="white-space:nowrap">${e.date}</td><td>${e.title}</td></tr>`).join('');
+    const tbl = p.rounds.filter(l => l.startsWith('|') && !l.includes('---'));
+    $('rounds').innerHTML = tbl.length ? '<table>' + tbl.map((l, i) => '<tr>' + l.split('|').slice(1, -1).map(c => i ? `<td>${c.trim()}</td>` : `<th>${c.trim()}</th>`).join('') + '</tr>').join('') + '</table>' + p.rounds.filter(l => l.startsWith('- ')).map(l => `<div class="muted" style="font-size:12px">${l.slice(2)}</div>`).join('') : '<span class="muted">раундов пока нет</span>';
+    $('s6log').textContent = p.s6_log.join('\n') || 'журнал S6 пуст';
+  } catch (e) {}
+  setTimeout(pollProject, 8000);
+}
+const TILE_DEFS = [
+  ['gpu_util', 'GPU', d => fmt(d.gpu_util, 0) + '%', 100, '--c1'],
+  ['vram_used', 'видеопамять', d => fmt(d.vram_used) + ' / ' + fmt(d.vram_total, 0) + ' ГБ', 8, '--c4'],
+  ['gpu_temp', 'темп. GPU', d => fmt(d.gpu_temp, 0) + ' °C', 90, '--c5'],
+  ['gpu_power', 'мощность GPU', d => fmt(d.gpu_power, 0) + ' Вт', 220, '--c2'],
+  ['cpu', 'CPU', d => fmt(d.cpu, 0) + '%', 100, '--c3'],
+  ['ram_used', 'ОЗУ', d => fmt(d.ram_used) + ' / ' + fmt(d.ram_total, 0) + ' ГБ', null, '--c6'],
+  ['commit_used', 'выделено (предел)', d => fmt(d.commit_used) + ' / ' + fmt(d.commit_total, 0) + ' ГБ', null, '--c7'],
+  ['disk_C', 'свободно C: / E:', d => fmt(d.disk_C, 0) + ' / ' + fmt(d.disk_E, 0) + ' ГБ', null, '--c8'],
+];
+$('tiles').innerHTML = TILE_DEFS.map(t => `<div class="tile"><small>${t[1]}</small><b id="t_${t[0]}">–</b><canvas id="s_${t[0]}"></canvas></div>`).join('');
+async function pollSystem() {
+  try {
+    const s = await get('/api/system'), d = s.now;
+    TILE_DEFS.forEach(([k, , f, max, c]) => {
+      $('t_' + k).textContent = f(d);
+      const m = k === 'ram_used' ? d.ram_total : k === 'commit_used' ? d.commit_total : k === 'vram_used' ? d.vram_total : max;
+      spark($('s_' + k), s.hist.map(h => h[k]), m, getComputedStyle(document.documentElement).getPropertyValue(c).trim());
+    });
+    const commitPct = d.commit_used / d.commit_total;
+    $('jobPill').textContent = `GPU ${fmt(d.gpu_util, 0)}% · CPU ${fmt(d.cpu, 0)}% · память ${fmt(commitPct * 100, 0)}% предела`;
+    $('jobPill').className = 'pill ' + (commitPct > .85 ? 'warn' : 'on');
+  } catch (e) {}
+  setTimeout(pollSystem, 2000);
+}
+setInterval(() => $('clock').textContent = new Date().toLocaleTimeString('ru'), 1000);
+loadOptions(); pollLive(); pollRuns(); pollProject(); pollSystem();
+window.addEventListener('resize', () => drawRuns());
+</script>
+</body>
+</html>
