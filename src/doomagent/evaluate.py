@@ -2,9 +2,11 @@ from collections import defaultdict
 
 import numpy as np
 
-from doomagent.config import SHOOT, Cfg
+from doomagent.config import FINE_LEFT, FINE_RIGHT, SHOOT, TURN_LEFT, TURN_RIGHT, Cfg
+from doomagent.teacher import is_enemy_name
 
 IDLE_STEPS = 100
+SIDE = {TURN_LEFT: -1, FINE_LEFT: -1, TURN_RIGHT: 1, FINE_RIGHT: 1}  # turn direction
 
 
 def pixel_only(act):
@@ -18,9 +20,24 @@ def run_episode(env, chooser, seed):
     obs = env.reset(seed)
     ammo = env.privileged().ammo
     total, kills, shots, pressed, steps, first_shot, done = 0.0, 0.0, 0, 0, 0, None, False
+    # search: steps with no enemy on screen (labels, evaluator only), the longest such streak,
+    # and left/right reversals while blind (spinning in place); None without labels
+    ammo_out, blind, streak, longest, flips, side = None, 0, 0, 0, 0, None
+    has_labels = hasattr(env.privileged(), 'labels')
     while not done:
-        action = int(chooser(obs, env.privileged()))
+        priv = env.privileged()
+        action = int(chooser(obs, priv))
         pressed += action == SHOOT
+        if has_labels:
+            if any(is_enemy_name(lb.object_name) for lb in priv.labels):
+                streak, side = 0, None
+            else:
+                blind += 1
+                streak += 1
+                longest = max(longest, streak)
+                if action in SIDE:
+                    flips += side is not None and SIDE[action] != side
+                    side = SIDE[action]
         obs, r, done = env.step(action)
         if not done:  # the terminal state carries no game variables
             new_ammo = env.privileged().ammo
@@ -29,11 +46,16 @@ def run_episode(env, chooser, seed):
                 if first_shot is None:
                     first_shot = steps
             ammo = new_ammo
+            if ammo <= 0 and ammo_out is None:
+                ammo_out = steps + 1
         total += r
         kills += max(r, 0.0)
         steps += 1
     return dict(reward=total, kills=kills, shots=shots, pressed=pressed, length=steps,
-                first_shot=first_shot)
+                first_shot=first_shot, ammo_out=ammo_out,
+                blind_steps=blind if has_labels else None,
+                longest_blind=longest if has_labels else None,
+                blind_flips=flips if has_labels else None)
 
 
 def _run_chunk(variant, seeds, chooser, cfg, env_factory):
@@ -97,4 +119,13 @@ def summarize(results):
     out['pressed_per_ep'] = float(np.mean([r['pressed'] for r in results]))
     idle = [r['first_shot'] is None or r['first_shot'] > IDLE_STEPS for r in results]
     out['idle_rate'] = float(np.mean(idle))
+    out_steps = [r['ammo_out'] for r in results if r.get('ammo_out') is not None]
+    out['ammo_out_rate'] = len(out_steps) / max(len(results), 1)
+    out['ammo_out_step'] = float(np.mean(out_steps)) if out_steps else None
+    seen = [r for r in results if r.get('blind_steps') is not None]
+    blind = sum(r['blind_steps'] for r in seen)
+    out['blind_share'] = blind / max(sum(r['length'] for r in seen), 1) if seen else None
+    out['longest_blind'] = float(np.mean([r['longest_blind'] for r in seen])) if seen else None
+    out['flips_per_100_blind'] = (100.0 * sum(r['blind_flips'] for r in seen) / max(blind, 1)
+                                  if seen else None)
     return out

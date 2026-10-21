@@ -99,7 +99,9 @@ def train(dirs, out, epochs, lam=0.5, lam_seg=0.5, shoot_w=1.0, hflip=True, aug=
             means = {k: v / max(n, 1) for k, v in sums.items()}  # epoch means, not the last batch
             log.append(dict(epoch=epoch, **means, val_score=score,
                             per_variant=per, kills_per_shot=s['kills_per_shot'],
-                            idle_rate=s['idle_rate']))
+                            idle_rate=s['idle_rate'], ammo_out_step=s['ammo_out_step'],
+                            ammo_out_rate=s['ammo_out_rate'], blind_share=s['blind_share'],
+                            flips_per_100_blind=s['flips_per_100_blind']))
             print(log[-1], flush=True)
             if score > best:
                 best = score

@@ -1,6 +1,6 @@
 from types import SimpleNamespace as NS
 
-from doomagent.config import SHOOT, TURN_LEFT, TURN_RIGHT
+from doomagent.config import FINE_LEFT, FINE_RIGHT, SHOOT, TURN_LEFT, TURN_RIGHT
 from doomagent.variants import Variant
 from doomagent.evaluate import (bootstrap_ci, evaluate_plan, paired_diff_ci, pixel_only,
                                 run_episode, summarize, val_score)
@@ -106,3 +106,38 @@ def test_parallel_evaluate_plan_matches_serial():
     assert parallel == serial
     assert [(r['variant'], r['seed']) for r in parallel] == [
         ('a', s) for s in range(7)] + [('b', s) for s in (40, 41, 42)]
+
+
+class LabelEnv(FakeEnv):
+    # FakeEnv plus labels: visible[t] says whether an enemy is on screen after t steps
+    def __init__(self, rewards, ammo, visible):
+        super().__init__(rewards, ammo)
+        self.visible = visible
+
+    def privileged(self):
+        lbs = [NS(object_name='Demon')] if self.visible[self.t] else [NS(object_name='DoomPlayer')]
+        return NS(ammo=self.ammo[self.t], labels=lbs)
+
+
+def test_run_episode_search_metrics():
+    # steps 0-3 blind (left, right, fine_left, fine_right: 3 flips), 4 sees an enemy, 5-6 blind
+    acts = iter([TURN_LEFT, TURN_RIGHT, FINE_LEFT, FINE_RIGHT, SHOOT, TURN_RIGHT, TURN_RIGHT])
+    env = LabelEnv([0.0] * 7, [2, 2, 2, 2, 2, 1, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0])
+    r = run_episode(env, lambda obs, priv: next(acts), seed=0)
+    assert r['blind_steps'] == 6 and r['longest_blind'] == 4 and r['blind_flips'] == 3
+    assert r['ammo_out'] == 6  # ammo reached 0 after the 6th step
+
+
+def test_run_episode_without_labels_has_no_search_metrics():
+    r = run_episode(FakeEnv([0.0, 0.0], [1, 1, 1]), lambda obs, priv: TURN_LEFT, seed=0)
+    assert r['blind_steps'] is None and r['ammo_out'] is None
+
+
+def test_summarize_search_metrics():
+    base = dict(reward=0.0, kills=0.0, shots=0, pressed=0, length=10, first_shot=None)
+    rs = [dict(base, ammo_out=100, blind_steps=4, longest_blind=3, blind_flips=2),
+          dict(base, ammo_out=None, blind_steps=6, longest_blind=5, blind_flips=0)]
+    s = summarize(rs)
+    assert s['ammo_out_rate'] == 0.5 and s['ammo_out_step'] == 100
+    assert s['blind_share'] == 0.5 and s['longest_blind'] == 4.0
+    assert s['flips_per_100_blind'] == 20.0

@@ -11,9 +11,14 @@ import matplotlib.pyplot as plt  # noqa: E402
 from doomagent.config import ACTION_NAMES, N_ACTIONS  # noqa: E402
 
 
+def fmt_opt(x, f):
+    return '-' if x is None else f % x
+
+
 def report_table_md(report):
     head = ['model', 'reward mean [95% CI]', 'vs teacher [95% CI]', 'kills/shot',
-            'shots', 'presses', 'idle rate', 'length', 'latency ms']
+            'shots', 'presses', 'idle rate', 'length', 'ammo out at', 'blind share',
+            'flips/100 blind', 'latency ms']
     lines = ['| ' + ' | '.join(head) + ' |', '|' + ' --- |' * len(head)]
     for name, s in report.items():
         r = s['reward']
@@ -28,6 +33,9 @@ def report_table_md(report):
             '%.1f' % s['pressed_per_ep'],
             '%.2f' % s['idle_rate'],
             '%.0f' % s['length']['mean'],
+            fmt_opt(s.get('ammo_out_step'), '%.0f'),
+            fmt_opt(s.get('blind_share'), '%.2f'),
+            fmt_opt(s.get('flips_per_100_blind'), '%.1f'),
             '-' if lat is None else '%.1f' % lat,
         ]
         lines.append('| ' + ' | '.join(cells) + ' |')
