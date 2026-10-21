@@ -191,3 +191,23 @@
 - Вывод: разрыв большой. На базе все три около учителя, на новых текстурах ученик почти не играет (около 0, как случайный агент), на новых спрайтах частично. Аугментации помогают в основном на spr. Шаг обобщения (S5) нужен.
 - Артефакты: `artifacts/s4_variants.png`, `reports/s4_variants.md`, `reports/val_bc0.json`, `reports/val_bc0_aug.json`, `reports/val_bc0_noaux.json`, `variants/*.json` (PWAD не в git, воспроизводятся `make_variants.py` с seed 0). Тесты: 84 из 84.
 - Стоп-точка S4: ждём go.
+
+## 2026-10-21, S5: R1, учитель на train-вариантах
+- Команды: `python -m doomagent.record --out data/variants --set variants --per-variant 15` (9 мин 37 с); `python scripts/s2_report.py data/variants`; `python -m doomagent.train_bc data/train data/variants --out runs/r1.pt --epochs 12 --aug --init runs/bc0.pt --workers 2` (23 мин); `python scripts/eval_val.py runs/bc0.pt runs/bc0_aug.pt runs/r1.pt`; `python scripts/rounds_report.py`. Флаги S3 по умолчанию (отражение, вес shoot 1.0).
+- Датасет `data/variants`: 26 рабочих train-вариантов по 15 эпизодов, 390 эпизодов, 99 734 шага, средняя длина 255.7, 2.1 ГБ. Доли меток на шагах с патронами 0.312 / 0.291 / 0.098 / 0.160 / 0.138, близко к R0. Отчёт: `reports/dataset_variants.md`.
+- Код Task 10 по плану (`dagger.py`, `rounds_summary`, `rounds_report.py`), тесты сначала красные, затем зелёные; набор 88 из 88. Коммит `f650ebe`.
+- r1 по чекпойнтам (val_score, эпохи 2–12): 10.16, 9.81, 10.60, 13.32, 11.80, **14.00**. База опускалась до 11 на эпохах 2–4 (аугментации и новые данные) и вернулась к 22.7.
+- Сравнение (`reports/s5_rounds.md`):
+
+| модель | val_score | base | ood_mean |
+| --- | --- | --- | --- |
+| bc0 | 5.02 | 22.90 | 2.79 |
+| bc0_aug | 9.93 | 21.33 | 8.50 |
+| r1 | **14.00** | 22.73 | **12.91** |
+
+- **Критерий S5 выполнен:** `ood_mean` r1 12.91 выше bc0 (2.79) и bc0_aug (8.50); база 22.73, ниже bc0 на 0.17 (допуск 1 очко).
+- По видам: spr-варианты почти решены (24.1 и 20.0 при учителе 17–20 на 3 seed), tex заметно лучше (4.8–16.0 против около 0), mix остаётся слабым (4.8 и 8.0; у bc0_aug на mix_val_00 было 16.8). Соседние чекпойнты по отдельным вариантам расходятся на 10–17 очков (mix_val_01: 19.1 на эпохе 8, 1.7 на эпохе 10), так что числа по одному варианту на 10 seed шумные.
+- Видео seed 5000: на `mix_val_00` bc0 6.0 (118 шагов), r1 6.0 (123 шага): этот вариант r1 не решил, видео по плану. Дополнительно на `tex_val_00`: bc0 −1.0 (60 шагов), r1 16.0 (232 шага).
+- Правило остановки (`reports/rounds.md`): один раунд, `stop rule met: False`.
+- Артефакты: `reports/s5_rounds.md`, `reports/rounds.md`, `reports/val_r1.json`, `reports/dataset_variants.*`, `artifacts/s5_bc0_ood.mp4`, `artifacts/s5_student_ood.mp4` (mix_val_00), `artifacts/s5_bc0_ood_tex_val_00.mp4`, `artifacts/s5_r1_ood_tex_val_00.mp4`.
+- Стоп-точка S5: ждём go на S6 (раунды DAgger). Нужно правило запуска раундов: каждый после go или подряд до правила остановки.
