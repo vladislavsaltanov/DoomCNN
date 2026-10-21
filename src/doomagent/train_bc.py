@@ -47,7 +47,10 @@ class Progress:
         with open(tmp, 'w') as fh:
             json.dump(dict(epoch=epoch, batch=batch, n_batches=self.n_batches, t=time.time(),
                            points=self.points), fh)
-        os.replace(tmp, self.path)
+        try:
+            os.replace(tmp, self.path)
+        except OSError:  # Windows: the dashboard is reading the file; the next update retries
+            pass
 
 
 def train(dirs, out, epochs, lam=0.5, lam_seg=0.5, shoot_w=1.0, hflip=True, aug=False,

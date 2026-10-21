@@ -25,3 +25,18 @@ def test_train_smoke_saves_best_checkpoint(tmp_path):
     prog = json.loads((tmp_path / 'best.pt.progress.json').read_text())
     assert prog['epoch'] == 1 and prog['batch'] == prog['n_batches'] > 0
     assert prog['points'] and {'batch', 'loss', 'ce'} <= set(prog['points'][-1])
+
+
+def test_progress_skips_an_update_when_the_file_is_busy(tmp_path, monkeypatch):
+    # Windows refuses os.replace while the dashboard has the file open; training must go on
+    import os
+    from doomagent.train_bc import Progress
+    p = Progress(str(tmp_path / 'x.progress.json'), n_batches=2, every=1)
+
+    def busy(src, dst):
+        raise PermissionError(5, 'Access is denied')
+    monkeypatch.setattr(os, 'replace', busy)
+    p.add(1, 1, dict(loss=1.0))  # must not raise
+    monkeypatch.undo()
+    p.add(1, 2, dict(loss=0.5))
+    assert json.loads((tmp_path / 'x.progress.json').read_text())['batch'] == 2
