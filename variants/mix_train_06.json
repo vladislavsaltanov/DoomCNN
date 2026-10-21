@@ -1,0 +1,11 @@
+{
+ "name": "mix_train_06",
+ "split": "train",
+ "kind": "mix",
+ "iwad": "",
+ "pwads": [
+  "variants/mix_train_06.wad"
+ ],
+ "disabled": true,
+ "reason": "teacher reward 13.7 < 0.7 * base"
+}

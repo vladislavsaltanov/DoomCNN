@@ -1,0 +1,17 @@
+{
+ "model": "runs/bc0.pt",
+ "val_score": 5.022222222222222,
+ "base": 22.9,
+ "ood_mean": 2.7875,
+ "per_variant": {
+  "base": 22.9,
+  "mix_val_00": 4.9,
+  "mix_val_01": 1.0,
+  "spr_val_cpos_skel": 11.2,
+  "spr_val_skel_cpos": 6.4,
+  "tex_val_00": -1.0,
+  "tex_val_01": -0.4,
+  "tex_val_02": -0.6,
+  "tex_val_03": 0.8
+ }
+}

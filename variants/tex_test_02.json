@@ -1,0 +1,9 @@
+{
+ "name": "tex_test_02",
+ "split": "test",
+ "kind": "tex",
+ "iwad": "",
+ "pwads": [
+  "variants/tex_test_02.wad"
+ ]
+}

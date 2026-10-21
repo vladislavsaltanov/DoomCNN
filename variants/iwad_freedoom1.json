@@ -1,0 +1,9 @@
+{
+ "name": "iwad_freedoom1",
+ "split": "val",
+ "kind": "iwad",
+ "iwad": "E:\\OtherProjects\\DoomCNN\\DoomCNN\\.venv\\Lib\\site-packages\\vizdoom\\freedoom1.wad",
+ "pwads": [],
+ "disabled": true,
+ "reason": "looks like the base graphics (mean diff 0.0)"
+}

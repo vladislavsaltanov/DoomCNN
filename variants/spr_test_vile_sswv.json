@@ -1,0 +1,9 @@
+{
+ "name": "spr_test_vile_sswv",
+ "split": "test",
+ "kind": "spr",
+ "iwad": "",
+ "pwads": [
+  "variants/spr_test_vile_sswv.wad"
+ ]
+}

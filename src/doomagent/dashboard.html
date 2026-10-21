@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DoomCNN — панель</title>
+<style>
+  :root {
+    --bg: #0e1013; --panel: #161a1f; --line: #262c34; --text: #e6e9ee; --muted: #8b95a3;
+    --accent: #ffb547; --good: #4fd18b; --bad: #ff6b6b; --blue: #5aa9ff;
+    --c1: #5aa9ff; --c2: #ffb547; --c3: #4fd18b; --c4: #e879f9; --c5: #ff6b6b; --c6: #2dd4bf;
+    --c7: #a3a3ff; --c8: #f472b6;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); overflow: hidden;
+         font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+         display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+  /* ---- header: title, slices, load */
+  header { display: flex; align-items: center; gap: 14px; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 17px; white-space: nowrap; } header h1 span { color: var(--accent); }
+  .stepper { display: flex; gap: 4px; flex: 1; min-width: 0; }
+  .step { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px;
+          font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .step b { color: var(--text); margin-right: 4px; }
+  .step.done { border-color: rgba(79,209,139,.35); } .step.done b::after { content: " ✓"; color: var(--good); }
+  .step.current { border-color: var(--accent); background: rgba(255,181,71,.10); color: var(--text); }
+  .pill { padding: 3px 10px; border-radius: 999px; background: #222831; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .pill.on { background: rgba(79,209,139,.15); color: var(--good); } .pill.warn { background: rgba(255,181,71,.15); color: var(--accent); }
+  /* ---- status strip: goal, now, time */
+  .status { display: grid; grid-template-columns: 1.1fr 1.5fr 1fr; gap: 12px; padding: 10px 16px 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; min-width: 0; }
+  .card h2 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .9px; color: var(--muted); font-weight: 600; }
+  .goal { font-size: 13px; } .goal .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .now { font-size: 13px; }
+  .progress { height: 8px; background: #0f1216; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #ffd28a); width: 0; transition: width .6s; }
+  .times { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+  .times div small { display: block; color: var(--muted); font-size: 11px; }
+  .times div b { font-size: 16px; font-variant-numeric: tabular-nums; }
+  /* ---- main grid */
+  main { display: grid; gap: 12px; padding: 12px 16px 14px; min-height: 0;
+         grid-template-columns: minmax(0, 1.28fr) minmax(0, 1.15fr) minmax(0, .9fr); }
+  .col { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+  .col > .card { min-height: 0; }
+  .grow { flex: 1; display: flex; flex-direction: column; }
+  .scroll { overflow: auto; }
+  .screen { width: 100%; aspect-ratio: 4/3; max-height: 44vh; background: #000; border-radius: 6px; display: block; object-fit: contain; }
+  .net { width: 100%; max-height: 11vh; object-fit: contain; background: #000; border-radius: 6px; display: block; margin-top: 8px; }
+  .caption { color: var(--muted); font-size: 11px; margin-top: 3px; }
+  .controls { display: grid; grid-template-columns: 1.3fr 1.3fr .8fr .7fr; gap: 6px; margin-bottom: 8px; }
+  .controls label { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  select, input, button { background: #0f1216; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; font: inherit; min-width: 0; }
+  button { cursor: pointer; background: #222a33; } button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 600; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .bars .b { display: grid; grid-template-columns: 78px 1fr 40px; align-items: center; gap: 8px; margin: 3px 0; font-size: 12px; }
+  .bars .track { height: 9px; background: #0f1216; border-radius: 5px; overflow: hidden; }
+  .bars .fill { height: 100%; background: var(--blue); border-radius: 5px; transition: width .12s; }
+  .bars .b.act .fill { background: var(--accent); } .bars .b.act { color: var(--accent); }
+  .bars .b.teach span:first-child::after { content: " ●"; color: var(--good); }
+  .kv { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 8px; }
+  .kv div { background: #0f1216; border-radius: 6px; padding: 4px 7px; }
+  .kv b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; } .kv small { color: var(--muted); font-size: 10px; }
+  .gauge { position: relative; height: 14px; background: #0f1216; border-radius: 7px; margin-top: 4px; }
+  .gauge i { position: absolute; top: 2px; width: 4px; height: 10px; background: var(--accent); border-radius: 2px; transition: left .12s; }
+  .gauge::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #444; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .tile { background: #0f1216; border-radius: 7px; padding: 5px 8px; min-width: 0; }
+  .tile small { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+  .tile b { display: block; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tile canvas { width: 100%; height: 22px; display: block; }
+  canvas.chart { width: 100%; flex: 1 1 0; height: 0; min-height: 110px; display: block; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+  .chip { padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); cursor: pointer; font-size: 11px; user-select: none; }
+  .chip.off { opacity: .35; } .chip .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
+  .tabs { display: flex; gap: 4px; margin-left: auto; }
+  .tabs button { padding: 2px 8px; font-size: 11px; white-space: nowrap; } .tabs button.sel { background: var(--accent); color: #1a1205; border-color: var(--accent); }
+  .hrow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .hrow h2 { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 3px 5px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: 11px; }
+  pre { background: #0f1216; border-radius: 6px; padding: 6px 8px; margin: 6px 0 0; font-size: 11px; overflow: auto; color: #c9d1d9; min-height: 70px; max-height: 110px; flex: none; }
+  .muted { color: var(--muted); } a { color: var(--blue); }
+  .runinfo { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  /* narrow screens: one column, page scrolls */
+  @media (max-width: 1250px), (max-height: 700px) {
+    body { overflow: auto; display: block; } .status { grid-template-columns: 1fr; }
+    main { grid-template-columns: 1fr; } .stepper { display: none; } canvas.chart { height: 240px; flex: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Doom<span>CNN</span></h1>
+  <div class="stepper" id="stepper"></div>
+  <span class="pill" id="jobPill">…</span>
+  <span class="muted" style="font-size:12px" id="clock"></span>
+</header>
+
+<div class="status">
+  <div class="card"><h2>Цель</h2><div class="goal" id="goal">…</div></div>
+  <div class="card"><h2>Что происходит сейчас</h2><div class="now" id="nowText">…</div><div class="progress"><i id="nowBar"></i></div></div>
+  <div class="card"><h2>Время</h2>
+    <div class="times">
+      <div><small>этап идёт</small><b id="tElapsed">–</b></div>
+      <div><small>до конца этапа</small><b id="tLeft">–</b></div>
+      <div><small>один раунд ≈</small><b id="tRound">–</b></div>
+      <div><small>S6 закончится не позже</small><b id="tS6">–</b></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="col">
+    <div class="card">
+      <img class="screen" id="screen" alt="экран игры">
+      <div class="caption">Экран для зрителя. Красным — где сеть «видит» врага, жёлтая линия — её оценка направления на врага, зелёные рамки — враги по данным игры (сеть их не получает).</div>
+      <img class="net" id="net" alt="вход сети">
+      <div class="caption">Вход сети: 4 последних кадра 160×120 в оттенках серого (всё, что получает сеть) и справа её карта врагов.</div>
+    </div>
+    <div class="card grow scroll">
+      <h2>Сыгранные в панели эпизоды</h2>
+      <table id="episodes"><thead><tr><th>модель</th><th>графика</th><th>seed</th><th>награда</th><th>совпадение с учителем</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h2>Живая игра: решения сети</h2>
+      <div class="controls">
+        <label>Модель<select id="model"></select></label>
+        <label>Графика<select id="variant"></select></label>
+        <label>Seed<input id="seed" type="number" value="5000"></label>
+        <label>Скорость<select id="speed"><option>0.5</option><option selected>1</option><option>2</option><option>4</option></select></label>
+      </div>
+      <div class="row" style="margin-bottom:8px">
+        <button class="primary" id="play">▶ Играть</button><button id="stop">■ Стоп</button>
+        <label class="muted" style="font-size:11px"><input type="checkbox" id="boxes" checked> рамки врагов</label><label class="muted" style="font-size:11px"><input type="checkbox" id="hud" checked> HUD</label><label class="muted" style="font-size:11px" title="какие пиксели сильнее всего влияют на решение сети"><input type="checkbox" id="saliency"> что важно сети</label>
+        <span class="muted" id="liveStatus" style="font-size:11px"></span>
+      </div>
+      <div class="muted" style="font-size:11px">Вероятности действий: оранжевое — выбор сети, ● — что сделал бы учитель</div>
+      <div class="bars" id="bars"></div>
+      <div class="muted" style="font-size:11px;margin-top:6px">Враг в кадре: <b id="vis">–</b> · направление на врага (центр — прицел):</div>
+      <div class="gauge"><i id="offMark" style="left:50%"></i></div>
+      <div class="kv">
+        <div><small>награда</small><b id="kReward">–</b></div><div><small>убито</small><b id="kKills">–</b></div>
+        <div><small>шаг</small><b id="kStep">–</b></div><div><small>здоровье</small><b id="kHealth">–</b></div>
+        <div><small>патроны</small><b id="kAmmo">–</b></div><div><small>как учитель</small><b id="kAgree">–</b></div>
+      </div>
+    </div>
+    <div class="card grow">
+      <div class="hrow"><h2 id="chartTitle">Награда на проверке по эпохам</h2>
+        <div class="tabs" id="chartTabs"><button class="sel" data-t="val">val_score</button><button data-t="ppo">PPO</button><button data-t="loss">потери</button><button data-t="trainlive">обучение live</button><button data-t="game">игра live</button><button data-t="brain">нейросеть</button></div></div>
+      <div class="chips" id="runChips"></div>
+      <canvas class="chart" id="chart"></canvas>
+      <img id="brainImg" alt="нейросеть изнутри" style="display:none;width:100%;flex:1 1 0;min-height:0;object-fit:contain;background:#0e1013;border-radius:6px">
+      <canvas class="chart" id="offLive" style="display:none;min-height:70px;flex:.5 1 0"></canvas>
+      <div class="runinfo" id="runInfo"></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h2>Нагрузка компьютера</h2>
+      <div class="tiles" id="tiles"></div>
+    </div>
+    <div class="card">
+      <div class="hrow"><h2>По вариантам графики</h2><select id="runPick" style="margin-left:auto"></select></div>
+      <div class="bars" id="perVariant"></div>
+    </div>
+    <div class="card grow scroll">
+      <h2>Раунды DAgger</h2>
+      <div id="rounds"></div>
+      <pre id="s6log"></pre>
+      <h2 style="margin-top:10px">Данные</h2>
+      <table id="datasets"><thead><tr><th>датасет</th><th>эпизодов</th><th>шагов</th><th>график</th></tr></thead><tbody></tbody></table>
+      <div class="caption" style="margin-top:6px"><a href="/file/artifacts/s4_variants.png" target="_blank">сетка всех вариантов графики</a></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const ACTIONS = ['turn_left', 'turn_right', 'shoot', 'fine_left', 'fine_right'];
+const RU = {turn_left: 'влево', turn_right: 'вправо', shoot: 'выстрел', fine_left: 'чуть влево', fine_right: 'чуть вправо'};
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const COLORS = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8'].map(css);
+const $ = id => document.getElementById(id);
+const get = u => fetch(u).then(r => r.json());
+const fmt = (x, d = 1) => x == null || isNaN(x) ? '–' : Number(x).toFixed(d);
+const dur = s => { if (s == null || isNaN(s)) return '–'; s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+  return h ? `${h} ч ${m} мин` : m ? `${m} мин` : `${s} с`; };
+const at = t => new Date(t * 1000).toLocaleTimeString('ru', {hour: '2-digit', minute: '2-digit'});
+
+// ---------------- canvas charts
+function setup(c) {
+  const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  c.width = r.width * dpr; c.height = r.height * dpr;
+  const g = c.getContext('2d'); g.scale(dpr, dpr); return [g, r.width, r.height];
+}
+function lineChart(c, series, o = {}) {
+  const [g, W, H] = setup(c), L = 36, R = 64, T = 8, B = 20;
+  const pts = series.flatMap(s => s.points).filter(p => p[1] != null);
+  if (!pts.length) { g.fillStyle = '#8b95a3'; g.font = '12px system-ui'; g.fillText('нет данных', W / 2 - 30, H / 2); return; }
+  let x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
+  let y0 = o.ymin ?? Math.min(...pts.map(p => p[1])), y1 = o.ymax ?? Math.max(...pts.map(p => p[1]));
+  if (o.band) { y0 = Math.min(y0, o.band[0]); y1 = Math.max(y1, o.band[1]); }
+  if (x1 === x0) x1 = x0 + 1; if (y1 - y0 < (o.minSpan || 0)) { const c = (y0 + y1) / 2; y0 = c - o.minSpan / 2; y1 = c + o.minSpan / 2; } if (y1 === y0) y1 = y0 + 1;
+  const pad = (y1 - y0) * .06; y0 -= pad; y1 += pad;
+  const X = x => L + (x - x0) / (x1 - x0) * (W - L - R), Y = y => T + (1 - (y - y0) / (y1 - y0)) * (H - T - B);
+  g.font = '11px system-ui'; g.strokeStyle = '#262c34'; g.fillStyle = '#8b95a3'; g.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = y0 + (y1 - y0) * i / 4; g.beginPath(); g.moveTo(L, Y(y)); g.lineTo(W - R, Y(y)); g.stroke();
+    g.fillText(y.toFixed(Math.abs(y1 - y0) < 3 ? 2 : 0), 2, Y(y) + 4);
+  }
+  const xs = [...new Set(pts.map(p => p[0]))].sort((a, b) => a - b), xstep = Math.max(1, Math.ceil(xs.length / 10));
+  xs.forEach((x, i) => { if (i % xstep === 0) g.fillText(o.xfmt ? o.xfmt(x) : x, X(x) - 4, H - 5); });
+  if (o.band) {
+    g.fillStyle = 'rgba(79,209,139,.13)'; g.fillRect(L, Y(o.band[1]), W - L - R, Y(o.band[0]) - Y(o.band[1]));
+    g.fillStyle = '#4fd18b'; g.fillText(o.bandLabel || 'учитель', W - R + 4, Y((o.band[0] + o.band[1]) / 2) + 4);
+  }
+  series.forEach(s => {
+    if (!s.points.length) return;
+    g.strokeStyle = s.color; g.lineWidth = s.bold ? 2.6 : 1.6; g.setLineDash(s.dash || []);
+    g.beginPath(); let pen = false;  // null values break the line
+    s.points.forEach(p => { if (p[1] == null) { pen = false; return; } pen ? g.lineTo(X(p[0]), Y(p[1])) : g.moveTo(X(p[0]), Y(p[1])); pen = true; });
+    g.stroke(); g.setLineDash([]);
+    const real = s.points.filter(p => p[1] != null);
+    g.fillStyle = s.color; if (!o.nodots) real.forEach(p => { g.beginPath(); g.arc(X(p[0]), Y(p[1]), 2.5, 0, 7); g.fill(); });
+    const last = real[real.length - 1];
+    if (s.label && last) g.fillText(s.label, X(last[0]) + 5, Y(last[1]) + 4);
+  });
+}
+function spark(c, vals, max, color) {
+  const [g, W, H] = setup(c); const v = vals.filter(x => x != null);
+  if (v.length < 2) return; const m = max ?? Math.max(...v, 1);
+  g.strokeStyle = color; g.lineWidth = 1.4; g.beginPath();
+  v.forEach((x, i) => { const px = i / (v.length - 1) * W, py = H - 2 - x / m * (H - 4); i ? g.lineTo(px, py) : g.moveTo(px, py); });
+  g.stroke(); g.lineTo(W, H); g.lineTo(0, H); g.closePath(); g.globalAlpha = .12; g.fillStyle = color; g.fill(); g.globalAlpha = 1;
+}
+
+// ---------------- live game
+let optionsLoaded = false, reqSynced = false;
+async function loadOptions() {
+  const o = await get('/api/options');
+  const mname = m => m === 'current' ? 'текущий чекпойнт (обучается сейчас)' : m === 'teacher' ? 'учитель' : m.replace('runs/', '').replace('/best_model.zip', ' (PPO)');
+  $('model').innerHTML = o.models.map(m => `<option value="${m}">${mname(m)}</option>`).join('');
+  const groups = {}; o.variants.forEach(v => (groups[v.split] ??= []).push(v));
+  const names = {base: 'базовая', train: 'train (была в обучении)', val: 'val (проверка)', test: 'test (не видела)'};
+  $('variant').innerHTML = Object.entries(groups).map(([k, vs]) => `<optgroup label="${names[k] || k}">` + vs.map(v => `<option value="${v.name}">${v.name}</option>`).join('') + '</optgroup>').join('');
+  optionsLoaded = true;
+}
+const control = p => fetch('/api/control?' + new URLSearchParams(p));
+$('play').onclick = () => showChart('game') || control({model: $('model').value, variant: $('variant').value, seed: $('seed').value, speed: $('speed').value, boxes: $('boxes').checked ? 1 : 0, hud: $('hud').checked ? 1 : 0, saliency: $('saliency').checked ? 1 : 0, running: 1});
+$('stop').onclick = () => control({running: 0});
+['model', 'variant', 'speed', 'boxes', 'hud', 'saliency'].forEach(id => $(id).onchange = () => { const p = {}; p[id] = $(id).type === 'checkbox' ? ($(id).checked ? 1 : 0) : $(id).value; control(p); });
+$('screen').src = '/live/screen.mjpg'; $('net').src = '/live/net.mjpg';
+async function pollLive() {
+  try {
+    const d = await get('/api/live'), s = d.state;
+    if (optionsLoaded && !reqSynced) { $('model').value = d.req.model; $('variant').value = d.req.variant; $('seed').value = d.req.seed;
+      ['boxes', 'hud', 'saliency'].forEach(k => { if (k in d.req) $(k).checked = !!d.req[k]; }); reqSynced = true; }
+    liveRunning = d.req.running;
+    $('liveStatus').textContent = s.status + (s.status === 'играет' ? ` · seed ${s.seed}` : '')
+      + (s.current && s.model ? ` · ${s.model.replace('runs/', '')}, сохранён ${at(s.ckpt_time)}` : '');
+    const probs = s.probs || ACTIONS.map(a => a === s.action ? 1 : 0);
+    $('bars').innerHTML = ACTIONS.map((a, i) => `<div class="b ${a === s.action ? 'act' : ''} ${a === s.teacher ? 'teach' : ''}"><span>${RU[a]}</span><div class="track"><div class="fill" style="width:${(probs[i] * 100).toFixed(1)}%"></div></div><span>${fmt(probs[i], 2)}</span></div>`).join('');
+    $('vis').textContent = s.vis == null ? '–' : (s.vis * 100).toFixed(0) + '%';
+    $('offMark').style.left = s.off == null || s.vis < .5 ? '50%' : `calc(${((s.off + 1) / 2 * 100).toFixed(1)}% - 2px)`;
+    $('kReward').textContent = fmt(s.reward, 0); $('kKills').textContent = fmt(s.kills, 0); $('kStep').textContent = s.step ?? '–';
+    $('kHealth').textContent = fmt(s.health, 0); $('kAmmo').textContent = fmt(s.ammo, 0);
+    $('kAgree').textContent = s.agree == null ? '–' : (s.agree * 100).toFixed(0) + '%';
+    $('episodes').tBodies[0].innerHTML = d.history.slice(0, 12).map(e => `<tr><td>${e.model === 'teacher' ? 'учитель' : e.model.replace('runs/', '')}</td><td>${e.variant}</td><td>${e.seed}</td><td>${fmt(e.reward, 0)}</td><td>${(e.agree * 100).toFixed(0)}%</td></tr>`).join('') || '<tr><td colspan="5" class="muted">нажмите «Играть»</td></tr>';
+    if (d.req.running && s.seed != null && document.activeElement !== $('seed')) $('seed').value = s.seed;
+    lastSeries = d.series || []; pollLive.n = (pollLive.n || 0) + 1; if (pollLive.n % 3 === 0) drawGameLive();
+  } catch (e) {}
+  setTimeout(pollLive, 150);
+}
+
+// ---------------- training
+let runs = [], hidden = new Set(), chartMode = 'val';
+function showChart(t) {
+  chartMode = t;
+  document.querySelectorAll('#chartTabs button').forEach(x => x.classList.toggle('sel', x.dataset.t === t));
+  $('runChips').style.display = t === 'val' ? 'flex' : 'none';
+  const brain = t === 'brain';
+  $('brainImg').style.display = brain ? 'block' : 'none';
+  $('chart').style.display = brain ? 'none' : 'block';
+  // the network view is rendered only while someone watches it
+  if (brain && !$('brainImg').src.includes('brain.mjpg')) $('brainImg').src = '/live/brain.mjpg';
+  if (!brain && $('brainImg').src) $('brainImg').removeAttribute('src');
+  if (brain) { $('chartTitle').textContent = 'Нейросеть изнутри: один шаг игры'; $('runInfo').textContent = 'Слева вход (4 кадра) и saliency — какие пиксели сильнее всего влияют на решение. Дальше карты признаков трёх свёрточных слоёв (ярче — сильнее активация), 512 нейронов полносвязного слоя и выход. Линии — самые сильные связи fc → выбранное действие (вклад = активация × вес). Работает, пока идёт живая игра; у учителя нейросети нет. ';
+    $('runInfo').insertAdjacentHTML('beforeend', '<a href="/brain" target="_blank">Открыть крупно на весь экран →</a>'); }
+  $('offLive').style.display = t === 'game' || (t === 'trainlive' && !trainLive.points && ppoRuns.some(r => r.active)) ? 'block' : 'none';
+  drawRuns();
+}
+document.querySelectorAll('#chartTabs button').forEach(b => b.onclick = () => showChart(b.dataset.t));
+async function pollRuns() {
+  try { runs = await get('/api/runs'); } catch (e) { return setTimeout(pollRuns, 5000); }
+  // S3 ablations ran on base-only val, later runs on base + variants: hide the ablations by default
+  if (!pollRuns.init) { runs.forEach(r => { if (r.name.startsWith('bc0') && r.name !== 'bc0') hidden.add(r.name); }); pollRuns.init = true; }
+  $('runChips').innerHTML = runs.map((r, i) => `<span class="chip ${hidden.has(r.name) ? 'off' : ''}" data-n="${r.name}"><span class="dot" style="background:${COLORS[i % COLORS.length]}"></span>${r.name}${r.active ? ' ◐' : ''}</span>`).join('');
+  document.querySelectorAll('#runChips .chip').forEach(c => c.onclick = () => { const n = c.dataset.n; hidden.has(n) ? hidden.delete(n) : hidden.add(n); c.classList.toggle('off'); drawRuns(); });
+  const sel = $('runPick'), cur = sel.value, active = runs.filter(r => r.active);
+  sel.innerHTML = runs.map(r => `<option>${r.name}</option>`).join('');
+  sel.value = cur && runs.some(r => r.name === cur) ? cur : (active[0] || runs[runs.length - 1] || {}).name;
+  drawRuns();
+  setTimeout(pollRuns, 10000);
+}
+function drawRuns() {
+  const r = runs.find(x => x.name === $('runPick').value);
+  if (chartMode === 'trainlive') drawTrainLive();
+  if (chartMode === 'game') drawGameLive();
+  if (chartMode === 'brain') { }
+  else if (chartMode === 'ppo') { drawPpo(); }
+  else if (chartMode === 'trainlive' || chartMode === 'game') {
+    // drawn by drawTrainLive / drawGameLive
+  } else if (chartMode === 'val') {
+    $('chartTitle').textContent = 'Награда на проверке (val_score) по эпохам';
+    lineChart($('chart'), runs.map((x, i) => ({color: COLORS[i % COLORS.length], label: x.name, bold: x.active,
+      points: hidden.has(x.name) ? [] : x.log.map(e => [e.epoch, e.val_score])})), {band: [21.9, 23.23]});
+    $('runInfo').textContent = 'val_score — средняя награда по базе и 8 проверочным вариантам графики (у bc0-абляций S3 — только база). Максимум 25.';
+  } else {
+    $('chartTitle').textContent = `Потери обучения: ${r ? r.name : ''}`;
+    lineChart($('chart'), r ? ['loss', 'ce', 'bce', 'mse', 'seg'].map((p, i) => ({color: COLORS[i], label: p, points: r.log.filter(e => e[p] != null).map(e => [e.epoch, e[p]])})) : [], {ymin: 0});
+    $('runInfo').textContent = 'ce — по действиям; bce — «есть ли враг в кадре»; mse — направление на врага; seg — маска врага; loss — сумма. Прогон выбирается справа.';
+  }
+  if (!r || !r.log.length) { $('perVariant').innerHTML = '<span class="muted">нет данных</span>'; return; }
+  const best = r.log.reduce((a, b) => b.val_score > a.val_score ? b : a), pv = best.per_variant || {};
+  const color = k => k === 'base' ? 'var(--good)' : k.startsWith('tex') ? 'var(--blue)' : k.startsWith('spr') ? 'var(--c4)' : 'var(--accent)';
+  $('perVariant').innerHTML = `<div class="muted" style="font-size:11px;margin-bottom:3px">лучший чекпойнт: эпоха ${best.epoch}, val_score ${fmt(best.val_score, 2)} · учитель ≈23 на базе и tex, 17–22 на spr/mix</div>` +
+    Object.entries(pv).map(([k, v]) => `<div class="b"><span style="font-size:11px">${k.replace('_val_', ' ')}</span><div class="track"><div class="fill" style="width:${Math.max(0, v / 25 * 100)}%;background:${color(k)}"></div></div><span>${fmt(v)}</span></div>`).join('');
+}
+$('runPick').onchange = drawRuns;
+
+// ---------------- activity, project, system
+async function pollActivity() {
+  try {
+    const a = await get('/api/activity');
+    $('goal').innerHTML = `${a.goal}<div class="sub"><b>${a.phase === 'ppo' || (a.text || '').startsWith('S7') ? 'S7' : 'S6'}:</b> ${a.slice_goal}</div>`;
+    $('nowText').textContent = a.text;
+    $('nowBar').style.width = ((a.progress ?? (a.phase === 'done' ? 1 : 0)) * 100).toFixed(1) + '%';
+    $('tElapsed').textContent = dur(a.phase_elapsed);
+    $('tLeft').textContent = a.phase_left != null ? `${dur(a.phase_left)} (к ${at(a.now + a.phase_left)})` : a.phase === 'train' ? 'после 1-й проверки' : '–';
+    $('tRound').textContent = dur(a.round_s);
+    $('tS6').textContent = a.s6_left_max != null ? `${at(a.now + a.s6_left_max)} (≤ ${dur(a.s6_left_max)})` : '–';
+  } catch (e) {}
+  setTimeout(pollActivity, 5000);
+}
+async function pollProject() {
+  try {
+    const p = await get('/api/project');
+    $('stepper').innerHTML = p.slices.map(s => `<div class="step ${s.done ? 'done' : ''} ${s.current ? 'current' : ''}" title="${s.q}"><b>${s.id}</b>${s.q}</div>`).join('');
+    $('datasets').tBodies[0].innerHTML = p.datasets.map(d => `<tr><td>${d.name}</td><td>${d.episodes}</td><td>${(d.steps || 0).toLocaleString('ru')}</td><td>${d.variants}</td></tr>`).join('') +
+      p.recording.map(d => `<tr><td>${d.name} <span class="pill on">пишется</span></td><td>${d.episodes}</td><td>–</td><td>–</td></tr>`).join('');
+    const tbl = p.rounds.filter(l => l.startsWith('|') && !l.includes('---'));
+    $('rounds').innerHTML = tbl.length ? '<table>' + tbl.map((l, i) => '<tr>' + l.split('|').slice(1, -1).map(c => i ? `<td>${c.trim()}</td>` : `<th>${c.trim()}</th>`).join('') + '</tr>').join('') + '</table>' + p.rounds.filter(l => l.startsWith('- ')).map(l => `<div class="muted" style="font-size:11px">${l.slice(2)}</div>`).join('') : '<span class="muted">раундов пока нет</span>';
+    $('s6log').textContent = p.s6_log.join('\n') || 'журнал S6 пуст';
+  } catch (e) {}
+  setTimeout(pollProject, 8000);
+}
+const TILE_DEFS = [
+  ['gpu_util', 'GPU', d => fmt(d.gpu_util, 0) + '%', 100, '--c1'],
+  ['vram_used', 'видеопамять', d => fmt(d.vram_used) + '/' + fmt(d.vram_total, 0) + ' ГБ', 8, '--c4'],
+  ['gpu_temp', 'темп. GPU', d => fmt(d.gpu_temp, 0) + ' °C', 90, '--c5'],
+  ['gpu_power', 'мощность', d => fmt(d.gpu_power, 0) + ' Вт', 220, '--c2'],
+  ['cpu', 'CPU', d => fmt(d.cpu, 0) + '%', 100, '--c3'],
+  ['ram_used', 'ОЗУ', d => fmt(d.ram_used) + '/' + fmt(d.ram_total, 0) + ' ГБ', null, '--c6'],
+  ['commit_used', 'выделено', d => fmt(d.commit_used) + '/' + fmt(d.commit_total, 0) + ' ГБ', null, '--c7'],
+  ['disk_E', 'диск C / E', d => fmt(d.disk_C, 0) + ' / ' + fmt(d.disk_E, 0) + ' ГБ', null, '--c8'],
+];
+$('tiles').innerHTML = TILE_DEFS.map(t => `<div class="tile"><small>${t[1]}</small><b id="t_${t[0]}">–</b><canvas id="s_${t[0]}"></canvas></div>`).join('');
+async function pollSystem() {
+  try {
+    const s = await get('/api/system'), d = s.now;
+    TILE_DEFS.forEach(([k, , f, max, c]) => {
+      $('t_' + k).textContent = f(d);
+      const m = {ram_used: d.ram_total, commit_used: d.commit_total, vram_used: d.vram_total}[k] ?? max;
+      spark($('s_' + k), s.hist.map(h => h[k]), m, css(c));
+    });
+    const pct = d.commit_used / d.commit_total;
+    $('jobPill').textContent = `GPU ${fmt(d.gpu_util, 0)}% · CPU ${fmt(d.cpu, 0)}% · память ${fmt(pct * 100, 0)}% предела`;
+    $('jobPill').className = 'pill ' + (pct > .85 ? 'warn' : 'on');
+  } catch (e) {}
+  setTimeout(pollSystem, 2000);
+}
+
+// ---------------- realtime views in the chart card
+let lastSeries = [], trainLive = {}, liveRunning = false;
+// exponential smoothing that skips gaps (null), and a centred moving average
+const ema = (pts, a) => { let m = null; return pts.map(([x, y]) => { if (y == null) { m = null; return [x, null]; } m = m == null ? y : m + a * (y - m); return [x, m]; }); };
+const movavg = (pts, w) => pts.map(([x, y], i) => { if (y == null) return [x, null]; const win = pts.slice(Math.max(0, i - w + 1), i + 1).map(p => p[1]).filter(v => v != null); return [x, win.reduce((a, v) => a + v, 0) / win.length]; });
+function drawGameLive() {
+  if (chartMode !== 'game') return;
+  $('chartTitle').textContent = 'Живая игра сейчас: сеть против учителя и правды игры';
+  $('runInfo').innerHTML = 'Сверху: <span style="color:var(--c3)">совпадение с учителем</span> (скользящее за 20 шагов), '
+    + '<span style="color:var(--c1)">вероятность действия учителя у сети</span>, <span style="color:var(--c2)">уверенность «враг в кадре»</span>, '
+    + '<span style="color:var(--c5)">правда по данным игры</span>. Снизу: направление на врага (−1 левый край, 0 прицел, +1 правый). '
+    + (liveRunning ? 'Линии сети сглажены (скользящее среднее), правда — без сглаживания.' : '<b style="color:var(--accent)">Игра остановлена</b> — график показывает последний эпизод. Нажмите «Играть»; модель «текущий чекпойнт» берёт последнюю сохранённую модель обучения.');
+  const s = lastSeries, roll = [];
+  s.forEach((e, i) => { const w = s.slice(Math.max(0, i - 19), i + 1); roll.push([e.step, w.reduce((a, x) => a + x.agree, 0) / w.length]); });
+  const sm = k => movavg(s.map(e => [e.step, e[k]]), 6);
+  lineChart($('chart'), [
+    {color: COLORS[2], label: 'совпадение', points: roll, bold: true},
+    {color: COLORS[0], label: 'P(учитель)', points: sm('p_teacher')},
+    {color: COLORS[1], label: 'враг: сеть', points: sm('vis_p')},
+    {color: COLORS[4], label: 'враг: правда', points: s.map(e => [e.step, e.vis_t]), dash: [4, 3]},
+  ], {ymin: 0, ymax: 1, nodots: true});
+  lineChart($('offLive'), [
+    {color: COLORS[1], label: 'сеть', points: movavg(s.map(e => [e.step, e.off_p]), 3)},
+    {color: COLORS[4], label: 'правда', points: s.map(e => [e.step, e.off_t]), dash: [4, 3]},
+  ], {ymin: -1, ymax: 1, nodots: true});
+}
+function drawTrainLive() {
+  if (chartMode !== 'trainlive') return;
+  const d = trainLive;
+  $('chartTitle').textContent = 'Обучение сейчас: потери по батчам';
+  if (!d.points) { drawPpoTrain(); return; }
+  const nb = d.n_batches;
+  lineChart($('chart'), ['loss', 'ce', 'bce', 'mse', 'seg'].map((p, i) => ({color: COLORS[i], label: p, bold: p === 'loss',
+    points: ema(d.points.map(e => [Math.round(e.batch / nb * 100) / 100, e[p]]), 0.12)})), {ymin: 0, nodots: true, xfmt: x => 'эп ' + (Math.floor(x) + 1)});
+  const ago = Math.round(Date.now() / 1000 - d.t);
+  $('runInfo').textContent = `${d.name}: эпоха ${d.epoch}, батч ${d.batch} из ${nb} (${Math.round(d.batch / nb * 100)}%), обновлено ${ago} с назад. ` +
+    (ago > 20 ? 'Сейчас идёт проверка игрой, поэтому потери не обновляются. ' : '') + 'Средние потери за каждые 25 батчей, сглажены.';
+}
+async function pollTrainLive() {
+  try { trainLive = await get('/api/trainlive'); drawTrainLive(); } catch (e) {}
+  setTimeout(pollTrainLive, 3000);
+}
+
+// ---------------- PPO (S7)
+let ppoRuns = [];
+const PPO_RU = {ppo_ft: 'r4 + PPO', ppo_ft_flip: 'r4 + PPO + штраф', ppo_scratch_rl: 'PPO с нуля (RL)', ppo_scratch_total: 'PPO с нуля (всё)'};
+function drawPpo() {
+  if (chartMode !== 'ppo') return;
+  $('chartTitle').textContent = 'S7: награда на проверке (val_score) по шагам PPO';
+  const ft = ppoRuns.find(r => r.name === 'ppo_ft' && r.val.length);
+  const level = ft ? ft.val[0].val_score : null;
+  lineChart($('chart'), ppoRuns.map((r, i) => ({color: COLORS[i], label: PPO_RU[r.name] || r.name, bold: r.active,
+    points: r.val.map(v => [Math.round(v.timesteps / 1000), v.val_score])})),
+    {band: level != null ? [level - 0.05, level + 0.05] : null, bandLabel: 'r4', minSpan: 6, xfmt: x => x + 'k'});
+  $('runInfo').textContent = (level != null ? `Зелёная линия — уровень r4 до PPO (${level.toFixed(2)}). ` : '')
+    + 'Gate C: PPO берём, только если его val_score выше этой линии. Проверка каждые 20 тыс. шагов на базе и 8 val-вариантах; только настоящая награда игры, без штрафа.';
+}
+function drawPpoTrain() {
+  const r = ppoRuns.find(x => x.active) || ppoRuns[ppoRuns.length - 1];
+  if (!r || !r.train.length) { lineChart($('chart'), []); $('runInfo').textContent = 'Сейчас ничего не обучается.'; return; }
+  $('chartTitle').textContent = `Обучение сейчас: ${PPO_RU[r.name] || r.name} (PPO)`;
+  const x = e => Math.round(e.total_timesteps / 1000);
+  lineChart($('chart'), [{color: COLORS[2], label: 'награда в обучении', bold: true, points: ema(r.train.map(e => [x(e), e.ep_rew_mean]), 0.3)},
+                         {color: COLORS[1], label: 'длина эпизода / 10', points: ema(r.train.map(e => [x(e), e.ep_len_mean / 10]), 0.3)}],
+            {nodots: true, xfmt: v => v + 'k'});
+  lineChart($('offLive'), [{color: COLORS[0], label: 'value loss', points: ema(r.train.map(e => [x(e), e.value_loss]), 0.3)},
+                           {color: COLORS[3], label: '−entropy', points: ema(r.train.map(e => [x(e), -e.entropy_loss]), 0.3)},
+                           {color: COLORS[5], label: 'explained var', points: ema(r.train.map(e => [x(e), e.explained_variance]), 0.3)}],
+            {nodots: true, xfmt: v => v + 'k'});
+  const last = r.train[r.train.length - 1];
+  $('runInfo').textContent = `Сверху: средняя награда эпизода в обучении${r.name === 'ppo_ft_flip' ? ' (вместе со штрафом)' : ''} и длина эпизода. Снизу: потери критика, энтропия политики (насколько она ещё «пробует»), explained variance. Скорость ${Math.round(last.fps)} шагов/с.`;
+}
+async function pollPpo() {
+  try { ppoRuns = await get('/api/ppo'); if (!pollPpo.init && ppoRuns.some(r => r.active)) { pollPpo.init = true; showChart('ppo'); } drawPpo(); if (chartMode === 'trainlive' && !trainLive.points) { showChart('trainlive'); } } catch (e) {}
+  setTimeout(pollPpo, 10000);
+}
+setInterval(() => $('clock').textContent = new Date().toLocaleTimeString('ru'), 1000);
+loadOptions(); pollLive(); pollTrainLive(); pollPpo(); pollRuns(); pollActivity(); pollProject(); pollSystem();
+window.addEventListener('resize', () => { drawRuns(); drawGameLive(); drawTrainLive(); });
+</script>
+</body>
+</html>

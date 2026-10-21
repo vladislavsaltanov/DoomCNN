@@ -1,0 +1,17 @@
+{
+ "model": "runs/r1.pt",
+ "val_score": 14.003703703703703,
+ "base": 22.733333333333334,
+ "ood_mean": 12.912500000000001,
+ "per_variant": {
+  "base": 22.733333333333334,
+  "mix_val_00": 4.8,
+  "mix_val_01": 8.0,
+  "spr_val_cpos_skel": 24.1,
+  "spr_val_skel_cpos": 20.0,
+  "tex_val_00": 15.9,
+  "tex_val_01": 9.7,
+  "tex_val_02": 16.0,
+  "tex_val_03": 4.8
+ }
+}

@@ -1,0 +1,9 @@
+{
+ "name": "mix_train_03",
+ "split": "train",
+ "kind": "mix",
+ "iwad": "",
+ "pwads": [
+  "variants/mix_train_03.wad"
+ ]
+}

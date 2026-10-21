@@ -1,0 +1,9 @@
+{
+ "name": "spr_val_cpos_skel",
+ "split": "val",
+ "kind": "spr",
+ "iwad": "",
+ "pwads": [
+  "variants/spr_val_cpos_skel.wad"
+ ]
+}

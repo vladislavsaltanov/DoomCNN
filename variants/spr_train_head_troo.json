@@ -1,0 +1,9 @@
+{
+ "name": "spr_train_head_troo",
+ "split": "train",
+ "kind": "spr",
+ "iwad": "",
+ "pwads": [
+  "variants/spr_train_head_troo.wad"
+ ]
+}

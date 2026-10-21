@@ -1,0 +1,17 @@
+{
+ "model": "runs/bc0_noaux.pt",
+ "val_score": 7.848148148148149,
+ "base": 23.833333333333332,
+ "ood_mean": 5.85,
+ "per_variant": {
+  "base": 23.833333333333332,
+  "mix_val_00": 3.0,
+  "mix_val_01": 2.0,
+  "spr_val_cpos_skel": 21.1,
+  "spr_val_skel_cpos": 5.9,
+  "tex_val_00": 1.2,
+  "tex_val_01": 2.2,
+  "tex_val_02": 9.6,
+  "tex_val_03": 1.8
+ }
+}

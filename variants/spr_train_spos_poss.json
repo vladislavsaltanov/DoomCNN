@@ -1,0 +1,11 @@
+{
+ "name": "spr_train_spos_poss",
+ "split": "train",
+ "kind": "spr",
+ "iwad": "",
+ "pwads": [
+  "variants/spr_train_spos_poss.wad"
+ ],
+ "disabled": true,
+ "reason": "teacher reward 13.7 < 0.7 * base"
+}
