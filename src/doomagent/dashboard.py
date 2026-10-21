@@ -167,6 +167,96 @@ def project_state():
                 rounds=rounds, s6_log=s6)
 
 
+GOAL = ('Агент играет в defend_the_center только по пикселям на уровне учителя '
+        '(≈22.7 из 25 на базовой графике) и не разваливается на незнакомой графике.')
+SLICE_GOALS = {
+    'S6': 'Ученик сам играет на вариантах графики, учитель размечает его ошибки, ученик '
+          'дообучается. Раунды идут, пока лучший val_score растёт больше чем на 0.5 '
+          '(стоп: два раунда без роста или 5 раундов). Лучший раунд пойдёт в PPO (S7).',
+    'S7': 'Дообучение с подкреплением (PPO): берём, только если val_score выше имитации.',
+    'S8': 'Финальная проверка на test-seed и test-вариантах, отчёт по критериям спека.'}
+ROUND_EPOCHS, ROUND_EPISODES, LAST_ROUND = 8, 100, 6
+
+
+class Activity:
+    # what the S6 runner is doing now and how long it will take, from runs/s6.log and the
+    # training log of the running round
+    @staticmethod
+    def _events():
+        out = []
+        for line in _tail('runs/s6.log', 400):
+            m = re.match(r'(\d\d):(\d\d):(\d\d) (.*)', line)
+            if not m:
+                continue
+            h, mi, s, text = int(m[1]), int(m[2]), int(m[3]), m[4]
+            t = time.mktime(time.localtime()[:3] + (h, mi, s, 0, 0, -1))
+            if t > time.time() + 60:
+                t -= 86400  # yesterday
+            if text.startswith('restart'):
+                out = []
+            out.append((t, text))
+        return out
+
+    def __call__(self):
+        now = time.time()
+        ev = self._events()
+        d = dict(goal=GOAL, slice_goal=SLICE_GOALS.get('S6'), phase='idle', now=now)
+        if not ev:
+            d['text'] = 'Сейчас ничего не запущено.'
+            return d
+        t0 = ev[0][0]
+        d['s6_elapsed'] = now - t0
+        last_t, last = ev[-1]
+        if 'finished' in last or 'stop rule' in last:
+            d.update(phase='done', text='S6 завершён: ' + last)
+            return d
+        m = re.match(r'round (\d+): (record|train)', last)
+        if not m:
+            d['text'] = last
+            return d
+        k, phase = int(m[1]), m[2]
+        d.update(round=k, phase=phase, phase_elapsed=now - last_t,
+                 rounds_left_max=LAST_ROUND - k)
+        # finished rounds since the (re)start give the round time
+        starts = [(t, int(re.match(r'round (\d+)', x)[1])) for t, x in ev
+                  if re.match(r'round \d+: record', x)]
+        done_rounds = [(b[0] - a[0]) for a, b in zip(starts, starts[1:])]
+        round_s = sum(done_rounds) / len(done_rounds) if done_rounds else None
+        if phase == 'record':
+            n = len(glob.glob(f'data/dagger_r{k}/ep_*.npz'))
+            rate = (now - last_t) / n if n else None
+            left = rate * (ROUND_EPISODES - n) if rate else None
+            d.update(progress=n / ROUND_EPISODES, phase_left=left,
+                     text=f'Раунд {k}: ученик r{k - 1} играет 100 эпизодов на случайных '
+                          f'вариантах графики, учитель размечает каждый шаг. Записано {n} из 100.')
+        else:
+            path = f'runs/r{k}.pt.log.json'
+            log = (_read_json(path) or {}).get('log', [])
+            ep = log[-1]['epoch'] if log else 0
+            t_eval = os.path.getmtime(path) if log else None  # the log is rewritten after each eval
+            per_epoch = (t_eval - last_t) / ep if ep else None
+            left = per_epoch * (ROUND_EPOCHS - ep) if per_epoch else None
+            # between evaluations, estimate the running epoch from the measured pace
+            est = min(ROUND_EPOCHS, ep + (now - t_eval) / per_epoch) if ep else None
+            dirs = last.split(' on ', 1)[1].split() if ' on ' in last else []
+            steps = sum((_read_json(os.path.join(p, 'meta.json')) or {}).get('steps', 0)
+                        for p in dirs)
+            d.update(progress=(est or ep) / ROUND_EPOCHS, phase_left=left, epoch=ep,
+                     text=f'Раунд {k}: ученик r{k} дообучается от r{k - 1} на всех данных '
+                          + (f'({steps:,} примеров) '.replace(',', ' ') if steps else '')
+                          + f'{ROUND_EPOCHS} эпох; каждые 2 эпохи он играет 110 проверочных '
+                          f'эпизодов (база и 8 val-вариантов). Готово эпох: {ep} из {ROUND_EPOCHS}.')
+            if left is not None and round_s is None:
+                round_s = (now - last_t) + left + 120  # this round, plus recording the next one
+        if round_s:
+            this_left = d.get('phase_left') or 0
+            if phase == 'record':
+                this_left += round_s * 0.75  # training is most of a round
+            d['s6_left_max'] = this_left + round_s * (LAST_ROUND - k)
+            d['round_s'] = round_s
+        return d
+
+
 def variants_list():
     from doomagent.variants import load_variants
     vs = [dict(name='base', split='base', kind='base')]
@@ -325,7 +415,7 @@ class Live:
 
 # ---------------------------------------------------------------- http
 
-def make_handler(system, live):
+def make_handler(system, live, activity):
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
             pass
@@ -372,6 +462,8 @@ def make_handler(system, live):
                 return self._mjpeg('net')
             if u.path == '/api/system':
                 return self._send(dict(now=system.now, hist=list(system.hist)))
+            if u.path == '/api/activity':
+                return self._send(activity())
             if u.path == '/api/project':
                 return self._send(project_state())
             if u.path == '/api/runs':
@@ -417,7 +509,7 @@ def main():
     if os.name == 'nt':
         ctypes.windll.winmm.timeBeginPeriod(1)  # smooth 35 fps pacing
     system, live = System(), Live(Cfg())
-    srv = ThreadingHTTPServer(('127.0.0.1', a.port), make_handler(system, live))
+    srv = ThreadingHTTPServer(('127.0.0.1', a.port), make_handler(system, live, Activity()))
     srv.daemon_threads = True
     print(f'dashboard: http://127.0.0.1:{a.port}', flush=True)
     srv.serve_forever()
