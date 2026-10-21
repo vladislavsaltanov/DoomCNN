@@ -180,7 +180,11 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+docs/
 data/
 runs/
 variants/*.wad
 _vizdoom.ini
+
+# videos are large; kept locally, not in git
+*.mp4
