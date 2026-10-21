@@ -135,6 +135,12 @@ def runs_state():
     return out
 
 
+def current_checkpoint():
+    # the newest DAgger-round checkpoint: the one the running round saved last
+    files = glob.glob('runs/r*.pt')
+    return max(files, key=os.path.getmtime).replace(os.sep, '/') if files else 'teacher'
+
+
 def train_progress():
     # the newest batch-level progress file written by train_bc, if it is fresh
     files = sorted(glob.glob('runs/*.pt.progress.json'), key=os.path.getmtime)
@@ -290,7 +296,7 @@ class Live:
     # plays one model in its own ViZDoom instance on the CPU, so training keeps the GPU
     def __init__(self, cfg: Cfg):
         self.cfg, self.lock = cfg, threading.Lock()
-        self.req = dict(model='runs/r1.pt', variant='base', seed=5000, speed=1.0,
+        self.req = dict(model='current', variant='base', seed=5000, speed=1.0,
                         boxes=True, running=False)
         self.screen = self.net = None
         self.version = 0
@@ -355,7 +361,7 @@ class Live:
         from doomagent.teacher import Teacher, enemies_from_labels, is_enemy_name, nearest_aux
         from doomagent.variants import get_variant
         env = model = None
-        env_name = model_name = None
+        env_name = model_name = loaded = None
         teacher = Teacher(self.cfg)
         while True:
             with self.lock:
@@ -371,9 +377,13 @@ class Live:
                         env.close()
                     self.state['status'] = 'запуск ViZDoom...'
                     env, env_name = DoomEnv(self.cfg, get_variant(req['variant'])), req['variant']
-                if model_name != req['model']:
+                # 'current': the newest checkpoint of the DAgger rounds, reloaded whenever training
+                # saves a better one (checked at the start of every episode)
+                path = current_checkpoint() if req['model'] == 'current' else req['model']
+                key = (path, os.path.getmtime(path) if path != 'teacher' else 0)
+                if key != loaded:
                     self.state['status'] = 'загрузка модели...'
-                    model, model_name = self._chooser(req['model']), req['model']
+                    model, model_name, loaded = self._chooser(path), path, key
             except Exception as e:  # a bad model path or a broken variant
                 self.state = dict(status=f'ошибка: {e}')
                 with self.lock:
@@ -425,7 +435,8 @@ class Live:
                 kills += max(r, 0)
                 step += 1
                 self.state = dict(
-                    status='играет', model=model_name, variant=env_name, seed=seed, step=step,
+                    status='играет', model=model_name, current=req['model'] == 'current',
+                    ckpt_time=loaded[1], variant=env_name, seed=seed, step=step,
                     reward=total, kills=kills, health=priv.health, ammo=priv.ammo,
                     action=ACTION_NAMES[int(action)], teacher=ACTION_NAMES[int(label)],
                     agree=agree / max(steps_cmp, 1),
@@ -506,7 +517,7 @@ def make_handler(system, live, activity):
                 return self._send(dict(state=live.state, req=req, history=list(live.history),
                                        series=list(live.series)))
             if u.path == '/api/options':
-                models = ['teacher'] + sorted(glob.glob('runs/*.pt'), key=os.path.getmtime,
+                models = ['current', 'teacher'] + sorted(glob.glob('runs/*.pt'), key=os.path.getmtime,
                                               reverse=True)
                 return self._send(dict(models=[m.replace('\\', '/') for m in models],
                                        variants=variants_list()))

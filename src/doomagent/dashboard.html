@@ -74,7 +74,7 @@
   .chip { padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); cursor: pointer; font-size: 11px; user-select: none; }
   .chip.off { opacity: .35; } .chip .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
   .tabs { display: flex; gap: 4px; margin-left: auto; }
-  .tabs button { padding: 2px 8px; font-size: 11px; } .tabs button.sel { background: var(--accent); color: #1a1205; border-color: var(--accent); }
+  .tabs button { padding: 2px 8px; font-size: 11px; white-space: nowrap; } .tabs button.sel { background: var(--accent); color: #1a1205; border-color: var(--accent); }
   .hrow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .hrow h2 { margin: 0; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
   th, td { text-align: left; padding: 3px 5px; border-bottom: 1px solid var(--line); }
@@ -241,7 +241,8 @@ function spark(c, vals, max, color) {
 let optionsLoaded = false, reqSynced = false;
 async function loadOptions() {
   const o = await get('/api/options');
-  $('model').innerHTML = o.models.map(m => `<option value="${m}">${m === 'teacher' ? 'учитель' : m.replace('runs/', '')}</option>`).join('');
+  const mname = m => m === 'current' ? 'текущий чекпойнт (обучается сейчас)' : m === 'teacher' ? 'учитель' : m.replace('runs/', '');
+  $('model').innerHTML = o.models.map(m => `<option value="${m}">${mname(m)}</option>`).join('');
   const groups = {}; o.variants.forEach(v => (groups[v.split] ??= []).push(v));
   const names = {base: 'базовая', train: 'train (была в обучении)', val: 'val (проверка)', test: 'test (не видела)'};
   $('variant').innerHTML = Object.entries(groups).map(([k, vs]) => `<optgroup label="${names[k] || k}">` + vs.map(v => `<option value="${v.name}">${v.name}</option>`).join('') + '</optgroup>').join('');
@@ -256,7 +257,9 @@ async function pollLive() {
   try {
     const d = await get('/api/live'), s = d.state;
     if (optionsLoaded && !reqSynced) { $('model').value = d.req.model; $('variant').value = d.req.variant; $('seed').value = d.req.seed; reqSynced = true; }
-    $('liveStatus').textContent = s.status + (s.status === 'играет' ? ` · seed ${s.seed}` : '');
+    liveRunning = d.req.running;
+    $('liveStatus').textContent = s.status + (s.status === 'играет' ? ` · seed ${s.seed}` : '')
+      + (s.current && s.model ? ` · ${s.model.replace('runs/', '')}, сохранён ${at(s.ckpt_time)}` : '');
     const probs = s.probs || ACTIONS.map(a => a === s.action ? 1 : 0);
     $('bars').innerHTML = ACTIONS.map((a, i) => `<div class="b ${a === s.action ? 'act' : ''} ${a === s.teacher ? 'teach' : ''}"><span>${RU[a]}</span><div class="track"><div class="fill" style="width:${(probs[i] * 100).toFixed(1)}%"></div></div><span>${fmt(probs[i], 2)}</span></div>`).join('');
     $('vis').textContent = s.vis == null ? '–' : (s.vis * 100).toFixed(0) + '%';
@@ -370,24 +373,28 @@ async function pollSystem() {
 }
 
 // ---------------- realtime views in the chart card
-let lastSeries = [], trainLive = {};
+let lastSeries = [], trainLive = {}, liveRunning = false;
+// exponential smoothing that skips gaps (null), and a centred moving average
+const ema = (pts, a) => { let m = null; return pts.map(([x, y]) => { if (y == null) { m = null; return [x, null]; } m = m == null ? y : m + a * (y - m); return [x, m]; }); };
+const movavg = (pts, w) => pts.map(([x, y], i) => { if (y == null) return [x, null]; const win = pts.slice(Math.max(0, i - w + 1), i + 1).map(p => p[1]).filter(v => v != null); return [x, win.reduce((a, v) => a + v, 0) / win.length]; });
 function drawGameLive() {
   if (chartMode !== 'game') return;
   $('chartTitle').textContent = 'Живая игра сейчас: сеть против учителя и правды игры';
   $('runInfo').innerHTML = 'Сверху: <span style="color:var(--c3)">совпадение с учителем</span> (скользящее за 20 шагов), '
     + '<span style="color:var(--c1)">вероятность действия учителя у сети</span>, <span style="color:var(--c2)">уверенность «враг в кадре»</span>, '
     + '<span style="color:var(--c5)">правда по данным игры</span>. Снизу: направление на врага (−1 левый край, 0 прицел, +1 правый). '
-    + (lastSeries.length ? '' : 'Запустите игру кнопкой «Играть».');
+    + (liveRunning ? 'Линии сети сглажены (скользящее среднее), правда — без сглаживания.' : '<b style="color:var(--accent)">Игра остановлена</b> — график показывает последний эпизод. Нажмите «Играть»; модель «текущий чекпойнт» берёт последнюю сохранённую модель обучения.');
   const s = lastSeries, roll = [];
   s.forEach((e, i) => { const w = s.slice(Math.max(0, i - 19), i + 1); roll.push([e.step, w.reduce((a, x) => a + x.agree, 0) / w.length]); });
+  const sm = k => movavg(s.map(e => [e.step, e[k]]), 6);
   lineChart($('chart'), [
     {color: COLORS[2], label: 'совпадение', points: roll, bold: true},
-    {color: COLORS[0], label: 'P(учитель)', points: s.map(e => [e.step, e.p_teacher])},
-    {color: COLORS[1], label: 'враг: сеть', points: s.map(e => [e.step, e.vis_p])},
+    {color: COLORS[0], label: 'P(учитель)', points: sm('p_teacher')},
+    {color: COLORS[1], label: 'враг: сеть', points: sm('vis_p')},
     {color: COLORS[4], label: 'враг: правда', points: s.map(e => [e.step, e.vis_t]), dash: [4, 3]},
   ], {ymin: 0, ymax: 1, nodots: true});
   lineChart($('offLive'), [
-    {color: COLORS[1], label: 'сеть', points: s.map(e => [e.step, e.off_p])},
+    {color: COLORS[1], label: 'сеть', points: movavg(s.map(e => [e.step, e.off_p]), 3)},
     {color: COLORS[4], label: 'правда', points: s.map(e => [e.step, e.off_t]), dash: [4, 3]},
   ], {ymin: -1, ymax: 1, nodots: true});
 }
@@ -395,13 +402,13 @@ function drawTrainLive() {
   if (chartMode !== 'trainlive') return;
   const d = trainLive;
   $('chartTitle').textContent = 'Обучение сейчас: потери по батчам';
-  if (!d.points) { lineChart($('chart'), []); $('runInfo').textContent = 'Сейчас ничего не обучается: график появляется, пока идёт обучение (с раунда r5).'; return; }
+  if (!d.points) { lineChart($('chart'), []); $('runInfo').textContent = 'Нет свежих данных: график строится, пока идёт обучение, начиная с раунда r5 (r4 запущен до появления этого графика).'; return; }
   const nb = d.n_batches;
   lineChart($('chart'), ['loss', 'ce', 'bce', 'mse', 'seg'].map((p, i) => ({color: COLORS[i], label: p, bold: p === 'loss',
-    points: d.points.map(e => [Math.round(e.batch / nb * 100) / 100, e[p]])})), {ymin: 0, nodots: true, xfmt: x => 'эп ' + (Math.floor(x) + 1)});
+    points: ema(d.points.map(e => [Math.round(e.batch / nb * 100) / 100, e[p]]), 0.12)})), {ymin: 0, nodots: true, xfmt: x => 'эп ' + (Math.floor(x) + 1)});
   const ago = Math.round(Date.now() / 1000 - d.t);
   $('runInfo').textContent = `${d.name}: эпоха ${d.epoch}, батч ${d.batch} из ${nb} (${Math.round(d.batch / nb * 100)}%), обновлено ${ago} с назад. ` +
-    (ago > 20 ? 'Сейчас идёт проверка игрой, поэтому потери не обновляются. ' : '') + 'Средние потери за каждые 25 батчей.';
+    (ago > 20 ? 'Сейчас идёт проверка игрой, поэтому потери не обновляются. ' : '') + 'Средние потери за каждые 25 батчей, сглажены.';
 }
 async function pollTrainLive() {
   try { trainLive = await get('/api/trainlive'); drawTrainLive(); } catch (e) {}
