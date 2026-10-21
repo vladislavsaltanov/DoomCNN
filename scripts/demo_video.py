@@ -21,6 +21,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from doomagent.config import ACTION_NAMES, Cfg
 from doomagent.env import DoomEnv
+from doomagent.hud import Hud
 from doomagent.model import StudentCNN
 from doomagent.teacher import Teacher, enemies_from_labels, is_enemy_name, nearest_aux
 from doomagent.variants import get_variant
@@ -44,6 +45,7 @@ def font(size, bold=False):
 
 
 F_TITLE, F_BIG, F, F_SMALL = font(26, True), font(22, True), font(17), font(14)
+HUD = Hud()
 
 
 def load_model(path, cfg):
@@ -95,6 +97,8 @@ def compose(rgb, obs, info, st, hist, cfg):
         cv2.line(game, (xo, 0), (xo, gh), ORANGE, 2)
     cv2.line(game, (gw // 2, gh // 2 - 9), (gw // 2, gh // 2 + 9), INK, 1)
     cv2.line(game, (gw // 2 - 9, gh // 2), (gw // 2 + 9, gh // 2), INK, 1)
+    game = HUD.draw(game, st['health'], st['ammo'], killed=st.get('killed', False),
+                    hurt=st.get('hurt', False))  # viewer only; the network never sees it
     img[60:60 + 645, 15:15 + 860] = cv2.resize(game, (860, 645), interpolation=cv2.INTER_LINEAR)
     # right column
     x0 = 895

@@ -18,6 +18,7 @@ ap.add_argument('--record', help='write an mp4 here')
 ap.add_argument('--no-window', action='store_true')
 ap.add_argument('--boxes', action='store_true', help='draw label boxes for the viewer')
 ap.add_argument('--speed', type=float, default=1.0)
+ap.add_argument('--hud', action='store_true', help='draw the Doom status bar for the viewer')
 a = ap.parse_args()
 cfg = Cfg()
 
@@ -59,10 +60,22 @@ if a.record:
     os.makedirs(os.path.dirname(a.record) or '.', exist_ok=True)
     sink = VideoSink(a.record, 35, (cfg.render_w, cfg.render_h))
 choose = make_chooser()
+hud_layer = None
+if a.hud:  # the network was trained without the HUD: it is drawn for the viewer only
+    from doomagent.hud import Hud
+    hud, last = Hud(), {'health': 100.0, 'hurt': 0}
+
+    def hud_layer(frame, p):
+        if p.health < last['health']:
+            last['hurt'] = 20
+        last['health'] = p.health
+        last['hurt'] = max(last['hurt'] - 1, 0)
+        return hud.draw(frame, p.health, p.ammo, hurt=last['hurt'] > 0)
 try:
     for i in range(a.episodes):
         total, n = play_episode(env, choose, a.seed + i, sink, not a.no_window, a.speed,
-                                boxes_fn, cfg, every_tic=True)
+                                boxes_fn, cfg, every_tic=True, post=hud_layer,
+                                bottom=8 + cfg.render_w * 32 // 320 if a.hud else 8)
         print(f'variant={a.variant} seed={a.seed + i} reward={total:.1f} steps={n}')
 except KeyboardInterrupt:
     pass

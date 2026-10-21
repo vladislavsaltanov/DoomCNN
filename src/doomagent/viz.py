@@ -17,7 +17,8 @@ def stack_image(obs, path, scale=2):
     cv2.imwrite(path, row)
 
 
-def draw_overlay(rgb, action, info=None, boxes=(), net_frame=None, cfg: Cfg = Cfg()):
+def draw_overlay(rgb, action, info=None, boxes=(), net_frame=None, cfg: Cfg = Cfg(), bottom=8):
+    # bottom: free space under the network-input inset (room for a status bar)
     # everything drawn here is for the viewer; the agent never sees this image
     img = cv2.cvtColor(np.ascontiguousarray(rgb), cv2.COLOR_RGB2BGR)
     H, W = img.shape[:2]
@@ -55,9 +56,10 @@ def draw_overlay(rgb, action, info=None, boxes=(), net_frame=None, cfg: Cfg = Cf
     if net_frame is not None:
         inset = cv2.cvtColor(np.ascontiguousarray(net_frame), cv2.COLOR_GRAY2BGR)
         h, w = inset.shape[:2]
-        img[H - h - 8:H - 8, W - w - 8:W - 8] = inset
-        cv2.rectangle(img, (W - w - 9, H - h - 9), (W - 8, H - 8), (255, 255, 255), 1)
-        cv2.putText(img, 'network input', (W - w - 8, H - h - 14), FONT, 0.45,
+        b = bottom
+        img[H - h - b:H - b, W - w - 8:W - 8] = inset
+        cv2.rectangle(img, (W - w - 9, H - h - b - 1), (W - 8, H - b), (255, 255, 255), 1)
+        cv2.putText(img, 'network input', (W - w - 8, H - h - b - 6), FONT, 0.45,
                     (255, 255, 255), 1, cv2.LINE_AA)
     return img
 
@@ -124,7 +126,8 @@ def video_frame_count(path):
 
 
 def play_episode(env, choose, seed, sink=None, window=False, speed=1.0, boxes_fn=None,
-                 cfg: Cfg = Cfg(), every_tic=False):
+                 cfg: Cfg = Cfg(), every_tic=False, post=None, bottom=8):
+    # post(frame, privileged) -> frame: a last viewer layer, e.g. the Doom status bar
     # every_tic: one frame per game tic (35 per second) instead of one per agent step
     if hasattr(choose, 'reset'):
         choose.reset()
@@ -158,11 +161,13 @@ def play_episode(env, choose, seed, sink=None, window=False, speed=1.0, boxes_fn
         if every_tic:
             def tic(rgb, p):
                 boxes = boxes_fn(p) if boxes_fn else ()
-                show(draw_overlay(rgb, action, info, boxes, net, cfg), 1)
+                frame = draw_overlay(rgb, action, info, boxes, net, cfg, bottom)
+                show(post(frame, p) if post else frame, 1)
             obs, r, done = env.step(int(action), on_tic=tic)
         else:
             boxes = boxes_fn(priv) if boxes_fn else ()
-            show(draw_overlay(env.screen(), action, info, boxes, net, cfg), cfg.frame_skip)
+            frame = draw_overlay(env.screen(), action, info, boxes, net, cfg, bottom)
+            show(post(frame, priv) if post else frame, cfg.frame_skip)
             obs, r, done = env.step(int(action))
         total += r
         n += 1

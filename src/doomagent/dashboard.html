@@ -135,7 +135,7 @@
       </div>
       <div class="row" style="margin-bottom:8px">
         <button class="primary" id="play">▶ Играть</button><button id="stop">■ Стоп</button>
-        <label class="muted" style="font-size:11px"><input type="checkbox" id="boxes" checked> рамки врагов</label>
+        <label class="muted" style="font-size:11px"><input type="checkbox" id="boxes" checked> рамки врагов</label><label class="muted" style="font-size:11px"><input type="checkbox" id="hud" checked> HUD</label><label class="muted" style="font-size:11px" title="какие пиксели сильнее всего влияют на решение сети"><input type="checkbox" id="saliency"> что важно сети</label>
         <span class="muted" id="liveStatus" style="font-size:11px"></span>
       </div>
       <div class="muted" style="font-size:11px">Вероятности действий: оранжевое — выбор сети, ● — что сделал бы учитель</div>
@@ -150,9 +150,10 @@
     </div>
     <div class="card grow">
       <div class="hrow"><h2 id="chartTitle">Награда на проверке по эпохам</h2>
-        <div class="tabs" id="chartTabs"><button class="sel" data-t="val">val_score</button><button data-t="ppo">PPO</button><button data-t="loss">потери</button><button data-t="trainlive">обучение live</button><button data-t="game">игра live</button></div></div>
+        <div class="tabs" id="chartTabs"><button class="sel" data-t="val">val_score</button><button data-t="ppo">PPO</button><button data-t="loss">потери</button><button data-t="trainlive">обучение live</button><button data-t="game">игра live</button><button data-t="brain">нейросеть</button></div></div>
       <div class="chips" id="runChips"></div>
       <canvas class="chart" id="chart"></canvas>
+      <img id="brainImg" alt="нейросеть изнутри" style="display:none;width:100%;flex:1 1 0;min-height:0;object-fit:contain;background:#0e1013;border-radius:6px">
       <canvas class="chart" id="offLive" style="display:none;min-height:70px;flex:.5 1 0"></canvas>
       <div class="runinfo" id="runInfo"></div>
     </div>
@@ -249,14 +250,15 @@ async function loadOptions() {
   optionsLoaded = true;
 }
 const control = p => fetch('/api/control?' + new URLSearchParams(p));
-$('play').onclick = () => showChart('game') || control({model: $('model').value, variant: $('variant').value, seed: $('seed').value, speed: $('speed').value, boxes: $('boxes').checked ? 1 : 0, running: 1});
+$('play').onclick = () => showChart('game') || control({model: $('model').value, variant: $('variant').value, seed: $('seed').value, speed: $('speed').value, boxes: $('boxes').checked ? 1 : 0, hud: $('hud').checked ? 1 : 0, saliency: $('saliency').checked ? 1 : 0, running: 1});
 $('stop').onclick = () => control({running: 0});
-['model', 'variant', 'speed', 'boxes'].forEach(id => $(id).onchange = () => { const p = {}; p[id] = id === 'boxes' ? ($('boxes').checked ? 1 : 0) : $(id).value; control(p); });
+['model', 'variant', 'speed', 'boxes', 'hud', 'saliency'].forEach(id => $(id).onchange = () => { const p = {}; p[id] = $(id).type === 'checkbox' ? ($(id).checked ? 1 : 0) : $(id).value; control(p); });
 $('screen').src = '/live/screen.mjpg'; $('net').src = '/live/net.mjpg';
 async function pollLive() {
   try {
     const d = await get('/api/live'), s = d.state;
-    if (optionsLoaded && !reqSynced) { $('model').value = d.req.model; $('variant').value = d.req.variant; $('seed').value = d.req.seed; reqSynced = true; }
+    if (optionsLoaded && !reqSynced) { $('model').value = d.req.model; $('variant').value = d.req.variant; $('seed').value = d.req.seed;
+      ['boxes', 'hud', 'saliency'].forEach(k => { if (k in d.req) $(k).checked = !!d.req[k]; }); reqSynced = true; }
     liveRunning = d.req.running;
     $('liveStatus').textContent = s.status + (s.status === 'играет' ? ` · seed ${s.seed}` : '')
       + (s.current && s.model ? ` · ${s.model.replace('runs/', '')}, сохранён ${at(s.ckpt_time)}` : '');
@@ -280,6 +282,14 @@ function showChart(t) {
   chartMode = t;
   document.querySelectorAll('#chartTabs button').forEach(x => x.classList.toggle('sel', x.dataset.t === t));
   $('runChips').style.display = t === 'val' ? 'flex' : 'none';
+  const brain = t === 'brain';
+  $('brainImg').style.display = brain ? 'block' : 'none';
+  $('chart').style.display = brain ? 'none' : 'block';
+  // the network view is rendered only while someone watches it
+  if (brain && !$('brainImg').src.includes('brain.mjpg')) $('brainImg').src = '/live/brain.mjpg';
+  if (!brain && $('brainImg').src) $('brainImg').removeAttribute('src');
+  if (brain) { $('chartTitle').textContent = 'Нейросеть изнутри: один шаг игры'; $('runInfo').textContent = 'Слева вход (4 кадра) и saliency — какие пиксели сильнее всего влияют на решение. Дальше карты признаков трёх свёрточных слоёв (ярче — сильнее активация), 512 нейронов полносвязного слоя и выход. Линии — самые сильные связи fc → выбранное действие (вклад = активация × вес). Работает, пока идёт живая игра; у учителя нейросети нет. ';
+    $('runInfo').insertAdjacentHTML('beforeend', '<a href="/brain" target="_blank">Открыть крупно на весь экран →</a>'); }
   $('offLive').style.display = t === 'game' || (t === 'trainlive' && !trainLive.points && ppoRuns.some(r => r.active)) ? 'block' : 'none';
   drawRuns();
 }
@@ -300,7 +310,8 @@ function drawRuns() {
   const r = runs.find(x => x.name === $('runPick').value);
   if (chartMode === 'trainlive') drawTrainLive();
   if (chartMode === 'game') drawGameLive();
-  if (chartMode === 'ppo') { drawPpo(); }
+  if (chartMode === 'brain') { }
+  else if (chartMode === 'ppo') { drawPpo(); }
   else if (chartMode === 'trainlive' || chartMode === 'game') {
     // drawn by drawTrainLive / drawGameLive
   } else if (chartMode === 'val') {

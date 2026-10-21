@@ -393,8 +393,10 @@ class Live:
     def __init__(self, cfg: Cfg):
         self.cfg, self.lock = cfg, threading.Lock()
         self.req = dict(model='current', variant='base', seed=5000, speed=1.0,
-                        boxes=True, running=False)
-        self.screen = self.net = None
+                        boxes=True, running=False, hud=True, saliency=False)
+        self.screen = self.net = self.brain = None
+        self.brain_seen = 0.0  # when a viewer last pulled the network view: render it only then
+        self.hud = None
         self.version = 0
         self.state = dict(status='остановлено')
         self.history = deque(maxlen=30)
@@ -422,10 +424,14 @@ class Live:
         m.eval()
         return m
 
-    def _publish(self, rgb, info, boxes, obs):
+    def _publish(self, rgb, info, boxes, obs, view):
+        # view: what the viewer asked to see on top of the game (saliency, HUD, ...)
         c = self.cfg
         img = cv2.cvtColor(np.ascontiguousarray(rgb), cv2.COLOR_RGB2BGR)
         H, W = img.shape[:2]
+        if view.get('saliency') is not None:
+            from doomagent.brain import saliency_overlay
+            img = saliency_overlay(img, view['saliency'])
         if info and info.get('seg') is not None:
             heat = cv2.resize(info['seg'].astype(np.float32), (W, H))
             a = (np.clip(heat, 0, 1) * 0.55)[..., None]
@@ -435,12 +441,18 @@ class Live:
             cv2.rectangle(img, (int(lb.x * sx), int(lb.y * sy)),
                           (int((lb.x + lb.width) * sx), int((lb.y + lb.height) * sy)),
                           (0, 255, 0), 1)
-        if info and info.get('vis') is not None and info['vis'] > 0.5:
-            x = int((info['off'] + 1) / 2 * W)
+        if info and info.get('vis') is not None and info['vis'] > 0.5 and not view.get('ppo'):
+            x = int((info['off'] + 1) / 2 * W)  # PPO never trained the offset head: not shown
             cv2.line(img, (x, 0), (x, H), (0, 200, 255), 1)
         cx, cy = W // 2, H // 2
         cv2.line(img, (cx, cy - 8), (cx, cy + 8), (255, 255, 255), 1)
         cv2.line(img, (cx - 8, cy), (cx + 8, cy), (255, 255, 255), 1)
+        if view.get('hud'):  # the Doom status bar for the viewer; the network never sees it
+            if self.hud is None:
+                from doomagent.hud import Hud
+                self.hud = Hud()
+            img = self.hud.draw(img, view['health'], view['ammo'], killed=view['killed'],
+                                hurt=view['hurt'])
         frames = [cv2.resize(f, (c.width * 2, c.height * 2), interpolation=cv2.INTER_NEAREST)
                   for f in obs]
         tiles = [cv2.cvtColor(f, cv2.COLOR_GRAY2BGR) for f in frames]
@@ -454,8 +466,11 @@ class Live:
             row = np.concatenate([row, sep, t], axis=1)
         s = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 82])[1].tobytes()
         n = cv2.imencode('.jpg', row, [cv2.IMWRITE_JPEG_QUALITY, 85])[1].tobytes()
+        b = view.get('brain')
         with self.lock:
             self.screen, self.net, self.version = s, n, self.version + 1
+            if b is not None:
+                self.brain = b
 
     def _loop(self):
         from doomagent.env import DoomEnv
@@ -496,6 +511,8 @@ class Live:
             agree = steps_cmp = 0
             self.series.clear()
             kills = 0
+            kill_tics = hurt_tics = 0  # how long the HUD face keeps grinning or wincing
+            last_health = 100.0
             tic_s = 1.0 / (35 * max(0.1, float(req['speed'])))
             due = time.perf_counter()
             while not done:
@@ -514,10 +531,27 @@ class Live:
                 steps_cmp += 1
                 boxes = ([lb for lb in priv.labels if is_enemy_name(lb.object_name)]
                          if r2['boxes'] else [])
+                view = dict(hud=r2.get('hud'), ppo=str(model_name).endswith('.zip'))
+                want_brain = time.time() - self.brain_seen < 3.0
+                if model is not None and (r2.get('saliency') or want_brain):
+                    from doomagent.brain import render, trace
+                    t = trace(model, obs)
+                    if r2.get('saliency'):
+                        view['saliency'] = t['saliency']
+                    if want_brain:
+                        view['brain'] = cv2.imencode('.jpg', render(t, obs),
+                                                     [cv2.IMWRITE_JPEG_QUALITY, 85])[1].tobytes()
 
-                def tic(rgb, p, info=info, boxes=boxes, obs=obs):
-                    nonlocal due
-                    self._publish(rgb, info, boxes, obs)
+                def tic(rgb, p, info=info, boxes=boxes, obs=obs, view=view):
+                    nonlocal due, kill_tics, hurt_tics, last_health
+                    if p.health < last_health:
+                        hurt_tics = 20
+                    last_health = p.health
+                    view.update(health=p.health, ammo=p.ammo, killed=kill_tics > 0,
+                                hurt=hurt_tics > 0)
+                    kill_tics, hurt_tics = max(kill_tics - 1, 0), max(hurt_tics - 1, 0)
+                    self._publish(rgb, info, boxes, obs, view)
+                    view.pop('brain', None)  # one network picture per step
                     due += tic_s
                     time.sleep(max(0.0, due - time.perf_counter()))
                     if time.perf_counter() - due > 0.25:
@@ -534,6 +568,8 @@ class Live:
                 obs, r, done = env.step(int(action), on_tic=tic)
                 total += r
                 kills += max(r, 0)
+                if r > 0:
+                    kill_tics = 35
                 step += 1
                 self.state = dict(
                     status='играет', model=model_name, current=req['model'] == 'current',
@@ -556,6 +592,16 @@ class Live:
 
 
 # ---------------------------------------------------------------- http
+
+BRAIN_PAGE = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>DoomCNN — нейросеть</title>
+<style>html,body{margin:0;height:100%;background:#0e1013;color:#8b95a3;font:13px system-ui,sans-serif}
+body{display:grid;grid-template-rows:1fr auto;gap:8px;padding:12px;box-sizing:border-box}
+img{width:100%;height:100%;object-fit:contain}a{color:#5aa9ff}</style></head><body>
+<img src="/live/brain.mjpg" alt="нейросеть изнутри"><div>Нейросеть в реальном времени: вход и saliency,
+карты признаков трёх свёрточных слоёв, 512 нейронов fc и самые сильные связи к выбранному действию.
+Показывается, пока на <a href="/">панели</a> идёт живая игра нейросети.</div></body></html>"""
+
 
 def make_handler(system, live, activity):
     class H(BaseHTTPRequestHandler):
@@ -583,9 +629,11 @@ def make_handler(system, live, activity):
             try:
                 while True:
                     with live.lock:
-                        v, img = live.version, getattr(live, which)
-                    if img is not None and v != seen:
-                        seen = v
+                        img = getattr(live, which)
+                    if which == 'brain':
+                        live.brain_seen = time.time()  # someone watches: keep rendering it
+                    if img is not None and id(img) != seen:
+                        seen = id(img)
                         self.wfile.write(b'--frame\r\nContent-Type: image/jpeg\r\nContent-Length: '
                                          + str(len(img)).encode() + b'\r\n\r\n' + img + b'\r\n')
                     time.sleep(1 / 35)
@@ -602,6 +650,10 @@ def make_handler(system, live, activity):
                 return self._mjpeg('screen')
             if u.path == '/live/net.mjpg':
                 return self._mjpeg('net')
+            if u.path == '/live/brain.mjpg':
+                return self._mjpeg('brain')
+            if u.path == '/brain':  # the network view alone, full screen
+                return self._send(BRAIN_PAGE, 'text/html; charset=utf-8')
             if u.path == '/api/system':
                 return self._send(dict(now=system.now, hist=list(system.hist)))
             if u.path == '/api/ppo':
@@ -633,7 +685,7 @@ def make_handler(system, live, activity):
                     kw['seed'] = int(q['seed'])
                 if 'speed' in q:
                     kw['speed'] = float(q['speed'])
-                for k in ('running', 'boxes'):
+                for k in ('running', 'boxes', 'hud', 'saliency'):
                     if k in q:
                         kw[k] = q[k] == '1'
                 live.control(**kw)
