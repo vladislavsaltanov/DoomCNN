@@ -65,9 +65,10 @@ def draw_overlay(rgb, action, info=None, boxes=(), net_frame=None, cfg: Cfg = Cf
 _H264 = None
 
 
-def h264_args():
+def h264_args(size=None):
     # ffmpeg output options for phone-playable H.264: the GPU encoder (NVENC) when the card has
-    # one, so encoding takes neither CPU nor CUDA time from training; libx264 otherwise
+    # one, so encoding takes neither CPU nor CUDA time from training; libx264 otherwise and for
+    # frames below NVENC's minimum size
     global _H264
     if _H264 is None:
         enc = subprocess.run(['ffmpeg', '-hide_banner', '-encoders'], capture_output=True,
@@ -80,6 +81,8 @@ def h264_args():
         else:
             _H264 = ['-c:v', 'libx264', '-preset', 'medium', '-crf', '20']
         _H264 += ['-pix_fmt', 'yuv420p', '-movflags', '+faststart']
+    if size is not None and min(size) < 256 and 'h264_nvenc' in _H264:
+        return ['-c:v', 'libx264', '-preset', 'medium', '-crf', '20'] + _H264[-4:]
     return list(_H264)
 
 
@@ -92,7 +95,7 @@ class VideoSink:
             w, h = size
             self.proc = subprocess.Popen(
                 ['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'bgr24',
-                 '-s', f'{w}x{h}', '-r', str(fps), '-i', '-', *h264_args(), path],
+                 '-s', f'{w}x{h}', '-r', str(fps), '-i', '-', *h264_args(size), path],
                 stdin=subprocess.PIPE)
         else:
             self.writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'mp4v'), fps, size)
