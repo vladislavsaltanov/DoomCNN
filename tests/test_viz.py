@@ -1,7 +1,11 @@
 from types import SimpleNamespace as NS
 
 import cv2
+import shutil
+import subprocess
+
 import numpy as np
+import pytest
 
 from doomagent.viz import draw_overlay, play_episode, stack_image, video_frame_count
 
@@ -46,3 +50,18 @@ def test_play_episode_writes_one_frame_per_step(tmp_path):
     total, n = play_episode(FakeEnv(5), lambda obs, priv: (2, None), 0, sink)
     sink.close()
     assert n == 5 and video_frame_count(out) == 5
+
+
+@pytest.mark.skipif(shutil.which('ffmpeg') is None, reason='needs ffmpeg')
+def test_video_sink_writes_h264_for_phones(tmp_path):
+    # iPhones do not play OpenCV's mp4v (MPEG-4 Part 2); with ffmpeg the sink writes H.264
+    from doomagent.viz import VideoSink
+    out = str(tmp_path / 'v.mp4')
+    sink = VideoSink(out, 35, (64, 48))
+    for i in range(10):
+        sink.write(np.full((48, 64, 3), i * 20, np.uint8))
+    sink.close()
+    codec = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries',
+                            'stream=codec_name,pix_fmt', '-of', 'csv=p=0', out],
+                           capture_output=True, text=True).stdout.strip()
+    assert codec == 'h264,yuv420p' and video_frame_count(out) == 10

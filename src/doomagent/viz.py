@@ -1,3 +1,5 @@
+import shutil
+import subprocess
 import time
 
 import cv2
@@ -61,15 +63,33 @@ def draw_overlay(rgb, action, info=None, boxes=(), net_frame=None, cfg: Cfg = Cf
 
 
 class VideoSink:
+    # H.264 (libx264, yuv420p, faststart) through ffmpeg when it is installed, so the videos
+    # play on phones; OpenCV's mp4v otherwise
     def __init__(self, path, fps, size):
-        self.writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'mp4v'), fps, size)
-        assert self.writer.isOpened(), f'cannot open a video writer for {path}'
+        self.proc = self.writer = None
+        if shutil.which('ffmpeg'):
+            w, h = size
+            self.proc = subprocess.Popen(
+                ['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'bgr24',
+                 '-s', f'{w}x{h}', '-r', str(fps), '-i', '-', '-c:v', 'libx264', '-preset', 'medium',
+                 '-crf', '20', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', path],
+                stdin=subprocess.PIPE)
+        else:
+            self.writer = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'mp4v'), fps, size)
+            assert self.writer.isOpened(), f'cannot open a video writer for {path}'
 
     def write(self, bgr):
-        self.writer.write(bgr)
+        if self.proc is not None:
+            self.proc.stdin.write(np.ascontiguousarray(bgr, np.uint8).tobytes())
+        else:
+            self.writer.write(bgr)
 
     def close(self):
-        self.writer.release()
+        if self.proc is not None:
+            self.proc.stdin.close()
+            assert self.proc.wait() == 0, 'ffmpeg failed'
+        else:
+            self.writer.release()
 
 
 def video_frame_count(path):
