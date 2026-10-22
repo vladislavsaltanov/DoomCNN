@@ -17,11 +17,34 @@ def label_class(name):
     return 'barrel' if name == BARREL else None
 
 
-def compose_view(rgb, priv, action=None, info=None, cfg=DM, boxes=True, hud=None):
+def compose_view(rgb, priv, action=None, info=None, cfg=DM, boxes=True, hud=None, mapview=None,
+                 teacher=None):
     # the game frame for people: label boxes, crosshair, the chosen action (and its probabilities),
-    # match counters, the Doom status bar; the agent never sees this image
+    # match counters, the Doom status bar; with a mapview, a 960x480 canvas with the minimap and the
+    # teacher's state on the right. The agent never sees this image.
+    game = _game_view(rgb, priv, action, info, cfg, boxes, hud, teacher)
+    if mapview is None:
+        return game
+    H, W = game.shape[:2]
+    out = np.full((H, W + 320, 3), (25, 26, 26), np.uint8)
+    out[:, :W] = game
+    m = cv2.resize(mapview.draw(priv, teacher), (320, 320), interpolation=cv2.INTER_AREA)
+    out[:320, W:] = m
+    lines = [f'health {priv.health:.0f}   rockets {priv.ammo:.0f}',
+             f'frags {priv.frags:.0f}   deaths {priv.deaths:.0f}']
+    if teacher is not None:
+        lines.insert(0, f'teacher: {teacher.mode}')
+    for i, t in enumerate(lines):
+        cv2.putText(out, t, (W + 12, 350 + 24 * i), FONT, 0.5, INK, 1, cv2.LINE_AA)
+    return out
+
+
+def _game_view(rgb, priv, action, info, cfg, boxes, hud, teacher):
     img = cv2.cvtColor(np.ascontiguousarray(rgb), cv2.COLOR_RGB2BGR)
     H, W = img.shape[:2]
+    if teacher is not None and teacher.target is not None and teacher.lead is not None:
+        x = int((teacher.target.offset + teacher.lead + 1.0) / 2.0 * W)  # where the rocket should go
+        cv2.line(img, (x, 0), (x, H), (38, 89, 217), 1)
     sx, sy = W / cfg.width, H / cfg.height
     if boxes:
         for lb in priv.labels:

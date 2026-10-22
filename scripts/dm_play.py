@@ -43,12 +43,37 @@ class Show:
             self.due = None
 
 
+class TeacherChooser:
+    def __init__(self, cfg):
+        from doomagent.dm.teacher import DMTeacher
+        self.teacher = DMTeacher(cfg)
+
+    def reset(self):
+        self.teacher.reset()
+
+    def __call__(self, obs, priv):
+        return self.teacher(obs, priv), None
+
+
 def make_chooser(who, seed):
     # chooser(obs, priv) -> (action, info for the overlay)
     if who == 'random':
         rng = np.random.default_rng(seed)
         return lambda obs, priv: (int(rng.integers(0, N_ACTIONS)), None)
-    raise SystemExit(f'--who {who}: the teacher arrives in D1, trained models in D2')
+    if who == 'teacher':
+        return TeacherChooser(DM)
+    raise SystemExit(f'--who {who}: trained models arrive in D2')
+
+
+def snapshot_grid(snaps, path):
+    # one frame per teacher mode, 2x2, half size
+    tiles = [cv2.resize(f, (f.shape[1] // 2, f.shape[0] // 2), interpolation=cv2.INTER_AREA)
+             for f in snaps.values()]
+    for t, mode in zip(tiles, snaps):
+        cv2.putText(t, mode, (8, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (71, 181, 255), 2, cv2.LINE_AA)
+    while len(tiles) < 4:
+        tiles.append(np.zeros_like(tiles[0]))
+    cv2.imwrite(path, np.vstack([np.hstack(tiles[:2]), np.hstack(tiles[2:4])]))
 
 
 ap = argparse.ArgumentParser()
@@ -61,6 +86,8 @@ ap.add_argument('--no-window', action='store_true')
 ap.add_argument('--boxes', action='store_true', help='draw label boxes for the viewer')
 ap.add_argument('--hud', action='store_true', help='draw the Doom status bar for the viewer')
 ap.add_argument('--speed', type=float, default=1.0)
+ap.add_argument('--map', action='store_true', help='minimap and the teacher state on the right')
+ap.add_argument('--snapshots', help='PNG: one frame per teacher mode (with --who teacher)')
 a = ap.parse_args()
 cfg = DM
 env = DeathmatchEnv(cfg, get_variant(a.variant, VARIANTS_DIR))
@@ -71,22 +98,39 @@ if a.hud:
 sink = None
 if a.record:
     os.makedirs(os.path.dirname(a.record) or '.', exist_ok=True)
-    sink = VideoSink(a.record, 35, (cfg.render_w, cfg.render_h))
+    sink = VideoSink(a.record, 35, (cfg.render_w + (320 if a.map else 0), cfg.render_h))
 show = Show(sink, not a.no_window, a.speed)
 choose = make_chooser(a.who, a.seed)
+teacher = getattr(choose, 'teacher', None)
+mapview, snaps, last = None, {}, {}
+
+
+def tic(rgb, p, action, info):
+    last['frame'] = compose_view(rgb, p, action, info, cfg, a.boxes, hud, mapview, teacher)
+    show(last['frame'])
+
+
 try:
     for i in range(a.matches):
         seed = a.seed + i
         obs, done, steps = env.reset(seed), False, 0
+        if a.map and mapview is None:
+            from doomagent.dm.minimap import MapView
+            mapview = MapView(env.sectors)
         if hasattr(choose, 'reset'):
             choose.reset()
         while not done:
             action, info = choose(obs, env.privileged())
-            obs, _, done = env.step(action, on_tic=lambda rgb, p: show(
-                compose_view(rgb, p, action, info, cfg, a.boxes, hud)))
+            obs, _, done = env.step(action, on_tic=lambda rgb, p: tic(rgb, p, action, info))
             steps += 1
+            if a.snapshots and teacher is not None and steps > 100 and 'frame' in last \
+                    and teacher.mode not in snaps:
+                snaps[teacher.mode] = last['frame'].copy()
         p = env.privileged()
         print(f'variant={a.variant} seed={seed} frags={p.frags:.0f} deaths={p.deaths:.0f} steps={steps}')
+    if a.snapshots and snaps:
+        snapshot_grid(snaps, a.snapshots)
+        print('snapshots:', list(snaps), '->', a.snapshots)
 except KeyboardInterrupt:
     pass
 finally:
