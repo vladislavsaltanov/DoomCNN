@@ -67,3 +67,14 @@ def test_parallel_matches_serial():
     cfg = replace(DM, timelimit=0.1)
     plan = [(BASE, (35011, 35012))]
     assert evaluate_plan(plan, forward, cfg) == evaluate_plan(plan, forward, cfg, workers=2)
+
+
+def test_random_chooser_repeats_per_match():
+    from doomagent.dm.evaluate import RandomChooser
+    c = RandomChooser()
+    runs = []
+    for _ in range(2):
+        c.reset()
+        runs.append([run_match(FakeMatchEnv([row(first=i == 0) for i in range(20)]), c, 1)['length'],
+                     c.actions[:]])
+    assert runs[0] == runs[1] and len(set(runs[0][1])) > 3

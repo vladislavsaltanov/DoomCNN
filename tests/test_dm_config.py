@@ -16,7 +16,8 @@ def test_deathmatch_cfg():
     d = D.DM
     assert d.scenario == 'deathmatch'
     assert (d.bots, d.timelimit, d.safe_dist, d.chase_s, d.low_health, d.low_ammo, d.seg_len,
-            d.burn_in) == (7, 2.0, 160.0, 2.0, 50.0, 5.0, 32, 8)
+            d.burn_in) == (7, 2.0, 128.0, 1.0, 50.0, 5.0, 32, 8)  # D1 decisions
+    assert d.aim_margin == 0.0
     assert D.N_ACTIONS == len(D.ACTION_NAMES) == 10
 
 

@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from doomagent.dm.config import BOT, DM
+from doomagent.dm.config import BOT, DM, N_ACTIONS
 from doomagent.evaluate import bootstrap_ci
 
 STUCK_STEPS = 17   # 2 s of agent steps
@@ -11,6 +11,20 @@ TRACE_KEYS = ('px', 'py', 'angle', 'action', 'first', 'enemy', 'enemy_x', 'enemy
               'health', 'ammo', 'frags', 'items')
 SUMMARY_KEYS = ('frags', 'deaths', 'kills', 'suicides', 'kd', 'hits_per_shot', 'items', 'path',
                 'stuck_share', 'enemy_share', 'bot_median')
+
+
+class RandomChooser:
+    # uniform over the ten actions; the generator is seeded from the match's first frame, so a match
+    # repeats in any worker process
+    def reset(self):
+        self.rng, self.actions = None, []
+
+    def __call__(self, obs, priv):
+        if self.rng is None:
+            self.rng = np.random.default_rng(int(obs.frames[-1].sum()))
+        a = int(self.rng.integers(0, N_ACTIONS))
+        self.actions.append(a)
+        return a
 
 
 def nearest_bot(labels, px, py, screen_w):

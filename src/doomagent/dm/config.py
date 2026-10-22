@@ -20,7 +20,8 @@ MODES = ('combat', 'chase', 'items', 'patrol')  # teacher decisions, in priority
 BOT_NAMES = ('Rambo', 'McClane', 'MacGyver', 'Plissken', 'Machete', 'Anderson', 'Leone', 'Predator',
              'Ripley', 'T800', 'Dredd', 'Conan', 'Bond', 'Jones', 'Blazkowicz')
 
-DM = Cfg(scenario='deathmatch')
+# D1 teacher grid (reports/d1_grid.md): closer safe distance, shorter chase, no aim margin
+DM = Cfg(scenario='deathmatch', safe_dist=128.0, chase_s=1.0, aim_margin=0.0)
 
 # disjoint from each other and from every defend_the_center set (1000-21000)
 TRAIN_SEEDS = tuple(range(30000, 30300))    # R0: 150 matches, 150 more if needed
