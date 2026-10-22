@@ -1,0 +1,46 @@
+import json
+import os
+from dataclasses import replace
+
+import numpy as np
+import pytest
+
+from dmfiles import make_match
+from doomagent.dm.config import DM
+from doomagent.dm.train import train
+
+
+@pytest.mark.parametrize('kind', ['m0', 'm1'])
+def test_train_smoke_writes_outputs(tmp_path, kind):
+    for s in range(3):
+        make_match(tmp_path / 'd', s, T=70, first_at=(0, 30))
+    out = str(tmp_path / f'{kind}.pt')
+    train(kind, [str(tmp_path / 'd')], out, epochs=1, val=[], workers=0, batch_steps=64)
+    log = json.load(open(out + '.log.json'))
+    live = json.load(open(out + '.live.json'))
+    assert os.path.exists(out) and log['log'] and np.array(live['confusion']).shape == (10, 10)
+    assert log['config']['holdout_files']
+    assert not set(log['config']['holdout_files']) & set(log['config']['train_files'])
+    assert log['log'][-1]['lr'] < 1e-6  # cosine schedule ends at zero
+    assert os.path.exists(out + '.progress.json')
+
+
+def test_live_json_skips_when_busy(tmp_path, monkeypatch):
+    from doomagent.dm import train as T
+
+    def busy(*a, **k):
+        raise PermissionError('the dashboard is reading')
+
+    monkeypatch.setattr(T.os, 'replace', busy)
+    T.write_json_atomic(str(tmp_path / 'x.json'), {'a': 1})  # must not raise
+
+
+@pytest.mark.vizdoom
+def test_train_with_val_on_a_short_match(tmp_path):
+    from doomagent.variants import BASE
+    for s in range(2):
+        make_match(tmp_path / 'd', s, T=60)
+    out = str(tmp_path / 'm1.pt')
+    train('m1', [str(tmp_path / 'd')], out, epochs=1, val=[(BASE, (35000,))], workers=0,
+          eval_workers=1, batch_steps=64, cfg=replace(DM, timelimit=0.1))
+    assert 'val_score' in json.load(open(out + '.log.json'))['log'][-1]
