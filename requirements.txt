@@ -6,3 +6,5 @@ stable-baselines3>=2.3
 opencv-python
 matplotlib
 pytest
+sb3-contrib
+scikit-learn
