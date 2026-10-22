@@ -58,7 +58,10 @@ def run_episode(env, chooser, seed):
                 blind_flips=flips if has_labels else None)
 
 
-def _run_chunk(variant, seeds, chooser, cfg, env_factory):
+def _run_chunk(variant, seeds, chooser, cfg, env_factory, trace=False):
+    if cfg.scenario == 'deathmatch':
+        from doomagent.dm.evaluate import run_chunk
+        return run_chunk(variant, seeds, chooser, cfg, env_factory, trace)
     if env_factory is None:
         from doomagent.env import DoomEnv
         env_factory = DoomEnv
@@ -74,18 +77,20 @@ def _run_chunk(variant, seeds, chooser, cfg, env_factory):
     return out
 
 
-def evaluate_plan(plan, chooser, cfg: Cfg = Cfg(), env_factory=None, workers=1):
+def evaluate_plan(plan, chooser, cfg: Cfg = Cfg(), env_factory=None, workers=1, trace=False):
     # workers > 1: episodes run in separate processes (chooser and env_factory must pickle);
-    # each episode depends only on its seed, so the results equal the serial ones, in plan order
+    # each episode depends only on its seed, so the results equal the serial ones, in plan order.
+    # trace: per-step arrays in each deathmatch result (defend_the_center ignores it)
     if workers <= 1:
-        return [r for v, seeds in plan for r in _run_chunk(v, seeds, chooser, cfg, env_factory)]
+        return [r for v, seeds in plan
+                for r in _run_chunk(v, seeds, chooser, cfg, env_factory, trace)]
     import multiprocessing as mp
     from concurrent.futures import ProcessPoolExecutor
     total = sum(len(s) for _, s in plan)
     size = max(1, -(-total // (2 * workers)))  # about two chunks per worker
     chunks = [(v, tuple(seeds[i:i + size])) for v, seeds in plan for i in range(0, len(seeds), size)]
     with ProcessPoolExecutor(workers, mp_context=mp.get_context('spawn')) as ex:
-        futures = [ex.submit(_run_chunk, v, s, chooser, cfg, env_factory) for v, s in chunks]
+        futures = [ex.submit(_run_chunk, v, s, chooser, cfg, env_factory, trace) for v, s in chunks]
         return [r for f in futures for r in f.result()]
 
 
