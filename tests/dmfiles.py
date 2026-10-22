@@ -19,6 +19,8 @@ class FakeMatchEnv:
     # step per row, and stepping into a row with done=True ends it early. Frame t is filled with t.
     def __init__(self, rows, player_frags=(0.0,) * 8):
         self.rows, self.player_frags, self.t, self.actions = rows, tuple(player_frags), 0, []
+        from doomagent.variants import BASE
+        self.variant = BASE
 
     def _priv(self):
         r = self.rows[self.t]
@@ -55,3 +57,38 @@ class FakeMatchEnv:
 
     def close(self):
         pass
+
+
+class StubTeacher:
+    # always the same label; stands in for DMTeacher in recorder tests
+    def __init__(self, action):
+        self.action, self.mode = action, 'patrol'
+
+    def reset(self):
+        pass
+
+    def __call__(self, obs, priv):
+        return self.action
+
+
+class Poison:
+    # a privileged-data stand-in that fails on any read: the agent must not touch it
+    def __getattr__(self, name):
+        raise AssertionError(f'the agent read privileged data: {name}')
+
+
+def make_match(d, seed, T=40, first_at=(0,), variant='base'):
+    # a synthetic match in the recorder format; frame t is filled with t % 256
+    import os
+    os.makedirs(d, exist_ok=True)
+    pre = os.path.join(str(d), f'ep_{variant}_{seed}')
+    np.save(pre + '.frames.npy', np.stack([np.full((DM.height, DM.width), t % 256, np.uint8)
+                                           for t in range(T)]))
+    first = np.zeros(T, bool)
+    first[list(first_at)] = True
+    np.savez(pre + '.npz', actions=np.arange(T) % 10, executed=np.arange(T) % 10,
+             vec=np.zeros((T, 2), np.float32), first=first, rewards=np.zeros(T, np.float32),
+             modes=np.zeros(T, np.int8), pose=np.zeros((T, 3), np.float32),
+             stats=np.zeros((T, 4), np.float32), counters=np.zeros((T, 3), np.float32),
+             bot_visible=np.zeros(T, bool), seed=seed, variant=variant, scenario='deathmatch')
+    return pre
