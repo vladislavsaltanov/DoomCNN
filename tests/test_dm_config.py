@@ -14,7 +14,7 @@ def test_first_section_cfg_is_untouched():
 
 def test_deathmatch_cfg():
     d = D.DM
-    assert (d.height, d.width, d.stack, d.frame_skip) == (180, 240, 4, 4)  # 1.5x the first section
+    assert (d.height, d.width, d.stack, d.frame_skip) == (240, 320, 4, 4)  # 2x the first section
     assert (d.bots, d.timelimit, d.safe_dist, d.chase_s, d.low_health, d.low_ammo, d.seg_len,
             d.burn_in) == (7, 2.0, 128.0, 1.0, 50.0, 5.0, 32, 8)  # D1 decisions
     assert d.aim_margin == 0.0
