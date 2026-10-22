@@ -21,7 +21,7 @@ def env():
 
 def test_reset_observation(env):
     o = env.reset(35000)
-    assert o.frames.shape == (4, 120, 160) and o.frames.dtype == np.uint8 and o.first
+    assert o.frames.shape == (4, SHORT.height, SHORT.width) and o.frames.dtype == np.uint8 and o.first
     assert all((o.frames[0] == o.frames[i]).all() for i in range(1, 4))
     assert o.vec.dtype == np.float32 and np.allclose(o.vec, [1.0, 0.3])  # 100 health, 15 rockets
 

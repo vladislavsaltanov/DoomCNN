@@ -1,6 +1,7 @@
+from dataclasses import dataclass
+
 import numpy as np
 
-from doomagent.config import Cfg
 from doomagent.variants import BASE, load_variants
 
 FORWARD, FORWARD_LEFT, FORWARD_RIGHT, TURN_LEFT, TURN_RIGHT, FINE_LEFT, FINE_RIGHT, \
@@ -20,8 +21,34 @@ MODES = ('combat', 'chase', 'items', 'patrol')  # teacher decisions, in priority
 BOT_NAMES = ('Rambo', 'McClane', 'MacGyver', 'Plissken', 'Machete', 'Anderson', 'Leone', 'Predator',
              'Ripley', 'T800', 'Dredd', 'Conan', 'Bond', 'Jones', 'Blazkowicz')
 
-# D1 teacher grid (reports/d1_grid.md): closer safe distance, shorter chase, no aim margin
-DM = Cfg(scenario='deathmatch', safe_dist=128.0, chase_s=1.0, aim_margin=0.0)
+
+
+@dataclass(frozen=True)
+class DMCfg:
+    # deathmatch settings, separate from the defend_the_center Cfg
+    frame_skip: int = 4
+    stack: int = 4
+    height: int = 180          # network input: 1.5x the first section's 160x120, small bots
+    width: int = 240           # are 1.5x wider (D1 resolution check, user decision 2026-10-22)
+    render_w: int = 640        # game render: demo, video, labels
+    render_h: int = 480
+    hud: bool = False
+    fine_turn_delta: float = 0.5  # fine turns: 2 degrees per step
+    fine_zone: float = 0.15    # teacher turns finely within this share of the half screen
+    aim_margin: float = 0.0    # D1 grid (reports/d1_grid.md)
+    min_target_w: float = 0.0  # px at network resolution; narrower bots are not shot
+    noise_p: float = 0.10
+    bots: int = 7              # D0 decision
+    timelimit: float = 2.0     # minutes per match: 4200 tics, 1050 agent steps
+    safe_dist: float = 128.0   # D1 grid: no rocket at a target, wall or barrel closer than this
+    chase_s: float = 1.0       # D1 grid: go where a bot was last seen for this long
+    low_health: float = 50.0   # go for a known medikit below this
+    low_ammo: float = 5.0      # go for known rockets below this
+    seg_len: int = 32          # M1 training windows, steps
+    burn_in: int = 8           # steps that only warm up the GRU in windows that start mid-life
+
+
+DM = DMCfg()
 
 # disjoint from each other and from every defend_the_center set (1000-21000)
 TRAIN_SEEDS = tuple(range(30000, 30300))    # R0: 150 matches, 150 more if needed

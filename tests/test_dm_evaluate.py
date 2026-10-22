@@ -62,7 +62,7 @@ def test_trace_has_one_row_per_step():
 def test_parallel_matches_serial():
     from dataclasses import replace
     from doomagent.dm.config import DM
-    from doomagent.evaluate import evaluate_plan
+    from doomagent.dm.evaluate import evaluate_plan
     from doomagent.variants import BASE
     cfg = replace(DM, timelimit=0.1)
     plan = [(BASE, (35011, 35012))]
@@ -78,3 +78,10 @@ def test_random_chooser_repeats_per_match():
         runs.append([run_match(FakeMatchEnv([row(first=i == 0) for i in range(20)]), c, 1)['length'],
                      c.actions[:]])
     assert runs[0] == runs[1] and len(set(runs[0][1])) > 3
+
+
+def test_items_count_pickups_not_respawn_refills():
+    # ITEMCOUNT ignores medikits and rockets: a pickup is a rise in health or rockets in one life
+    rows = [row(ammo=a, health=h, first=i in (0, 3)) for i, (a, h) in
+            enumerate([(10, 60), (15, 60), (15, 85), (15, 100), (15, 100)])]
+    assert run_match(FakeMatchEnv(rows), forward, 1)['items'] == 2

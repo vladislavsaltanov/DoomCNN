@@ -20,9 +20,8 @@ from doomagent.dm.config import (BOT, DM, FINE_LEFT, FINE_RIGHT, FORWARD, FORWAR
                                  FORWARD_RIGHT, ITEM_KIND, N_ACTIONS, STRAFE_LEFT, TURN_LEFT,
                                  TURN_RIGHT, VAL_SEEDS)
 from doomagent.dm.env import DeathmatchEnv
-from doomagent.dm.evaluate import run_match, summarize
+from doomagent.dm.evaluate import evaluate_plan, run_match, summarize
 from doomagent.dm.reports import d0_figure
-from doomagent.evaluate import evaluate_plan
 from doomagent.variants import BASE
 from doomagent.wadgen import read_wad
 

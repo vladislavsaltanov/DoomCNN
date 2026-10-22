@@ -60,7 +60,7 @@ def run_match(env, chooser, seed, trace=False):
     obs = env.reset(seed)
     rows = {k: [] for k in TRACE_KEYS}
     pos, enemy, first = [], [], []
-    shots, suicides, path, length, done = 0, 0, 0.0, 0, False
+    shots, suicides, pickups, path, length, done = 0, 0, 0, 0.0, 0, False
     while not done:
         p = env.privileged()
         bot = nearest_bot(p.labels, p.px, p.py, w)
@@ -81,6 +81,8 @@ def run_match(env, chooser, seed, trace=False):
             if q.ammo < p.ammo:
                 shots += int(round(p.ammo - q.ammo))
             path += math.hypot(q.px - p.px, q.py - p.py)
+            # ITEMCOUNT skips medikits and rockets: a pickup is a rise in health, rockets or armor
+            pickups += q.health > p.health or q.ammo > p.ammo or q.armor > p.armor
         length += 1
     end = env.privileged()
     bots = [float(f) for f in end.player_frags[1:]]
@@ -89,7 +91,7 @@ def run_match(env, chooser, seed, trace=False):
                suicides=int(suicides), kills=float(end.frags) + suicides,
                kd=float(end.frags) / max(float(end.deaths), 1.0), shots=shots,
                hits=float(end.hits), hits_per_shot=float(end.hits) / max(shots, 1),
-               items=float(end.items), path=path, stuck_steps=stuck,
+               items=float(pickups), path=path, stuck_steps=stuck,
                stuck_share=stuck / max(length, 1), enemy_steps=int(sum(enemy)),
                enemy_share=sum(enemy) / max(length, 1), length=length, bot_frags=bots,
                bot_median=float(np.median(bots)) if bots else None)
@@ -114,6 +116,21 @@ def run_chunk(variant, seeds, chooser, cfg, env_factory=None, trace=False):
     finally:
         env.close()
     return out
+
+
+def evaluate_plan(plan, chooser, cfg=DM, env_factory=None, workers=1, trace=False):
+    # plan: [(variant, seeds)]; workers > 1 runs matches in spawn processes (chooser must pickle);
+    # a match depends only on its seed, so the results equal the serial ones, in plan order
+    if workers <= 1:
+        return [r for v, seeds in plan for r in run_chunk(v, seeds, chooser, cfg, env_factory, trace)]
+    import multiprocessing as mp
+    from concurrent.futures import ProcessPoolExecutor
+    total = sum(len(s) for _, s in plan)
+    size = max(1, -(-total // (2 * workers)))  # about two chunks per worker
+    chunks = [(v, tuple(seeds[i:i + size])) for v, seeds in plan for i in range(0, len(seeds), size)]
+    with ProcessPoolExecutor(workers, mp_context=mp.get_context('spawn')) as ex:
+        futures = [ex.submit(run_chunk, v, s, chooser, cfg, env_factory, trace) for v, s in chunks]
+        return [r for f in futures for r in f.result()]
 
 
 def summarize(results):

@@ -61,19 +61,6 @@ if os.name == 'nt':
     ctypes.windll.winmm.timeBeginPeriod(1)
 
 
-def unthrottle_children(exe='vizdoom.exe'):
-    # every game process this one started (a new one per deathmatch match); False off Windows
-    if os.name != 'nt':
-        return False
-    done = False
-    for pid in _child_pids(exe):
-        h = _k32.OpenProcess(0x0200, False, pid)  # PROCESS_SET_INFORMATION
-        if h:
-            done = _unthrottle(h) or done
-            _k32.CloseHandle(h)
-    return done
-
-
 @dataclass(frozen=True)
 class Label:
     # a labels-buffer entry with the box scaled to network coordinates
@@ -139,7 +126,13 @@ class DoomEnv:
             g.add_available_game_variable(v)
         g.init()
         self.game = g
-        self.unthrottled = unthrottle_children()  # this env's game process (and older ones)
+        self.unthrottled = False
+        if os.name == 'nt':
+            for pid in _child_pids('vizdoom.exe'):  # this env's game process (and older ones)
+                h = _k32.OpenProcess(0x0200, False, pid)  # PROCESS_SET_INFORMATION
+                if h:
+                    self.unthrottled = _unthrottle(h) or self.unthrottled
+                    _k32.CloseHandle(h)
         self._frames = deque(maxlen=cfg.stack)
         self._rgb = np.zeros((cfg.render_h, cfg.render_w, 3), np.uint8)
         self._small = np.zeros((cfg.height, cfg.width), np.uint8)

@@ -6,9 +6,8 @@ from dataclasses import dataclass, field
 import numpy as np
 import vizdoom as vzd
 
-from doomagent.config import Cfg
-from doomagent.dm.config import AMMO_SCALE, BOT, BOT_NAMES, DM, HEALTH_SCALE
-from doomagent.env import DELTA_SIGN, RESOLUTIONS, Label, to_net, unthrottle_children
+from doomagent.dm.config import AMMO_SCALE, BOT, BOT_NAMES, DM, HEALTH_SCALE, DMCfg
+from doomagent.env import DELTA_SIGN, RESOLUTIONS, Label, to_net
 from doomagent.variants import BASE, Variant
 from doomagent.vzseed import vizdoom_seed
 
@@ -25,7 +24,23 @@ MAX_DEAD_TICS = 70  # the dead state lasts a tic or two with sv_forcerespawn; a 
 SELF_DIST = 1.0     # the player's own DoomPlayer label sits exactly at its position
 
 
-def action_buttons(cfg: Cfg):
+def unthrottle_children():
+    # Windows: opt every ViZDoom process this one started (a new one per match) out of power
+    # throttling, with the first section's helpers; importing doomagent.env already set the 1 ms
+    # timer and unthrottled this process
+    if os.name != 'nt':
+        return False
+    from doomagent import env as base
+    done = False
+    for pid in base._child_pids('vizdoom.exe'):
+        h = base._k32.OpenProcess(0x0200, False, pid)  # PROCESS_SET_INFORMATION
+        if h:
+            done = base._unthrottle(h) or done
+            base._k32.CloseHandle(h)
+    return done
+
+
+def action_buttons(cfg: DMCfg):
     # one button vector per action in dm.config order; fine turns go through the delta button
     f = DELTA_SIGN * cfg.fine_turn_delta
     return ([1, 0, 0, 0, 0, 0, 0], [1, 0, 0, 1, 0, 0, 0], [1, 0, 0, 0, 1, 0, 0],
@@ -80,7 +95,7 @@ class DeathmatchEnv:
     # cig.wad MAP01 against named ViZDoom bots. In host mode a match repeats bit for bit only if
     # the seed is set before init() and the match is the game's first (probed), so every reset
     # starts a fresh game. The agent-facing API returns DMObs; privileged data is separate.
-    def __init__(self, cfg: Cfg = DM, variant: Variant = BASE, visible: bool = False):
+    def __init__(self, cfg: DMCfg = DM, variant: Variant = BASE, visible: bool = False):
         self.cfg, self.variant, self.visible = cfg, variant, visible
         self.game, self.unthrottled, self.sectors = None, False, []
         self._buttons, self._noop = action_buttons(cfg), [0] * 7

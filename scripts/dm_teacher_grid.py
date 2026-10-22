@@ -10,9 +10,9 @@ import sys
 from dataclasses import replace
 
 from doomagent.dm.config import DM, VAL_SEEDS
-from doomagent.dm.evaluate import summarize
+from doomagent.dm.evaluate import evaluate_plan, summarize
 from doomagent.dm.teacher import DMTeacher
-from doomagent.evaluate import evaluate_plan, paired_diff_ci
+from doomagent.evaluate import paired_diff_ci
 from doomagent.variants import BASE
 
 GRID = {'safe_dist': (128.0, 224.0), 'chase_s': (1.0, 3.0), 'low_health': (30.0, 70.0),

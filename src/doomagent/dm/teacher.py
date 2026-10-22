@@ -1,12 +1,12 @@
 import math
 from collections import deque
 
-from doomagent.config import Cfg
-from doomagent.dm.config import (BARREL, BOT, DM, FINE_LEFT, FINE_RIGHT, FORWARD, FORWARD_LEFT,
+from dataclasses import dataclass
+
+from doomagent.dm.config import (BARREL, BOT, DM, DMCfg, FINE_LEFT, FINE_RIGHT, FORWARD, FORWARD_LEFT,
                                  FORWARD_RIGHT, ITEM_KIND, MODES, ROCKET_SPEED, SHOOT, STRAFE_LEFT,
                                  STRAFE_RIGHT, TIC_RATE, TURN_LEFT, TURN_RIGHT)
 from doomagent.dm.nav import lookahead, nav_for
-from doomagent.teacher import Enemy, is_aimed, pick_target
 
 ARRIVE_R = 64.0       # a goal counts as reached this close
 PICKUP_R = 24.0       # a known item this close is forgotten: picked up or gone
@@ -16,6 +16,33 @@ STUCK_STEPS = 8       # moving less than STUCK_MOVE over this many navigation st
 STUCK_MOVE = 16.0
 BARREL_MARGIN = 32.0  # a barrel in the line of fire closer than safe_dist + this blocks the shot
 LEFT_ACTIONS = {TURN_LEFT, FINE_LEFT, FORWARD_LEFT}
+
+
+@dataclass(frozen=True)
+class Enemy:
+    id: int
+    left: float      # box edges normalized to [-1, 1], negative = left of the screen center
+    right: float
+    dist: float      # world distance to the player
+    width_px: float  # box width at network resolution
+
+    @property
+    def offset(self):
+        return (self.left + self.right) / 2.0
+
+
+def is_aimed(e, margin):
+    m = margin * (e.right - e.left)
+    return e.left + m <= 0.0 <= e.right - m
+
+
+def pick_target(enemies, lock_id=None, keep=1.25):
+    # nearest bot, but keep the locked one unless another is clearly closer
+    nearest = min(enemies, key=lambda e: e.dist)
+    for e in enemies:
+        if e.id == lock_id and e.dist <= keep * nearest.dist:
+            return e
+    return nearest
 
 
 def wrap(deg):
@@ -79,7 +106,7 @@ def steer(rel):
 class DMTeacher:
     # scripted player on privileged data, honest about what it knows: items and bots only from
     # labels seen in this match, chase only to where a bot was seen; objects_info is never read
-    def __init__(self, cfg: Cfg = DM, keep_trace=False):
+    def __init__(self, cfg: DMCfg = DM, keep_trace=False):
         self.cfg, self.keep_trace = cfg, keep_trace
         self.nav, self.ring = None, []
         self.reset()

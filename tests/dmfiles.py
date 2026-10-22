@@ -1,9 +1,10 @@
 import numpy as np
 
+from doomagent.dm.config import DM
 from doomagent.dm.env import DMObs, DMPrivileged
 from doomagent.env import Label
 
-BOT_LABEL = Label(1, 7, 'DoomPlayer', 60.0, 40.0, 40.0, 40.0, 500.0, 0.0)  # centered, 500 units east
+BOT_LABEL = Label(1, 7, 'DoomPlayer', DM.width / 2 - 20.0, 40.0, 40.0, 40.0, 500.0, 0.0)  # centered, 500 units east
 
 
 def row(px=0.0, py=0.0, ammo=15.0, frags=0.0, deaths=0.0, first=False, bot=False, health=100.0,
@@ -29,7 +30,7 @@ class FakeMatchEnv:
 
     def _obs(self):
         r = self.rows[self.t]
-        return DMObs(np.full((4, 120, 160), self.t % 256, np.uint8),
+        return DMObs(np.full((DM.stack, DM.height, DM.width), self.t % 256, np.uint8),
                      np.array([r['health'] / 100.0, r['ammo'] / 50.0], np.float32), bool(r['first']))
 
     def reset(self, seed):

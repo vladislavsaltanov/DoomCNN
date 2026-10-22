@@ -34,13 +34,3 @@ class Cfg:
     noise_p: float = 0.10
     lam: float = 0.5           # visibility + offset heads
     lam_seg: float = 0.5       # enemy mask head
-    scenario: str = 'defend_the_center'  # 'defend_the_center' | 'deathmatch'
-    # deathmatch only (cig.wad MAP01 against ViZDoom bots); defend_the_center ignores these
-    bots: int = 7
-    timelimit: float = 2.0     # minutes per match: 4200 tics, 1050 agent steps at frame_skip 4
-    safe_dist: float = 160.0   # teacher: no rocket at a target, wall or barrel closer than this
-    chase_s: float = 2.0       # teacher: go where a bot was last seen for this long
-    low_health: float = 50.0   # teacher: go for a known medikit below this
-    low_ammo: float = 5.0      # teacher: go for known rockets below this
-    seg_len: int = 32          # M1 training windows, steps
-    burn_in: int = 8           # steps that only warm up the GRU in windows that start mid-life

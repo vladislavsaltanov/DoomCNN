@@ -14,14 +14,14 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt  # noqa: E402
 
 from doomagent.dm.config import DM, SHOOT, val_plan  # noqa: E402
-from doomagent.dm.evaluate import summarize  # noqa: E402
+from doomagent.dm.evaluate import evaluate_plan, summarize  # noqa: E402
 from doomagent.dm.reports import ENTITY, _dots  # noqa: E402
 from doomagent.dm.teacher import DMTeacher  # noqa: E402
-from doomagent.evaluate import evaluate_plan, paired_diff_ci  # noqa: E402
+from doomagent.evaluate import paired_diff_ci  # noqa: E402
 from doomagent.reports import MUTED, SURFACE, _style  # noqa: E402
 
 WIDTHS = (0.0, 2.0, 3.0, 4.0, 6.0)
-CHECK_W = 4.0  # 16 px at 640: the narrowest bot a 160x120 network should still be asked to hit
+CHECK_W = 4.0 * DM.width / 160  # 16 px at 640: the narrowest bot the network should still be asked to hit
 
 
 class WidthLog:

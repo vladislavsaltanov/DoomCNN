@@ -26,7 +26,7 @@ def place(rel, dist, me=ME, angle=0.0):
     a = math.radians(angle + rel)
     wx, wy = me[0] + dist * math.cos(a), me[1] + dist * math.sin(a)
     xn, half = -math.tan(math.radians(rel)), 16.0 / max(dist, 1.0)
-    return wx, wy, (xn - half + 1) * 80, 2 * half * 80
+    return wx, wy, (xn - half + 1) * DM.width / 2, half * DM.width
 
 
 def bot(id, rel, dist, me=ME, north=0.0, pos=None):
@@ -49,7 +49,7 @@ def priv(**kw):
 
 
 def obs(first=False):
-    return DMObs(np.zeros((4, 120, 160), np.uint8), np.zeros(2, np.float32), first)
+    return DMObs(np.zeros((DM.stack, DM.height, DM.width), np.uint8), np.zeros(2, np.float32), first)
 
 
 def scripted_steps():

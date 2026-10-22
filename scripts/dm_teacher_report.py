@@ -12,10 +12,9 @@ from dataclasses import fields, replace
 import numpy as np
 
 from doomagent.dm.config import DM, MODES, val_plan
-from doomagent.dm.evaluate import RandomChooser, summarize
+from doomagent.dm.evaluate import RandomChooser, evaluate_plan, summarize
 from doomagent.dm.reports import gate_a, match_table_md, teacher_figure
 from doomagent.dm.teacher import DMTeacher
-from doomagent.evaluate import evaluate_plan
 
 
 def with_overrides(cfg, items):
