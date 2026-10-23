@@ -9,12 +9,13 @@ import ctypes
 import glob
 import json
 import os
+import re
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 from doomagent.dm.actions import HEADS, MOVE_NAMES, TURN_DEG
-from doomagent.dm.config import DM, VARIANTS_DIR
+from doomagent.dm.config import DM, MODES, VARIANTS_DIR
 
 # the values of every head, for the charts
 VALUES = dict(move=list(MOVE_NAMES), turn=[f'{d:+g}°' for d in TURN_DEG], fire=['no', 'fire'], weapon=['keep', 'next'])
@@ -56,6 +57,72 @@ def dm_train(name):
     d = {k: _read_json(f'runs/dm/{name}.pt.{k}.json') for k in ('progress', 'live', 'log')}
     teacher = (_read_json('reports/dm/e1_teacher.json') or {}).get('report', {}).get('teacher', {}).get('frags')
     return dict(name=name, heads=list(HEADS), values=VALUES, teacher=teacher, **d)
+
+
+_MATCH_CACHE = {}  # npz path -> (mtime, its numbers): finished matches are read once
+
+
+def _match_numbers(path):
+    import numpy as np
+    m = os.path.getmtime(path)
+    if path not in _MATCH_CACHE or _MATCH_CACHE[path][0] != m:
+        z = np.load(path)
+        a, c = z['actions'], z['counters']
+        frames = path[:-4] + '.frames.npy'
+        _MATCH_CACHE[path] = (m, dict(
+            steps=len(a), frags=float(c[-1, 0]), deaths=float(c[-1, 1]), hits=float(c[-1, 2]),
+            fire=int(a[:, 2].sum()), switch=int(a[:, 3].sum()), bot=int(z['bot_visible'].sum()),
+            modes=np.bincount(z['modes'], minlength=len(MODES)).tolist(),
+            weapons=np.bincount(z['weapon'].astype(int), minlength=8).tolist(), mtime=m,
+            bytes=os.path.getsize(path) + (os.path.getsize(frames) if os.path.exists(frames) else 0)))
+    return _MATCH_CACHE[path][1]
+
+
+def dm_record():
+    # the recording card: what is recorded, the finished matches and their numbers, the live workers
+    from doomagent.dm.livetap import LIVE_DIR, STALE_S
+    from doomagent.dm.weapons import WEAPONS
+    plan = _read_json(os.path.join(LIVE_DIR, 'record.json'))
+    now = time.time()
+    workers = []
+    for p in sorted(glob.glob(os.path.join(LIVE_DIR, '*.json'))):
+        w = _read_json(p)
+        if os.path.basename(p) != 'record.json' and w and now - w.get('time', 0) < STALE_S:
+            workers.append(w)
+    if not plan:
+        return dict(plan=None, workers=workers)
+    rows = []
+    for p in glob.glob(os.path.join(plan['out'], 'ep_*.npz')):
+        try:
+            rows.append(_match_numbers(p))
+        except (OSError, ValueError, KeyError):  # being written
+            pass
+    rows.sort(key=lambda r: r['mtime'])
+    steps = sum(r['steps'] for r in rows)
+    new = [r for r in rows if r['mtime'] >= plan['start']]
+    rate = len(new) / max(now - plan['start'], 1.0)
+    left = max(plan['total'] - len(rows), 0)
+    weapons = [sum(r['weapons'][s] for r in rows) for s in range(8)]
+    metrics = None
+    if rows:
+        metrics = dict(
+            frags=sum(r['frags'] for r in rows) / len(rows), deaths=sum(r['deaths'] for r in rows) / len(rows),
+            kd=sum(r['frags'] for r in rows) / max(sum(r['deaths'] for r in rows), 1.0),
+            hits=sum(r['hits'] for r in rows) / len(rows), fire_share=sum(r['fire'] for r in rows) / steps,
+            switch_share=sum(r['switch'] for r in rows) / steps, bot_share=sum(r['bot'] for r in rows) / steps,
+            mode_share={m: sum(r['modes'][i] for r in rows) / steps for i, m in enumerate(MODES)},
+            weapon_share={WEAPONS[s].name: weapons[s] / steps for s in WEAPONS if weapons[s]},
+            frags_per_match=[r['frags'] for r in rows[-60:]])
+    return dict(plan=plan, workers=workers, done=len(rows), steps=steps,
+                gb=sum(r['bytes'] for r in rows) / 1e9, per_min=60 * rate,
+                eta_s=left / rate if new and left else (0 if not left else None), metrics=metrics)
+
+
+def dm_neurons(run):
+    # neuron maps of this run's network kind (m0 or m1), newest first
+    kind = os.path.basename(run).split('_')[0]
+    files = sorted(glob.glob(f'artifacts/dm/*_select_{kind}.png'), key=os.path.getmtime, reverse=True)
+    return dict(images=[dict(name=os.path.basename(f), mtime=os.path.getmtime(f)) for f in files])
 
 
 def dm_options():
@@ -133,6 +200,25 @@ def make_handler(dm, system=None):
                 return self._send(dm_runs())
             if u.path == '/api/train':
                 return self._send(dm_train(q.get('run', '')))
+            if u.path == '/api/record':
+                return self._send(dm_record())
+            if u.path == '/api/record/img':
+                from doomagent.dm.livetap import LIVE_DIR
+                w, k = q.get('w', ''), q.get('k', '')
+                path = os.path.join(LIVE_DIR, f'{w}.{k}.jpg')
+                if re.fullmatch(r'[\w-]+', w) and k in ('screen', 'map') and os.path.exists(path):
+                    with open(path, 'rb') as fh:
+                        return self._send(fh.read(), 'image/jpeg')
+                return self._send({'error': 'not found'}, code=404)
+            if u.path == '/api/neurons':
+                return self._send(dm_neurons(q.get('run', '')))
+            if u.path == '/artifact':
+                name = q.get('name', '')
+                path = os.path.join('artifacts', 'dm', name)
+                if re.fullmatch(r'[\w.-]+\.png', name) and '..' not in name and os.path.exists(path):
+                    with open(path, 'rb') as fh:
+                        return self._send(fh.read(), 'image/png')
+                return self._send({'error': 'not found'}, code=404)
             if u.path == '/api/system':
                 return self._send(dict(now=system.now if system else {}))
             return self._send({'error': 'not found'}, code=404)

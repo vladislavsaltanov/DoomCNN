@@ -61,3 +61,39 @@ def test_parallel_record_matches_serial(tmp_path):
         assert all(np.array_equal(a[k], b[k]) for k in a.files)
         assert np.array_equal(*(np.load(tmp_path / d / f'ep_base_{s}.frames.npy') for d in 'sp'))
     assert (tmp_path / 'p' / 'meta.json').read_text() == (tmp_path / 's' / 'meta.json').read_text()
+
+
+def test_live_tap_publishes_the_current_step(tmp_path):
+    # a recording worker shows what it plays: frame, minimap and state, at most every every_s seconds
+    import json
+    from doomagent.dm.livetap import LiveTap
+    tap = LiveTap(str(tmp_path), every_s=0.0, worker='w1')
+    env = FakeMatchEnv([row(first=i == 0, frags=float(i // 4)) for i in range(12)])
+    record_match(env, 5, lambda o, p, lab: lab, StubTeacher(LABEL), str(tmp_path / 'ep_base_5'), live=tap)
+    st = json.load(open(tmp_path / 'w1.json'))
+    assert st['seed'] == 5 and st['step'] == 11 and st['frags'] == 2.0 and st['mode'] == 'patrol'
+    assert st['variant'] == 'base' and 'fire' in st['label']
+    assert (tmp_path / 'w1.screen.jpg').stat().st_size > 0
+
+
+def test_live_tap_waits_between_frames(tmp_path):
+    from doomagent.dm.livetap import LiveTap
+    tap = LiveTap(str(tmp_path), every_s=3600.0, worker='w1')
+    env = FakeMatchEnv([row(first=i == 0) for i in range(6)])
+    record_match(env, 5, lambda o, p, lab: lab, StubTeacher(LABEL), str(tmp_path / 'ep_base_5'), live=tap)
+    import json
+    assert json.load(open(tmp_path / 'w1.json'))['step'] == 0  # only the first step was published
+
+
+def test_bot_visible_ignores_hidden_bots(tmp_path):
+    # a label with no pixels on screen (behind a wall) is not a visible bot in the dataset
+    from dataclasses import replace as rep
+    class Hidden(FakeMatchEnv):
+        def privileged(self):
+            return rep(self._priv(), vis_px={7: 0})
+    env = Hidden([row(first=i == 0, bot=True) for i in range(5)])
+    record_match(env, 1, lambda o, p, lab: lab, StubTeacher(LABEL), str(tmp_path / 'ep_base_1'))
+    assert not np.load(tmp_path / 'ep_base_1.npz')['bot_visible'].any()
+    record_match(FakeMatchEnv([row(first=i == 0, bot=True) for i in range(5)]), 1, lambda o, p, lab: lab,
+                 StubTeacher(LABEL), str(tmp_path / 'ep_base_2'))
+    assert np.load(tmp_path / 'ep_base_2.npz')['bot_visible'].all()  # unknown pixel counts pass
