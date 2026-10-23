@@ -15,6 +15,7 @@ REPLAN_STEPS = 8
 STUCK_STEPS = 8       # moving less than STUCK_MOVE over this many navigation steps is stuck
 STUCK_MOVE = 16.0
 BARREL_MARGIN = 32.0  # a barrel in the line of fire closer than safe_dist + this blocks the shot
+DODGE_ROOM = 48.0     # a dodge turns back before a wall this close on its side
 LEFT_ACTIONS = {TURN_LEFT, FINE_LEFT, FORWARD_LEFT}
 
 
@@ -120,6 +121,7 @@ class DMTeacher:
         self.tracks, self.lock, self.target, self.lead, self.last_seen = {}, None, None, None, None
         self.path, self._path_goal, self._path_age = [], None, 0
         self.scan, self.unstick, self.unstick_side = TURN_RIGHT, 0, STRAFE_LEFT
+        self.dodge_side, self.dodge_n = STRAFE_LEFT, 0
         self.moves = deque(maxlen=STUCK_STEPS + 1)
         self.ring_i = 0
         if me is not None and self.ring:
@@ -212,20 +214,40 @@ class DMTeacher:
         self.lock, self.target = t.id, t
         _, tx, ty = self.tracks[t.id][-1]
         self.lead = lead_shift(self.tracks[t.id], priv.px, priv.py, priv.angle, tx, ty)
-        aim = Enemy(t.id, t.left + self.lead, t.right + self.lead, t.dist, t.width_px)
+        slack = c.aim_slack / max(t.dist, 1.0)  # a sideways miss in map units, as a share of the half screen
+        aim = Enemy(t.id, t.left + self.lead - slack, t.right + self.lead + slack, t.dist, t.width_px)
+        ray = self.nav.shot_dist if c.shot_check == 'rocket' else self.nav.wall_dist
         safe = (t.dist >= c.safe_dist
-                and self.nav.wall_dist(priv.px, priv.py, priv.angle) >= c.safe_dist
+                and ray(priv.px, priv.py, priv.angle) >= c.safe_dist
                 and not self._barrel_in_line(priv, me))
-        if is_aimed(aim, c.aim_margin) and priv.attack_ready and safe and t.width_px >= c.min_target_w:
+        aimed = is_aimed(aim, c.aim_margin)
+        if aimed and priv.attack_ready and safe and t.width_px >= c.min_target_w:
             return SHOOT
         if t.dist < c.safe_dist:
-            left = self.nav.wall_dist(priv.px, priv.py, priv.angle + 90.0)
-            right = self.nav.wall_dist(priv.px, priv.py, priv.angle - 90.0)
-            return STRAFE_LEFT if left >= right else STRAFE_RIGHT
+            return self._side_step(priv)
+        if c.dodge and (aimed or abs(aim.offset) <= c.fine_zone) and not priv.attack_ready:
+            return self._dodge(priv)
         a = turn_towards(aim.offset, self.scan, c.fine_zone)
         if a != SHOOT:
             self.scan = TURN_LEFT if a in LEFT_ACTIONS else TURN_RIGHT
         return a
+
+    def _side_step(self, priv):
+        # towards the side with more room
+        left = self.nav.wall_dist(priv.px, priv.py, priv.angle + 90.0)
+        right = self.nav.wall_dist(priv.px, priv.py, priv.angle - 90.0)
+        return STRAFE_LEFT if left >= right else STRAFE_RIGHT
+
+    def _dodge(self, priv):
+        # while the launcher reloads: strafe one way for dodge_steps, then the other; a wall closer
+        # than a few steps on that side flips it early
+        self.dodge_n += 1
+        side_angle = 90.0 if self.dodge_side == STRAFE_LEFT else -90.0
+        if self.dodge_n > self.cfg.dodge_steps or \
+                self.nav.wall_dist(priv.px, priv.py, priv.angle + side_angle) < DODGE_ROOM:
+            self.dodge_side = STRAFE_RIGHT if self.dodge_side == STRAFE_LEFT else STRAFE_LEFT
+            self.dodge_n = 1
+        return self.dodge_side
 
     def _barrel_in_line(self, priv, me):
         w = self.cfg.width

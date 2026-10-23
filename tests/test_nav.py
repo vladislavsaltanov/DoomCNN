@@ -35,6 +35,25 @@ def test_step_height(floor, reachable):
     assert bool(NavGrid([a, b]).path((64, 128), (448, 128))) == reachable
 
 
+@pytest.mark.parametrize('floor_a, floor_b, start, angle, expect', [
+    (0.0, 40.0, (64, 128), 0.0, 192.0),    # a ledge up above the rocket's height blocks it
+    (0.0, 16.0, (64, 128), 0.0, 448.0),    # a low step does not
+    (0.0, 40.0, (448, 128), 180.0, 448.0),  # firing down off a ledge: nothing in the way
+])
+def test_shot_dist_counts_heights_not_walkability(floor_a, floor_b, start, angle, expect):
+    a = sector([(0, 0), (256, 0), (256, 256), (0, 256)], floor=floor_a, open_edges=(1,))
+    b = sector([(256, 0), (512, 0), (512, 256), (256, 256)], floor=floor_b, open_edges=(3,))
+    assert NavGrid([a, b]).shot_dist(*start, angle) == pytest.approx(expect, abs=1.0)
+
+
+def test_impassable_two_sided_line_lets_rockets_through():
+    a = sector([(0, 0), (256, 0), (256, 256), (0, 256)])  # the shared edge is flagged blocking
+    b = sector([(256, 0), (512, 0), (512, 256), (256, 256)])
+    g = NavGrid([a, b])
+    assert g.wall_dist(64, 128, 0.0) == pytest.approx(192.0, abs=1.0)
+    assert g.shot_dist(64, 128, 0.0) == pytest.approx(448.0, abs=1.0)
+
+
 def test_low_ceiling_is_not_walkable():
     g = NavGrid([sector([(0, 0), (256, 0), (256, 256), (0, 256)], floor=264.0, ceil=268.0)])
     assert not g.walk.any()

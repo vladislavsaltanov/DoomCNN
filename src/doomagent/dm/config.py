@@ -44,6 +44,11 @@ class DMCfg:
     chase_s: float = 1.0       # D1 grid: go where a bot was last seen for this long
     low_health: float = 50.0   # go for a known medikit below this
     low_ammo: float = 5.0      # go for known rockets below this
+    # teacher upgrades under test (D3 teacher check); the defaults keep the D1 teacher
+    shot_check: str = 'walk'   # 'walk': walking walls block a shot; 'rocket': only what stops a rocket
+    aim_slack: float = 0.0     # map units of sideways miss still counted as aimed (splash, bot radius)
+    dodge: bool = False        # strafe from side to side while reloading instead of standing
+    dodge_steps: int = 4       # steps per strafe direction
     seg_len: int = 32          # M1 training windows, steps
     burn_in: int = 8           # steps that only warm up the GRU in windows that start mid-life
 

@@ -5,6 +5,9 @@ import numpy as np
 
 from doomagent.dm.config import PLAYER_HEIGHT, PLAYER_RADIUS, STEP_HEIGHT
 
+MISSILE_Z = 32.0  # a player's rocket starts this far above the player's floor and flies level
+MISSILE_H = 8.0   # the rocket's height
+
 
 def walls_from_sectors(sectors, step=STEP_HEIGHT, height=PLAYER_HEIGHT):
     # (K, 4) segments the player cannot cross: blocking lines, one-sided lines, and two-sided lines
@@ -52,11 +55,42 @@ def segments_cross(ax, ay, bx, by, walls):
     return bool(np.any((d1 * d2 < 0) & (d3 * d4 < 0)))
 
 
+def shot_lines_from_sectors(sectors):
+    # every line with the highest floor and lowest ceiling of its sides; a one-sided line gets
+    # (+inf, -inf), so it stops any rocket
+    sides = {}
+    for floor, ceil, lines in sectors:
+        for x1, y1, x2, y2, _ in lines:
+            sides.setdefault(tuple(sorted([(x1, y1), (x2, y2)])), []).append((floor, ceil))
+    segs, lo, hi = [], [], []
+    for (a, b), fc in sides.items():
+        segs.append((a[0], a[1], b[0], b[1]))
+        two = len(fc) > 1
+        lo.append(max(f for f, _ in fc) if two else np.inf)
+        hi.append(min(c for _, c in fc) if two else -np.inf)
+    return np.array(segs, np.float64).reshape(-1, 4), np.array(lo), np.array(hi)
+
+
+def _ray(walls, x, y, angle_deg, max_d):
+    if len(walls) == 0:
+        return max_d
+    dx, dy = math.cos(math.radians(angle_deg)), math.sin(math.radians(angle_deg))
+    x1, y1, x2, y2 = (walls[:, i] for i in range(4))
+    ex, ey = x2 - x1, y2 - y1
+    den = dx * ey - dy * ex
+    with np.errstate(divide='ignore', invalid='ignore'):
+        t = ((x1 - x) * ey - (y1 - y) * ex) / den
+        u = ((x1 - x) * dy - (y1 - y) * dx) / den
+    ok = (np.abs(den) > 1e-9) & (t > 0) & (u >= 0) & (u <= 1)
+    return float(min(t[ok].min(), max_d)) if ok.any() else max_d
+
+
 class NavGrid:
     # a walkable grid over the map; built once per map (nav_for caches it)
     def __init__(self, sectors, cell=16.0, clearance=PLAYER_RADIUS + 2):
         self.cell = cell
         self.walls = walls_from_sectors(sectors)
+        self.shot_lines, self.shot_lo, self.shot_hi = shot_lines_from_sectors(sectors)
         pts = np.array([(x, y) for _, _, lines in sectors for x1, y1, x2, y2, _ in lines
                         for x, y in ((x1, y1), (x2, y2))], np.float64)
         self.x0, self.y0 = pts[:, 0].min(), pts[:, 1].min()
@@ -133,17 +167,17 @@ class NavGrid:
         return []
 
     def wall_dist(self, x, y, angle_deg, max_d=4096.0):
-        if len(self.walls) == 0:
-            return max_d
-        dx, dy = math.cos(math.radians(angle_deg)), math.sin(math.radians(angle_deg))
-        x1, y1, x2, y2 = (self.walls[:, i] for i in range(4))
-        ex, ey = x2 - x1, y2 - y1
-        den = dx * ey - dy * ex
-        with np.errstate(divide='ignore', invalid='ignore'):
-            t = ((x1 - x) * ey - (y1 - y) * ex) / den
-            u = ((x1 - x) * dy - (y1 - y) * dx) / den
-        ok = (np.abs(den) > 1e-9) & (t > 0) & (u >= 0) & (u <= 1)
-        return float(min(t[ok].min(), max_d)) if ok.any() else max_d
+        # to the nearest line the player cannot walk through
+        return _ray(self.walls, x, y, angle_deg, max_d)
+
+    def shot_dist(self, x, y, angle_deg, max_d=4096.0):
+        # to the nearest line that stops a rocket fired from (x, y): one-sided lines, and two-sided ones
+        # where a floor rises above the rocket or a ceiling comes down on it; the impassable flag and
+        # ledges going down do not stop it
+        f = self.floor[self.cell_of(x, y)]
+        rz = (0.0 if np.isnan(f) else float(f)) + MISSILE_Z
+        stop = (self.shot_lo > rz) | (self.shot_hi < rz + MISSILE_H)
+        return _ray(self.shot_lines[stop], x, y, angle_deg, max_d)
 
     def patrol_ring(self, k=8, seed=0):
         ii, jj = np.nonzero(self.walk)
