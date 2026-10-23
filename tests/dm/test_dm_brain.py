@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 import torch
 
+from doomagent.dm.actions import HEAD_SIZES, VEC_DIM
 from doomagent.dm.agent import DMAgent
 from doomagent.dm.brain import render, trace
 from doomagent.dm.config import DM
@@ -15,7 +16,7 @@ from doomagent.env import Label
 
 def inputs(seed=0):
     g = np.random.default_rng(seed)
-    return g.integers(0, 255, (4, DM.height, DM.width), dtype=np.uint8), g.random(2).astype(np.float32)
+    return g.integers(0, 255, (4, DM.height, DM.width), dtype=np.uint8), g.random(VEC_DIM).astype(np.float32)
 
 
 def bot_label():
@@ -25,22 +26,25 @@ def bot_label():
 def test_m0_contributions_sum_to_the_logit():
     m = DMNet(DM, memory=False).eval()
     t = trace(m, *inputs())
-    a = t['action']
-    assert np.isclose(t['contrib'][a].sum() + t['vec_contrib'][a].sum() + t['bias'][a], t['logits'][a], atol=1e-4)
+    assert len(t['action']) == 4 and [len(p) for p in t['probs']] == list(HEAD_SIZES)
+    for k, a in enumerate(t['action']):
+        total = t['contrib'][k][a].sum() + t['vec_contrib'][k][a].sum() + t['bias'][k][a]
+        assert np.isclose(total, t['logits'][k][a], atol=1e-4)
 
 
 def test_m0_vec_contrib_is_the_linear_term():
     m = DMNet(DM, memory=False).eval()
     f, v = inputs()
     w = m.head.weight.detach().numpy()[:, 512:]
-    assert np.allclose(trace(m, f, v)['vec_contrib'], w * v[None, :], atol=1e-5)
+    got = np.concatenate(trace(m, f, v)['vec_contrib'])
+    assert np.allclose(got, w * v[None, :], atol=1e-5)
 
 
 def test_m1_contributions_sum_to_the_logit():
     m = DMNet(DM, memory=True).eval()
     t = trace(m, *inputs(), h=torch.randn(1, 1, 512))
-    a = t['action']
-    assert np.isclose(t['contrib'][a].sum() + t['bias'][a], t['logits'][a], atol=1e-4)
+    for k, a in enumerate(t['action']):
+        assert np.isclose(t['contrib'][k][a].sum() + t['bias'][k][a], t['logits'][k][a], atol=1e-4)
 
 
 def test_trace_leaves_h_unchanged():
@@ -81,8 +85,9 @@ def test_tape_keeps_the_last_20_seconds_and_places_events():
 
 
 def test_events_from():
-    p0 = DMPrivileged(labels=[], ammo=5.0)
-    p1 = DMPrivileged(labels=[bot_label()], ammo=15.0)
+    p0 = DMPrivileged(labels=[], ammo=5.0, weapon=5)
+    p1 = DMPrivileged(labels=[bot_label()], ammo=15.0, weapon=5)
     assert events_from(p0, p1, False, False) == {'bot_seen', 'pickup'}
+    assert events_from(p0, DMPrivileged(labels=[], ammo=50.0, weapon=2), False, False) == set()  # a switch
     assert events_from(p1, p0, True, False) == {'bot_lost', 'death'}
     assert events_from(None, p0, True, True) == set()

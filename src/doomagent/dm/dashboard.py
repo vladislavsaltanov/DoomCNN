@@ -13,7 +13,11 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from doomagent.dm.config import ACTION_NAMES, DM, VARIANTS_DIR
+from doomagent.dm.actions import HEADS, MOVE_NAMES, TURN_DEG
+from doomagent.dm.config import DM, VARIANTS_DIR
+
+# the values of every head, for the charts
+VALUES = dict(move=list(MOVE_NAMES), turn=[f'{d:+g}°' for d in TURN_DEG], fire=['no', 'fire'], weapon=['keep', 'next'])
 from doomagent.dm.live import DMLive
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -49,8 +53,8 @@ def dm_runs():
 def dm_train(name):
     name = os.path.basename(name)  # no paths from the query string
     d = {k: _read_json(f'runs/dm/{name}.pt.{k}.json') for k in ('progress', 'live', 'log')}
-    teacher = (_read_json('reports/dm/d1_teacher.json') or {}).get('report', {}).get('teacher', {}).get('frags')
-    return dict(name=name, actions=list(ACTION_NAMES), teacher=teacher, **d)
+    teacher = (_read_json('reports/dm/e1_teacher.json') or {}).get('report', {}).get('teacher', {}).get('frags')
+    return dict(name=name, heads=list(HEADS), values=VALUES, teacher=teacher, **d)
 
 
 def dm_options():
@@ -112,7 +116,7 @@ def make_handler(dm, system=None):
                 with dm.lock:
                     req = {k: v for k, v in dm.req.items() if k != 'changed'}
                 return self._send(dict(state=dm.state, req=req, history=list(dm.history),
-                                       series=list(dm.series), actions=list(ACTION_NAMES)))
+                                       series=list(dm.series), heads=list(HEADS), values=VALUES))
             if u.path == '/api/control':
                 kw = {k: q[k] for k in ('model', 'variant') if k in q}
                 if 'seed' in q:

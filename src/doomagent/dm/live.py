@@ -10,11 +10,18 @@ from collections import deque
 import cv2
 import numpy as np
 
-from doomagent.dm.config import ACTION_NAMES, DM, VARIANTS_DIR
+from doomagent.dm.actions import HEADS, MOVE_NAMES, TURN_DEG
+from doomagent.dm.config import DM, VARIANTS_DIR
 
 JPEG = [cv2.IMWRITE_JPEG_QUALITY, 82]
 WATCH_S = 3.0  # the network and memory views are drawn only while someone pulled them this recently
 BRAIN_EVERY_S = 0.4  # trace() runs ten backward passes: at most this often
+
+
+def describe(a):
+    # 'forward · +10 · fire · next' for the page
+    move, turn, fire, weapon = (int(x) for x in a)
+    return ' · '.join([MOVE_NAMES[move], f'{TURN_DEG[turn]:+g}°'] + (['fire'] if fire else []) + (['next'] if weapon else []))
 
 
 def _jpg(img):
@@ -100,7 +107,7 @@ class DMLive:
         self.series.clear()
         with self.lock:
             self.memory = None
-        agree = 0
+        agree = {h: 0 for h in HEADS + ('all',)}
         prev, last_brain = None, 0.0
         tic_s = 1.0 / (35 * max(0.1, float(req['speed'])))
         due = time.perf_counter()
@@ -131,7 +138,9 @@ class DMLive:
                     with self.lock:
                         self.memory = m
             prev = priv
-            agree += action == label
+            same = [int(a) == int(b) for a, b in zip(action, label)]
+            for h, ok in zip(HEADS + ('all',), same + [all(same)]):
+                agree[h] += ok
 
             def tic(rgb, p, action=action, info=info):
                 nonlocal due
@@ -146,21 +155,22 @@ class DMLive:
                 if time.perf_counter() - due > 0.25:  # fell behind (a network view): no catch-up burst
                     due = time.perf_counter()
 
-            obs, _, done = env.step(int(action), on_tic=tic)
+            obs, _, done = env.step(action, on_tic=tic)
             step += 1
             p = env.privileged()
-            self.series.append(dict(step=step, agree=int(action == label),
-                                    p_teacher=None if info is None else float(info['probs'][int(label)]),
+            self.series.append(dict(step=step, agree=int(all(same)), agree_move=int(same[0]), agree_turn=int(same[1]),
+                                    agree_fire=int(same[2]),
+                                    p_teacher=None if info is None else float(info['probs'][1][int(label[1])]),
                                     frags=p.frags, health=max(p.health, 0.0)))
             self.state = dict(
                 status='играет', model=req['model'], variant=env_name, seed=seed, step=step,
                 frags=p.frags, deaths=p.deaths, kd=p.frags / max(p.deaths, 1), health=p.health, ammo=p.ammo,
-                action=ACTION_NAMES[int(action)], teacher=ACTION_NAMES[int(label)], mode=teacher.mode,
-                agree=agree / step, memory=bool(memory),
-                probs=None if info is None else [float(x) for x in info['probs']])
+                action=describe(action), teacher=describe(label), mode=teacher.mode, weapon=int(p.weapon),
+                agree={h: n / step for h, n in agree.items()}, memory=bool(memory),
+                probs=None if info is None else [[float(x) for x in pr] for pr in info['probs']])
         p = env.privileged()
         self.history.appendleft(dict(model=req['model'], variant=env_name, seed=seed, frags=p.frags,
-                                     deaths=p.deaths, steps=step, agree=agree / max(step, 1)))
+                                     deaths=p.deaths, steps=step, agree=agree['all'] / max(step, 1)))
         with self.lock:
             if not self.req.get('changed'):
                 self.req['seed'] = seed + 1  # the next match on the next seed

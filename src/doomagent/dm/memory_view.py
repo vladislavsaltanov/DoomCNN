@@ -28,7 +28,7 @@ def events_from(prev, priv, first, match_start):
         ev.add('bot_lost')
     if first:
         ev.add('death')
-    elif priv.health > prev.health or priv.ammo > prev.ammo or priv.armor > prev.armor:
+    elif priv.health > prev.health or priv.armor > prev.armor or (priv.ammo > prev.ammo and priv.weapon == prev.weapon):
         ev.add('pickup')
     return ev
 

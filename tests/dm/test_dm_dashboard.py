@@ -45,4 +45,5 @@ def test_runs_and_train_read_the_run_files(tmp_path, monkeypatch):
     runs = {r['name']: r for r in dm_runs()}
     assert runs['m1_x']['best'] == 4.0 and runs['m0_y']['best'] is None
     d = dm_train('../runs/dm/m1_x')  # a path in the query string is cut to the run name
-    assert d['log']['log'][-1]['epoch'] == 10 and len(d['actions']) == 10
+    assert d['log']['log'][-1]['epoch'] == 10 and d['heads'] == ['move', 'turn', 'fire', 'weapon']
+    assert len(d['values']['turn']) == 15

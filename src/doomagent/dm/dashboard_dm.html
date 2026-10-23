@@ -51,7 +51,7 @@
 <body>
 <header>
   <h1>DoomCNN <span>deathmatch</span></h1>
-  <div class="sub">cig.wad MAP01, 7 ботов, матч 2 минуты. Сеть видит только кадры и [здоровье, ракеты]; учитель играет «в тени» и подписывает каждый шаг.</div>
+  <div class="sub">cig.wad MAP02, 7 ботов, матч 2 минуты. Сеть видит только кадры и вектор (здоровье, броня, патроны, оружие в руках); учитель-читер играет «в тени» и подписывает каждый шаг четырьмя головами: движение, поворот, выстрел, оружие.</div>
   <div class="pill" id="sys">—</div>
 </header>
 <main>
@@ -77,14 +77,14 @@
       <div class="tiles">
         <div class="tile"><small>фраги</small><b id="t-frags">—</b></div>
         <div class="tile"><small>смерти</small><b id="t-deaths">—</b> <i id="t-kd"></i></div>
-        <div class="tile"><small>здоровье · ракеты</small><b id="t-hp">—</b></div>
+        <div class="tile"><small>здоровье · патроны</small><b id="t-hp">—</b></div>
         <div class="tile"><small>согласие с учителем</small><b id="t-agree">—</b></div>
       </div>
       <div class="note" id="t-action">—</div>
     </div>
     <div class="two">
       <div class="card"><h2>Согласие с учителем</h2><div class="chart" id="c-agree"></div>
-        <div class="note">доля шагов за последние 25, где сеть выбрала то же, что учитель</div></div>
+        <div class="note">доля шагов за последние 25, где голова сети выбрала то же, что учитель</div></div>
       <div class="card"><h2>Фраги за матч</h2><div class="chart" id="c-frags"></div></div>
     </div>
     <div class="card"><h2>Прошлые матчи</h2><div id="hist" class="empty">пока нет</div></div>
@@ -92,9 +92,9 @@
 
   <section class="col">
     <div class="card"><h2>Карта сверху</h2><img class="view" src="/live/map.mjpg" alt="мини-карта" style="max-width:360px;margin:auto">
-      <div class="note">белый — игрок и его поле зрения, красные — боты, оранжевая линия — путь учителя; кольца — предметы (зелёный аптечка, жёлтый ракеты, розовый броня), закрашены — те, что учитель уже видел. Карту знает только учитель, сеть — нет</div></div>
+      <div class="note">белый — игрок и его поле зрения, красные — боты, оранжевая линия — путь учителя; квадраты — оружие (цвет по виду), кольца — аптечки (зелёные), патроны (жёлтые), броня (розовая); закрашены — места, которые знает учитель. Карту знает только учитель, сеть — нет</div></div>
     <div class="card"><h2>Нейросеть изнутри</h2><img class="view" src="/live/brain.mjpg" alt="вид сети">
-      <div class="note">вход и что влияет на решение, карты свёрток, 512 нейронов, вклад [здоровье, ракеты], вероятности 10 действий. Только для сети, не для учителя.</div></div>
+      <div class="note">вход и что влияет на движение и поворот, карты свёрток, 512 нейронов, вклад вектора, три самых вероятных значения каждой из четырёх голов. Только для сети, не для учителя.</div></div>
     <div class="card"><h2>Память M1</h2><img class="view" id="memimg" src="/live/memory.mjpg" alt="растр памяти">
       <div class="note" id="memnote">512 ячеек GRU за последние 20 с; есть только у M1</div></div>
   </section>
@@ -109,16 +109,21 @@
       <div class="card"><h2>Точность</h2><div class="chart" id="c-acc"></div></div>
     </div>
     <div class="card"><h2>Фраги на val по чекпойнтам</h2><div class="chart" id="c-val"></div>
-      <div class="note">среднее за матч и 95% CI; серая полоса — учитель на тех же seed (D1)</div></div>
-    <div class="card"><h2>Точность по действиям, отложенная выборка</h2><div class="chart" id="c-per"></div></div>
+      <div class="note">среднее за матч и 95% CI; серая полоса — учитель на тех же seed (E1)</div></div>
+    <div class="card"><h2>Точность по значениям головы, отложенная выборка</h2>
+      <div class="row" style="margin-top:0"><label>голова <select id="head"><option value="move">движение</option><option value="turn" selected>поворот</option><option value="fire">выстрел</option><option value="weapon">оружие</option></select></label></div>
+      <div class="chart" id="c-per"></div></div>
     <div class="card"><h2>Матрица путаницы</h2><div class="chart" id="c-conf"></div>
-      <div class="note" id="confnote">строка — действие учителя, столбец — действие сети; тон — доля строки</div></div>
+      <div class="note" id="confnote">голова выбирается выше; строка — значение учителя, столбец — значение сети; тон — доля строки</div></div>
   </section>
 </main>
 
 <script>
 const C = { s1: '#3987e5', s2: '#d95926', s3: '#199e70', gray: '#898781', grid: '#20262d', muted: '#8b95a3', text: '#e6e9ee', surface: '#161a1f' };
-const RU = ['вперёд', 'вперёд-влево', 'вперёд-вправо', 'влево', 'вправо', 'чуть влево', 'чуть вправо', 'шаг влево', 'шаг вправо', 'выстрел'];
+const RU_MOVE = ['стоять', 'вперёд', 'назад', 'шаг влево', 'шаг вправо', 'вперёд-влево', 'вперёд-вправо', 'назад-влево', 'назад-вправо'];
+const RU_HEAD = { move: 'движение', turn: 'поворот', fire: 'выстрел', weapon: 'оружие' };
+const HEAD_COLOR = { move: '#3987e5', turn: '#d95926', fire: '#199e70', weapon: '#898781' };
+const headValues = (vals, h) => h === 'move' ? RU_MOVE : h === 'fire' ? ['нет', 'огонь'] : h === 'weapon' ? ['держать', 'следующее'] : vals.turn;
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
 const fmt = (v, d = 2) => v == null ? '—' : (+v).toFixed(d);
@@ -299,10 +304,10 @@ $('speed').onchange = () => control({ speed: $('speed').value });
 $('boxes').onchange = () => control({ boxes: $('boxes').checked ? 1 : 0 });
 $('hud').onchange = () => control({ hud: $('hud').checked ? 1 : 0 });
 
-function rolling(pts, k) {
+function rolling(pts, k, key) {
   const out = [];
   let s = 0;
-  pts.forEach((p, i) => { s += p.agree; if (i >= k) s -= pts[i - k].agree; out.push([p.step, s / Math.min(i + 1, k)]); });
+  pts.forEach((p, i) => { s += p[key]; if (i >= k) s -= pts[i - k][key]; out.push([p.step, s / Math.min(i + 1, k)]); });
   return out;
 }
 async function tickLive() {
@@ -313,14 +318,14 @@ async function tickLive() {
     $('t-deaths').textContent = s.deaths;
     $('t-kd').textContent = 'K/D ' + fmt(s.kd);
     $('t-hp').textContent = `${Math.max(0, Math.round(s.health))} · ${Math.round(s.ammo)}`;
-    $('t-agree').textContent = s.model === 'teacher' ? '—' : Math.round(100 * s.agree) + '%';
-    const a = RU[d.actions.indexOf(s.action)], t = RU[d.actions.indexOf(s.teacher)];
-    $('t-action').textContent = s.model === 'teacher' ? `учитель: ${t} · режим ${s.mode}` : `сеть: ${a} · учитель бы: ${t} · режим учителя ${s.mode}`;
+    $('t-agree').textContent = s.model === 'teacher' ? '—' : Math.round(100 * s.agree.all) + '%';
+    $('t-action').textContent = s.model === 'teacher' ? `учитель: ${s.teacher} · режим ${s.mode}` : `сеть: ${s.action} · учитель бы: ${s.teacher} · режим учителя ${s.mode}`;
     $('memnote').textContent = s.memory ? '512 ячеек GRU за последние 20 с, события сверху, вентиль обновления снизу' : 'у этого игрока нет памяти: растр есть только у M1';
   }
   const ser = d.series;
   if (s.model !== 'teacher' && ser.length)
-    lineChart($('c-agree'), [{ name: 'согласие', color: C.s1, pts: rolling(ser, 25), label: true }], { y0: 0, y1: 1, xname: 'шаг', yfmt: v => Math.round(v * 100) + '%', vfmt: v => Math.round(v * 100) + '%' });
+    lineChart($('c-agree'), ['move', 'turn', 'fire'].map(h => ({ name: RU_HEAD[h], color: HEAD_COLOR[h], pts: rolling(ser, 25, 'agree_' + h), label: h === 'turn' })),
+              { y0: 0, y1: 1, xname: 'шаг', yfmt: v => Math.round(v * 100) + '%', vfmt: v => Math.round(v * 100) + '%' });
   else $('c-agree').innerHTML = '<div class="empty">' + (s.model === 'teacher' ? 'играет сам учитель' : 'пока нет данных') + '</div>';
   lineChart($('c-frags'), [{ name: 'фраги', color: C.s1, pts: ser.map(p => [p.step, p.frags]), label: true }], { y0: 0, xname: 'шаг', yfmt: v => v, vfmt: v => v });
   $('hist').className = d.history.length ? '' : 'empty';
@@ -336,6 +341,7 @@ async function loadRuns() {
   if (cur && runs.some(r => r.name === cur)) sel.value = cur;
 }
 $('run').onchange = tickTrain;
+$('head').onchange = tickTrain;
 async function tickTrain() {
   if (!$('run').value) return;
   const d = await api('/api/train?run=' + encodeURIComponent($('run').value));
@@ -347,15 +353,17 @@ async function tickTrain() {
   lineChart($('c-ce'), [{ name: 'обучение', color: C.s1, pts: pts.map(p => [ep(p), p.ce]), label: true },
                         { name: 'отложенная', color: C.s2, pts: hold('holdout_ce'), dots: true }],
             { y0: 0, xname: 'эпоха', xfmt: v => +(+v).toFixed(1) });
-  lineChart($('c-acc'), [{ name: 'обучение', color: C.s1, pts: pts.map(p => [ep(p), p.acc]), label: true },
-                         { name: 'отложенная', color: C.s2, pts: hold('holdout_acc'), dots: true }],
+  lineChart($('c-acc'), ['move', 'turn', 'fire', 'weapon'].map(h => ({ name: RU_HEAD[h], color: HEAD_COLOR[h], pts: pts.filter(p => p['acc_' + h] != null).map(p => [ep(p), p['acc_' + h]]), label: h === 'turn' }))
+                         .concat([{ name: 'поворот, отложенная', color: HEAD_COLOR.turn, pts: hold('holdout_acc_turn'), dots: true }]),
             { y0: 0, y1: 1, xname: 'эпоха', xfmt: v => +(+v).toFixed(1), yfmt: v => Math.round(v * 100) + '%', vfmt: v => Math.round(v * 100) + '%' });
   valChart($('c-val'), log, d.teacher);
-  const lastHold = [...log].reverse().find(r => r.holdout_acc_per_action);
-  barChart($('c-per'), lastHold ? lastHold.holdout_acc_per_action : null, RU, C.s1);
+  const head = $('head').value, names = headValues(d.values, head);
+  const lastHold = [...log].reverse().find(r => r.holdout_acc_per_value);
+  barChart($('c-per'), lastHold ? lastHold.holdout_acc_per_value[head] : null, names, HEAD_COLOR[head]);
   const live = d.live || {};
-  confusion($('c-conf'), live.holdout_confusion || live.confusion, RU);
-  $('confnote').textContent = 'строка — действие учителя, столбец — действие сети; тон — доля строки; ' +
+  const conf = live.holdout_confusion || live.confusion;
+  confusion($('c-conf'), conf ? conf[head] : null, names);
+  $('confnote').textContent = `голова «${RU_HEAD[head]}»; строка — значение учителя, столбец — значение сети; тон — доля строки; ` +
     (live.holdout_confusion ? 'отложенная выборка, последняя проверка' : 'последние батчи обучения');
 }
 
