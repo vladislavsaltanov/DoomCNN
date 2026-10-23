@@ -54,5 +54,5 @@ def buttons_for(action, frame_skip):
     # the tics, the next-weapon key is pressed on the first tic only
     move, turn, fire, weapon = action
     keys = list(_MOVE_KEYS[move]) + [int(fire)]
-    delta = DELTA_SIGN * TURN_DEG[turn] / frame_skip
+    delta = -DELTA_SIGN * TURN_DEG[turn] / frame_skip  # a positive delta turns right (measured in E0)
     return keys + [int(weapon), delta], keys + [0, delta]

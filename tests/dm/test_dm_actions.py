@@ -39,4 +39,4 @@ def test_make_vec_fist_has_no_ammo():
 def test_buttons_for_turn_and_weapon():
     first, rest = buttons_for((FORWARD, TURN_DEG.index(10.0), 1, 1), 4)
     assert first[0] == 1 and first[4] == 1 and first[5] == 1 and rest[5] == 0
-    assert first[6] == rest[6] == DELTA_SIGN * 2.5
+    assert first[6] == rest[6] == -DELTA_SIGN * 2.5  # + is a left turn, the delta button turns right on +

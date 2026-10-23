@@ -6,8 +6,9 @@ from dataclasses import dataclass, field
 import numpy as np
 import vizdoom as vzd
 
-from doomagent.dm.config import AMMO_SCALE, BOT, BOT_NAMES, DM, HEALTH_SCALE, DMCfg
-from doomagent.env import DELTA_SIGN, RESOLUTIONS, Label, to_net
+from doomagent.dm.actions import NOOP, buttons_for, make_vec
+from doomagent.dm.config import BOT, BOT_NAMES, DM, DMCfg
+from doomagent.env import RESOLUTIONS, Label, to_net
 from doomagent.variants import BASE, Variant
 from doomagent.dm.vzseed import vizdoom_seed
 
@@ -16,10 +17,12 @@ BOTS_CFG = os.path.join(os.path.dirname(vzd.__file__), 'bots.cfg')
 GAME_ARGS = ('-host 1 -deathmatch +timelimit {timelimit} +sv_forcerespawn 1 +sv_noautoaim 1 '
              '+sv_respawnprotect 1 +sv_spawnfarthest 1 +viz_respawn_delay 0 '
              '+viz_bots_path {bots}')
-BUTTONS = (vzd.Button.MOVE_FORWARD, vzd.Button.MOVE_LEFT, vzd.Button.MOVE_RIGHT,
-           vzd.Button.TURN_LEFT, vzd.Button.TURN_RIGHT, vzd.Button.ATTACK)  # + TURN_LEFT_RIGHT_DELTA
-VARS = (GV.HEALTH, GV.ARMOR, GV.AMMO5, GV.ATTACK_READY, GV.POSITION_X, GV.POSITION_Y, GV.ANGLE,
-        GV.FRAGCOUNT, GV.DEATHCOUNT, GV.HITCOUNT, GV.DAMAGECOUNT, GV.ITEMCOUNT, GV.PLAYER_COUNT)
+BUTTONS = (vzd.Button.MOVE_FORWARD, vzd.Button.MOVE_BACKWARD, vzd.Button.MOVE_LEFT, vzd.Button.MOVE_RIGHT,
+           vzd.Button.ATTACK, vzd.Button.SELECT_NEXT_WEAPON)  # + TURN_LEFT_RIGHT_DELTA (dm.actions.buttons_for)
+VARS = (GV.HEALTH, GV.ARMOR, GV.SELECTED_WEAPON_AMMO, GV.ATTACK_READY, GV.POSITION_X, GV.POSITION_Y, GV.ANGLE,
+        GV.FRAGCOUNT, GV.DEATHCOUNT, GV.HITCOUNT, GV.DAMAGECOUNT, GV.ITEMCOUNT, GV.PLAYER_COUNT,
+        GV.SELECTED_WEAPON) + tuple(getattr(GV, f'AMMO{i}') for i in range(8))     + tuple(getattr(GV, f'WEAPON{i}') for i in range(8))
+N_SLOTS = 8  # AMMO0..7 and WEAPON0..7: slot n is the weapon on key n
 MAX_DEAD_TICS = 70  # the dead state lasts a tic or two with sv_forcerespawn; a guard only
 SELF_DIST = 1.0     # the player's own DoomPlayer label sits exactly at its position
 
@@ -40,19 +43,10 @@ def unthrottle_children():
     return done
 
 
-def action_buttons(cfg: DMCfg):
-    # one button vector per action in dm.config order; fine turns go through the delta button
-    f = DELTA_SIGN * cfg.fine_turn_delta
-    return ([1, 0, 0, 0, 0, 0, 0], [1, 0, 0, 1, 0, 0, 0], [1, 0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, -f],
-            [0, 0, 0, 0, 0, 0, f], [0, 1, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1, 0])
-
-
 @dataclass(frozen=True)
 class DMObs:
-    frames: np.ndarray  # (stack, 120, 160) uint8, oldest..newest
-    vec: np.ndarray     # (2,) float32: health / 100, rockets / 50
+    frames: np.ndarray  # (stack, height, width) uint8, oldest..newest
+    vec: np.ndarray     # (10,) float32, dm.actions.make_vec: health, armor, ammo in hand, weapon one-hot
     first: bool         # first step of a life: match start or just after a respawn
 
 
@@ -75,7 +69,7 @@ class DMPrivileged:
     angle: float = 0.0
     health: float = 0.0
     armor: float = 0.0
-    ammo: float = 0.0
+    ammo: float = 0.0    # ammo of the weapon in hand (= weapon_ammo)
     attack_ready: bool = False
     frags: float = 0.0   # match counters
     deaths: float = 0.0
@@ -85,6 +79,10 @@ class DMPrivileged:
     players: int = 0
     player_frags: tuple = ()  # PLAYER1..N_FRAGCOUNT, the agent first
     tic: int = 0
+    weapon: int = 0           # slot of the weapon in hand
+    weapon_ammo: float = 0.0
+    slot_ammo: tuple = ()     # AMMO0..7
+    owned: tuple = ()         # WEAPON0..7
 
 
 def _is_self(name, x, y, px, py):
@@ -92,13 +90,13 @@ def _is_self(name, x, y, px, py):
 
 
 class DeathmatchEnv:
-    # cig.wad MAP01 against named ViZDoom bots. In host mode a match repeats bit for bit only if
+    # cig.wad (cfg.map) against named ViZDoom bots. In host mode a match repeats bit for bit only if
     # the seed is set before init() and the match is the game's first (probed), so every reset
     # starts a fresh game. The agent-facing API returns DMObs; privileged data is separate.
     def __init__(self, cfg: DMCfg = DM, variant: Variant = BASE, visible: bool = False):
         self.cfg, self.variant, self.visible = cfg, variant, visible
         self.game, self.unthrottled, self.sectors = None, False, []
-        self._buttons, self._noop = action_buttons(cfg), [0] * 7
+        self._noop = buttons_for(NOOP, cfg.frame_skip)[0]
         self._vars = VARS + tuple(getattr(GV, f'PLAYER{i}_FRAGCOUNT') for i in range(1, cfg.bots + 2))
         self._frames = deque(maxlen=cfg.stack)
         self._rgb = np.zeros((cfg.render_h, cfg.render_w, 3), np.uint8)
@@ -112,7 +110,7 @@ class DeathmatchEnv:
         assert ' ' not in BOTS_CFG, f'ViZDoom splits game args on spaces: {BOTS_CFG}'
         g = vzd.DoomGame()
         g.load_config(os.path.join(vzd.scenarios_path, 'cig.cfg'))
-        g.set_doom_map('map01')
+        g.set_doom_map(c.map)
         g.add_game_args(GAME_ARGS.format(timelimit=c.timelimit, bots=BOTS_CFG))
         self.variant.apply(g)
         g.set_mode(vzd.Mode.PLAYER)
@@ -128,7 +126,7 @@ class DeathmatchEnv:
         g.clear_available_buttons()
         for b in BUTTONS:
             g.add_available_button(b)
-        g.add_available_button(vzd.Button.TURN_LEFT_RIGHT_DELTA, 180)  # fine turns only
+        g.add_available_button(vzd.Button.TURN_LEFT_RIGHT_DELTA, 180)  # every turn, spread over the tics
         g.clear_available_game_variables()
         for v in self._vars:
             g.add_available_game_variable(v)
@@ -150,7 +148,9 @@ class DeathmatchEnv:
             self._rgb = st.screen_buffer
             self._small = to_net(self._rgb, c)
         (health, armor, ammo, ready, px, py, angle, frags, deaths, hits, damage, items,
-         players) = values[:len(VARS)]
+         players, weapon) = values[:14]
+        slot_ammo = tuple(float(v) for v in values[14:14 + N_SLOTS])
+        owned = tuple(int(v) for v in values[14 + N_SLOTS:len(VARS)])
         p = self._priv
         labels, objects = p.labels, p.objects
         if st is not None:
@@ -163,12 +163,12 @@ class DeathmatchEnv:
                        for o in st.objects if not _is_self(o.name, o.position_x, o.position_y, px, py)]
         self._priv = DMPrivileged(labels, objects, self.sectors, px, py, angle, health, armor, ammo,
                                   bool(ready), frags, deaths, hits, damage, items, int(players),
-                                  tuple(values[len(VARS):]), int(g.get_episode_time()))
+                                  tuple(values[len(VARS):]), int(g.get_episode_time()), int(weapon), float(ammo),
+                                  slot_ammo, owned)
 
     def _obs(self, first):
         p = self._priv
-        vec = np.array([p.health / HEALTH_SCALE, p.ammo / AMMO_SCALE], np.float32)
-        return DMObs(np.stack(self._frames), vec, bool(first))
+        return DMObs(np.stack(self._frames), make_vec(p.health, p.armor, p.weapon, p.weapon_ammo), bool(first))
 
     def _restack(self):
         self._frames.clear()
@@ -201,16 +201,21 @@ class DeathmatchEnv:
         self._restack()
         return self._obs(True)
 
-    def step(self, action: int, on_tic=None):
-        # on_tic(rgb, privileged) runs after every tic, the death skip included: the viewer's path
+    def step(self, action, on_tic=None):
+        # action: (move, turn, fire, weapon), dm.actions; the next-weapon key is held on the first tic
+        # only. on_tic(rgb, privileged) runs after every tic, the death skip included: the viewer's path
         g, c = self.game, self.cfg
         frags0, deaths0 = self._priv.frags, self._priv.deaths
-        buttons = list(self._buttons[action])
-        if on_tic is None:
-            g.make_action(buttons, c.frame_skip)
+        first, rest = buttons_for(tuple(int(x) for x in action), c.frame_skip)
+        if on_tic is None and first == rest:
+            g.make_action(first, c.frame_skip)
+        elif on_tic is None:
+            g.make_action(first, 1)
+            if not g.is_episode_finished():
+                g.make_action(rest, c.frame_skip - 1)
         else:
-            for _ in range(c.frame_skip):
-                g.make_action(buttons, 1)
+            for t in range(c.frame_skip):
+                g.make_action(first if t == 0 else rest, 1)
                 if g.is_episode_finished():
                     break
                 self._read()
