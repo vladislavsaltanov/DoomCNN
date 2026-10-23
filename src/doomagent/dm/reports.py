@@ -245,6 +245,7 @@ def selectivity_figure(best, strength, names, out_png, cut=0.1):
     fig.suptitle(f'Which condition each of the 512 units follows best (|Pearson r| >= {cut}; darker = stronger)',
                  color=INK, fontsize=11, x=0.01, ha='left')
     fig.tight_layout()
+    fig.subplots_adjust(top=0.84)  # room for the suptitle above the panel titles
     fig.savefig(out_png, dpi=120, facecolor=SURFACE)
     plt.close(fig)
 
