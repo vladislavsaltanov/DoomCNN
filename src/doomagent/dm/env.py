@@ -14,7 +14,8 @@ from doomagent.dm.vzseed import vizdoom_seed
 
 GV = vzd.GameVariable
 BOTS_CFG = os.path.join(os.path.dirname(vzd.__file__), 'bots.cfg')
-GAME_ARGS = ('-host 1 -deathmatch +timelimit {timelimit} +sv_forcerespawn 1 +sv_noautoaim 1 '
+GAME_ARGS = ('-host 1 -deathmatch +timelimit {timelimit} +sv_forcerespawn 1 +sv_noautoaim {noautoaim} '
+             '+cl_run {run} '
              '+sv_respawnprotect 1 +sv_spawnfarthest 1 +viz_respawn_delay 0 '
              '+viz_bots_path {bots}')
 BUTTONS = (vzd.Button.MOVE_FORWARD, vzd.Button.MOVE_BACKWARD, vzd.Button.MOVE_LEFT, vzd.Button.MOVE_RIGHT,
@@ -86,6 +87,11 @@ class DMPrivileged:
     vis_px: dict = field(default_factory=dict)  # label object id -> its pixels on the render (640x480)
 
 
+def game_args(c):
+    # cl_run is archived in _vizdoom.ini: every game sets it, or an earlier game's value leaks in
+    return GAME_ARGS.format(timelimit=c.timelimit, bots=BOTS_CFG, run=int(c.run), noautoaim=int(not c.autoaim))
+
+
 def _is_self(name, x, y, px, py):
     return name == BOT and math.hypot(x - px, y - py) < SELF_DIST
 
@@ -112,7 +118,7 @@ class DeathmatchEnv:
         g = vzd.DoomGame()
         g.load_config(os.path.join(vzd.scenarios_path, 'cig.cfg'))
         g.set_doom_map(c.map)
-        g.add_game_args(GAME_ARGS.format(timelimit=c.timelimit, bots=BOTS_CFG))
+        g.add_game_args(game_args(c))
         self.variant.apply(g)
         g.set_mode(vzd.Mode.PLAYER)
         g.set_window_visible(self.visible)

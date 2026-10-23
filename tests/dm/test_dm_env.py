@@ -193,3 +193,14 @@ def test_tic_by_tic_step_matches_the_frame_skip_step():
 def test_env_unthrottles_its_vizdoom_process(env):
     env.reset(35000)
     assert env.unthrottled
+
+
+def test_run_and_autoaim_are_set_on_every_game():
+    # cl_run is an archived cvar: one game with +cl_run 1 writes it to _vizdoom.ini for every later game,
+    # so each game sets it explicitly
+    from doomagent.dm.env import game_args
+    a = game_args(replace(DM, run=False, autoaim=False))
+    assert '+cl_run 0' in a and '+sv_noautoaim 1' in a
+    b = game_args(replace(DM, run=True, autoaim=True))
+    assert '+cl_run 1' in b and '+sv_noautoaim 0' in b
+    assert ' ' not in a.split('+viz_bots_path ')[1]
