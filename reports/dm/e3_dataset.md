@@ -2,58 +2,58 @@
 
 | set | matches | steps | GB | steps per match | lives per match | teacher frags per match | noise share | variants |
 |---|---|---|---|---|---|---|---|---|
-| data/dm/r0 | 150 | 157402 | 11.3 | 1049 | 3.3 | 7.41 | 0.099 | 1 |
-| data/dm/r1 | 96 | 100733 | 7.2 | 1049 | 3.5 | 7.75 | 0.101 | 16 |
-| all | 246 | 258135 | 18.5 | 1049 | 3.4 | 7.54 | 0.100 | 17 |
+| data/dm/r0 | 150 | 157381 | 11.3 | 1049 | 4.1 | 11.44 | 0.099 | 1 |
+| data/dm/r1 | 96 | 100733 | 7.2 | 1049 | 3.9 | 11.36 | 0.101 | 16 |
+| all | 246 | 258114 | 18.5 | 1049 | 4.0 | 11.41 | 0.100 | 17 |
 
 | move | share of labels |
 |---|---|
-| stay | 4.9% |
-| forward | 32.3% |
+| stay | 6.7% |
+| forward | 43.2% |
 | back | 0.0% |
-| strafe_left | 28.7% |
-| strafe_right | 28.3% |
-| forward_left | 2.8% |
-| forward_right | 2.8% |
+| strafe_left | 22.6% |
+| strafe_right | 22.3% |
+| forward_left | 2.5% |
+| forward_right | 2.5% |
 | back_left | 0.1% |
 | back_right | 0.1% |
 
 | turn (degrees) | share of labels |
 |---|---|
-| +0 | 24.6% |
-| +1 | 2.6% |
-| -1 | 2.6% |
-| +3 | 6.7% |
-| -3 | 6.6% |
-| +5 | 9.3% |
-| -5 | 9.2% |
-| +10 | 8.9% |
-| -10 | 9.1% |
-| +20 | 4.1% |
-| -20 | 4.4% |
-| +30 | 1.9% |
-| -30 | 2.1% |
-| +40 | 3.9% |
-| -40 | 4.1% |
+| +0 | 23.5% |
+| +1 | 1.9% |
+| -1 | 1.8% |
+| +3 | 6.0% |
+| -3 | 5.9% |
+| +5 | 9.2% |
+| -5 | 9.1% |
+| +10 | 9.2% |
+| -10 | 9.6% |
+| +20 | 4.5% |
+| -20 | 4.6% |
+| +30 | 2.2% |
+| -30 | 2.2% |
+| +40 | 5.0% |
+| -40 | 5.2% |
 
-Fire on 10.4% of steps, next weapon on 2.8%.
+Fire on 23.8% of steps, next weapon on 3.5%.
 
 | weapon in hand | share of steps |
 |---|---|
-| fist | 4.6% |
-| pistol | 24.3% |
-| super shotgun | 12.6% |
-| chaingun | 39.3% |
-| rocket launcher | 13.5% |
-| plasma rifle | 5.3% |
-| BFG9000 | 0.4% |
+| fist | 6.6% |
+| pistol | 27.3% |
+| super shotgun | 11.8% |
+| chaingun | 32.4% |
+| rocket launcher | 8.1% |
+| plasma rifle | 12.4% |
+| BFG9000 | 1.4% |
 
 | teacher mode | share of steps |
 |---|---|
-| combat | 62.3% |
-| chase | 9.3% |
-| gear | 11.0% |
-| items | 2.7% |
-| patrol | 14.7% |
+| combat | 49.4% |
+| chase | 11.5% |
+| gear | 14.7% |
+| items | 4.8% |
+| patrol | 19.6% |
 
 ![dataset](e3_dataset.png)
