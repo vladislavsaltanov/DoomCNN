@@ -50,7 +50,8 @@ def analyze(m):
         if col['deaths'][t] > col['deaths'][t - 1]:  # before the new life starts: the death step is also its first
             w0 = max(life, t - WINDOW)
             deaths.append(dict(suicide=bool(col['frags'][t] < col['frags'][t - 1]), bot_seen=bool(col['bot'][w0:t].any()),
-                               mode=MODES[int(col['mode'][t - 1])], health_before=float(col['health'][w0])))
+                               mode=MODES[int(col['mode'][t - 1])], health_before=float(col['health'][w0]),
+                               weapon=int(col['weapon'][t - 1])))
         if col['first'][t]:
             to_gear.append(got if got is not None else t - life)
             life, got = t, None
@@ -85,6 +86,7 @@ def summary(res):
                      'bot seen': sum(x['bot_seen'] and not x['suicide'] for x in d) / n,
                      'unseen': sum(not x['bot_seen'] and not x['suicide'] for x in d) / n},
         death_mode={m: sum(x['mode'] == m for x in d) / n for m in MODES},
+        suicide_weapon={WEAPONS[k].name: sum(x['suicide'] and x['weapon'] == k for x in d) for k in WEAPONS},
         death_health_before=float(np.mean([x['health_before'] for x in d])) if d else None,
         shots_per_match=len(s) / max(len(res), 1),
         hit_share_by_weapon={k: v[0] for k, v in by_w.items()}, shots_by_weapon={k: v[1] for k, v in by_w.items()},

@@ -35,6 +35,8 @@ class DMCfg:
     dodge: bool = True         # step out of a visible projectile's path
     gear_rank: int = 3         # at a life start, go for a weapon while the best in hand ranks below this
     hitscan_tol: float = 0.0   # degrees: hitscan weapons also fire this far off (their spread); 0: off
+    track_ahead: bool = False  # turn to where the target will be after this step, not where it is
+    barrel_check: bool = False  # no shot with a barrel in the line of fire closer than BARREL_R
     seg_len: int = 32          # M1 training windows, steps
     burn_in: int = 8           # steps that only warm up the GRU in windows that start mid-life
 

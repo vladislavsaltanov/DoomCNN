@@ -19,8 +19,9 @@ import numpy as np
 from doomagent.evaluate import bootstrap_ci
 
 OUT = 'reports/dm/e1_teacher_cycle.md'
+FRESH_N = 40  # all FRESH_SEEDS: 20 matches leave a ±1.8 frag interval, too wide for most changes
 HEAD = ['# E1: teacher improvement cycle', '',
-        'Each row: one change against the accepted teacher; 20 val matches, then 20 fresh matches (FRESH_SEEDS), '
+        'Each row: one change against the accepted teacher; 20 val matches, then 40 fresh matches (FRESH_SEEDS), '
         'paired by seed. A change is accepted only if the lower bound of the fresh difference is above 0 '
         '(plan v2, decision 9). Stop after two rejected changes in a row.', '',
         '| change | settings | why | val frags (accepted → candidate) | fresh frags (accepted → candidate) | '
@@ -29,11 +30,12 @@ HEAD = ['# E1: teacher improvement cycle', '',
 
 
 def run(sets, seeds, workers):
+    n = FRESH_N if seeds == 'fresh' else 20
     key = hashlib.md5(' '.join(sorted(sets)).encode()).hexdigest()[:10]
-    path = f'runs/dm/cycle/{key}_{seeds}'
+    path = f'runs/dm/cycle/{key}_{seeds}{n}'
     if not os.path.exists(path + '.json'):
         os.makedirs('runs/dm/cycle', exist_ok=True)
-        cmd = [sys.executable, 'scripts/dm/dm_teacher_diag.py', '--seeds', seeds, '--matches', '20', '--workers',
+        cmd = [sys.executable, 'scripts/dm/dm_teacher_diag.py', '--seeds', seeds, '--matches', str(n), '--workers',
                str(workers), '--out', path] + (['--set'] + sets if sets else [])
         with open(path + '.out', 'w') as fh:
             subprocess.run(cmd, check=True, stdout=fh, stderr=subprocess.STDOUT)
@@ -44,7 +46,8 @@ def frags(d):
     return {m['seed']: m['frags'] for m in d['per_match']}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # arrows in the row; the Windows console is cp1251
     ap = argparse.ArgumentParser()
     ap.add_argument('--name', required=True)
     ap.add_argument('--base', default='')

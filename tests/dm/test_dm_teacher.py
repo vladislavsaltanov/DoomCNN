@@ -221,3 +221,21 @@ def test_hitscan_fires_within_its_tolerance():
     assert DMTeacher(DM)(obs(), priv(labels=[bot(1, 2.0, 600)], **p))[2] == 0  # 2° off a ±1.5° target
     assert DMTeacher(replace(DM, hitscan_tol=3.0))(obs(), priv(labels=[bot(1, 2.0, 600)], **p))[2] == 1
     assert DMTeacher(replace(DM, hitscan_tol=3.0))(obs(), priv(labels=[bot(1, 2.0, 600)]))[2] == 0  # not rockets
+
+
+def test_track_ahead_turns_with_a_running_bot():
+    # a bot running north at 10 units per tic, 600 ahead: aimed now, but it will be ~4° left after the step
+    p = dict(weapon=4, weapon_ammo=50.0, ammo=50.0, owned=(0, 1, 1, 0, 1, 0, 0, 0), slot_ammo=(0, 0, 50, 0, 50, 0, 0, 0))
+    for cfg, left in ((DM, False), (replace(DM, track_ahead=True), True)):
+        t = DMTeacher(cfg)
+        t(obs(), priv(labels=[bot(1, 0.0, 600, north=-40.0)], tic=100, **p))
+        _, turn, fire, _ = t(obs(), priv(labels=[bot(1, 0.0, 600)], tic=104, **p))
+        assert fire == 1 and (TURN_DEG[turn] > 0) == left
+
+
+def test_barrel_check_holds_fire():
+    labels = [bot(1, 0.0, 600), thing('ExplosiveBarrel', ME[0] + 100.0, ME[1])]
+    assert DMTeacher(DM)(obs(), priv(labels=labels))[2] == 1
+    assert DMTeacher(replace(DM, barrel_check=True))(obs(), priv(labels=labels))[2] == 0
+    far = [bot(1, 0.0, 600), thing('ExplosiveBarrel', ME[0] + 400.0, ME[1])]
+    assert DMTeacher(replace(DM, barrel_check=True))(obs(), priv(labels=far))[2] == 1

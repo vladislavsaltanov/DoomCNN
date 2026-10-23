@@ -13,7 +13,8 @@ from dataclasses import dataclass
 from doomagent.dm.actions import (BACK_LEFT, BACK_RIGHT, FORWARD, FORWARD_LEFT, FORWARD_RIGHT, STAY, STRAFE_LEFT,
                                   STRAFE_RIGHT, TURN_DEG)
 from doomagent.dm.aim import dodge_move, half_width_deg, lead_point, pick_turn, target_angle
-from doomagent.dm.config import AMMO_ITEMS, BOT, DM, DMCfg, ITEM_KIND, MODES, PROJECTILES, TIC_RATE, WEAPON_ITEMS
+from doomagent.dm.config import (AMMO_ITEMS, BARREL, BOT, DM, DMCfg, ITEM_KIND, MODES, PROJECTILES, TIC_RATE,
+                                 WEAPON_ITEMS)
 from doomagent.dm.nav import lookahead, nav_for
 from doomagent.dm.weapons import WEAPONS, best_weapon, usable
 
@@ -29,6 +30,7 @@ SWITCH_STEPS = 3      # a weapon change takes about 3 steps; no new press before
 SIDE_ROOM = 48.0      # a strafe turns back before a wall this close on its side
 RANGE_MARGIN = 32.0   # back off this far beyond a weapon's minimum range
 NAV_RANGE = 512.0     # the distance the weapon in hand is chosen for when nobody is in sight
+BARREL_R = 160.0      # a barrel this close in the line of fire blows up the shooter too
 SIDE = {(0, 1): STRAFE_LEFT, (0, -1): STRAFE_RIGHT, (1, 1): FORWARD_LEFT, (1, -1): FORWARD_RIGHT,
         (-1, 1): BACK_LEFT, (-1, -1): BACK_RIGHT}
 
@@ -224,9 +226,11 @@ class DMTeacher:
         self.aim = lead_point(self.tracks[t.id], priv.px, priv.py, w.speed)
         rel = target_angle(priv.px, priv.py, priv.angle, *self.aim)
         tol = c.aim_tol * half_width_deg(t.dist)
-        turn = pick_turn(rel, tol)
+        turn = pick_turn(self._ahead(priv, t.id) if c.track_ahead else rel, tol)
         safe = t.dist >= w.lo and (w.splash == 0.0 or
                                    self.nav.shot_dist(priv.px, priv.py, priv.angle) >= c.safe_dist)
+        if c.barrel_check and self._barrel_in_line(priv):
+            safe = False
         # the rocket launcher fires on a new press only; the other weapons repeat while the key is held
         ready = priv.attack_ready or (self.fired_last and priv.weapon != 5)
         fresh = not (self.fired_last and priv.weapon == 5)
@@ -241,6 +245,23 @@ class DMTeacher:
         elif t.dist > w.hi:
             fwd = 1
         return SIDE[(fwd, self._strafe_side(priv))], turn, fire, weapon
+
+    def _ahead(self, priv, tid):
+        # the angle to the aim point moved by the target's velocity over this step: the turn ends on the target
+        track = self.tracks[tid]
+        if len(track) < 2 or track[-1][0] == track[0][0]:
+            return target_angle(priv.px, priv.py, priv.angle, *self.aim)
+        dt = track[-1][0] - track[0][0]
+        vx, vy = (track[-1][1] - track[0][1]) / dt, (track[-1][2] - track[0][2]) / dt
+        step = self.cfg.frame_skip
+        return target_angle(priv.px, priv.py, priv.angle, self.aim[0] + vx * step, self.aim[1] + vy * step)
+
+    def _barrel_in_line(self, priv):
+        w = self.cfg.width
+        for lb in priv.labels:
+            if lb.object_name == BARREL and 2.0 * lb.x / w - 1.0 <= 0.0 <= 2.0 * (lb.x + lb.width) / w - 1.0 and                     math.hypot(lb.object_position_x - priv.px, lb.object_position_y - priv.py) < BARREL_R:
+                return True
+        return False
 
     def _strafe_side(self, priv):
         # +1 left, -1 right: strafe_period steps one way, then the other; a wall close on that side flips it
