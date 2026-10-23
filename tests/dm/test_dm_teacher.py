@@ -89,8 +89,10 @@ def test_target_by_angle_takes_the_bot_at_the_crosshair_and_keeps_it():
 
 
 def test_turns_towards_target_with_big_turn():
-    _, turn, fire, _ = DMTeacher(DM)(obs(), priv(labels=[bot(1, 40.0, 600)]))
+    _, turn, fire, _ = DMTeacher(replace(DM, flick=False))(obs(), priv(labels=[bot(1, 40.0, 600)]))
     assert TURN_DEG[turn] == 40.0 and fire == 0
+    _, turn, fire, _ = DMTeacher(DM)(obs(), priv(labels=[bot(1, 40.0, 600)]))  # the flick ends on the bot
+    assert TURN_DEG[turn] == 40.0 and fire == 1
 
 
 def test_no_rocket_close_switches_to_shotgun():
@@ -244,9 +246,10 @@ def test_why_names_the_reason():
 
 def test_hitscan_fires_within_its_tolerance():
     p = dict(weapon=4, weapon_ammo=50.0, ammo=50.0, owned=(0, 1, 1, 0, 1, 0, 0, 0), slot_ammo=(0, 0, 50, 0, 50, 0, 0, 0))
-    assert DMTeacher(DM)(obs(), priv(labels=[bot(1, 2.0, 600)], **p))[2] == 0  # 2° off a ±1.5° target
-    assert DMTeacher(replace(DM, hitscan_tol=3.0))(obs(), priv(labels=[bot(1, 2.0, 600)], **p))[2] == 1
-    assert DMTeacher(replace(DM, hitscan_tol=3.0))(obs(), priv(labels=[bot(1, 2.0, 600)]))[2] == 0  # not rockets
+    still = replace(DM, flick=False)  # the error before the turn decides
+    assert DMTeacher(still)(obs(), priv(labels=[bot(1, 2.0, 600)], **p))[2] == 0  # 2° off a ±1.5° target
+    assert DMTeacher(replace(still, hitscan_tol=3.0))(obs(), priv(labels=[bot(1, 2.0, 600)], **p))[2] == 1
+    assert DMTeacher(replace(still, hitscan_tol=3.0))(obs(), priv(labels=[bot(1, 2.0, 600)]))[2] == 0  # not rockets
 
 
 def test_track_ahead_turns_with_a_running_bot():
@@ -298,7 +301,7 @@ def test_retreat_leaves_a_fight_for_a_medikit():
 def test_flick_fires_in_the_step_that_turns_onto_the_target():
     # the turn ends on the bot: with a flick the shot of this step already hits, so it fires now
     p = dict(weapon=4, weapon_ammo=50.0, ammo=50.0, owned=(0, 1, 1, 0, 1, 0, 0, 0), slot_ammo=(0, 0, 50, 0, 50, 0, 0, 0))
-    _, turn, fire, _ = DMTeacher(DM)(obs(), priv(labels=[bot(1, 10.0, 600)], **p))
+    _, turn, fire, _ = DMTeacher(replace(DM, flick=False))(obs(), priv(labels=[bot(1, 10.0, 600)], **p))
     assert TURN_DEG[turn] == 10.0 and fire == 0
     _, turn, fire, _ = DMTeacher(replace(DM, flick=True))(obs(), priv(labels=[bot(1, 10.0, 600)], **p))
     assert TURN_DEG[turn] == 10.0 and fire == 1

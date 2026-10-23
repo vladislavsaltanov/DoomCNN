@@ -62,8 +62,8 @@
 </header>
 <section class="rec">
   <div class="card">
-    <h2>Запись данных — учитель играет, каждый шаг пишется в датасет</h2>
-    <div id="recempty" class="empty">запись не идёт; она появится здесь, когда запущен <code>python -m doomagent.dm.record</code></div>
+    <h2 id="r-title">Запись данных — учитель играет, каждый шаг пишется в датасет</h2>
+    <div id="recempty" class="empty">ни запись, ни проверка учителя не идут; они появятся здесь, когда запущен <code>python -m doomagent.dm.record</code> или <code>scripts/dm/dm_teacher_cycle.py</code></div>
     <div id="recbody" style="display:none">
       <div class="row" style="margin-top:0"><b id="r-name">—</b><span class="note" id="r-prog">—</span>
         <label>воркер <select id="r-worker"></select></label><span class="note" id="r-state">—</span></div>
@@ -75,12 +75,12 @@
           <div class="tiles six">
             <div class="tile"><small>фраги учителя за матч</small><b id="r-frags">—</b> <i id="r-kd"></i></div>
             <div class="tile"><small>смерти за матч</small><b id="r-deaths">—</b></div>
-            <div class="tile"><small>попаданий за матч</small><b id="r-hits">—</b></div>
-            <div class="tile"><small>шагов с выстрелом</small><b id="r-fire">—</b></div>
-            <div class="tile"><small>шагов со сменой оружия</small><b id="r-switch">—</b></div>
-            <div class="tile"><small>шагов с ботом на экране</small><b id="r-bot">—</b></div>
+            <div class="tile"><small id="r-l3">попаданий за матч</small><b id="r-hits">—</b></div>
+            <div class="tile"><small id="r-l4">шагов с выстрелом</small><b id="r-fire">—</b></div>
+            <div class="tile" id="r-t5"><small>шагов со сменой оружия</small><b id="r-switch">—</b></div>
+            <div class="tile" id="r-t6"><small>шагов с ботом на экране</small><b id="r-bot">—</b></div>
           </div>
-          <div class="two" style="margin-top:8px">
+          <div class="two" id="r-charts" style="margin-top:8px">
             <div><div class="note">режим учителя, доля шагов</div><div class="chart" id="r-modes"></div></div>
             <div><div class="note">оружие в руках, доля шагов</div><div class="chart" id="r-weapons"></div></div>
           </div>
@@ -433,9 +433,15 @@ async function tickRecord() {
   const on = !!d.plan;
   $('recempty').style.display = on ? 'none' : ''; $('recbody').style.display = on ? '' : 'none';
   if (!on) return;
-  $('r-name').textContent = d.plan.out;
-  $('r-prog').textContent = `${d.done} из ${d.plan.total} матчей · ${d.steps.toLocaleString('ru')} шагов · ${fmt(d.gb, 1)} ГБ · ` +
+  const ev = d.plan.kind === 'eval';
+  $('r-title').textContent = ev ? 'Проверка учителя — оценочные матчи, ничего не записывается'
+                                : 'Запись данных — учитель играет, каждый шаг пишется в датасет';
+  $('r-name').textContent = ev ? d.plan.name : d.plan.out;
+  $('r-prog').textContent = `${d.done} из ${d.plan.total} матчей · ` + (ev ? '' : `${d.steps.toLocaleString('ru')} шагов · ${fmt(d.gb, 1)} ГБ · `) +
     (d.done >= d.plan.total ? 'готово' : `${fmt(d.per_min, 1)} матча/мин · осталось ≈ ${dur(d.eta_s)}`);
+  $('r-l3').textContent = ev ? 'лучший бот, фраги за матч' : 'попаданий за матч';
+  $('r-l4').textContent = ev ? 'первое место из 8' : 'шагов с выстрелом';
+  ['r-t5', 'r-t6', 'r-charts'].forEach(id => { $(id).style.display = ev ? 'none' : ''; });
   $('r-bar').style.width = Math.min(100, 100 * d.done / Math.max(d.plan.total, 1)) + '%';
   const names = d.workers.map(w => w.worker), sel = $('r-worker'), cur = sel.value;
   if (names.join() !== recWorkers.join()) {
@@ -446,15 +452,19 @@ async function tickRecord() {
   const w = d.workers.find(x => x.worker === sel.value);
   $('r-state').textContent = w ? `seed ${w.seed} · ${w.variant} · шаг ${w.step} · фраги ${w.frags} · смерти ${w.deaths} · режим ${RU_MODE[w.mode] || w.mode} · учитель: ${w.label}${w.label !== w.action ? ' · сыграно (шум): ' + w.action : ''}` : 'воркеров нет: запись закончилась или не началась';
   const m = d.metrics;
-  if (!m) return;
+  if (!m) { ['r-frags', 'r-kd', 'r-deaths', 'r-hits', 'r-fire'].forEach(id => { $(id).textContent = '—'; }); return; }
   $('r-frags').textContent = fmt(m.frags); $('r-kd').textContent = 'K/D ' + fmt(m.kd);
-  $('r-deaths').textContent = fmt(m.deaths); $('r-hits').textContent = fmt(m.hits, 1);
-  $('r-fire').textContent = pct(m.fire_share); $('r-switch').textContent = pct(m.switch_share); $('r-bot').textContent = pct(m.bot_share);
+  $('r-deaths').textContent = fmt(m.deaths);
+  if (ev) { $('r-hits').textContent = fmt(m.best_bot); $('r-fire').textContent = pct(m.first_share); }
+  else { $('r-hits').textContent = fmt(m.hits, 1); $('r-fire').textContent = pct(m.fire_share); }
+  const line = () => lineChart($('r-fpm'), [{ name: 'фраги', color: C.s2, pts: m.frags_per_match.map((v, i) => [i + 1, v]), dots: true }],
+                               { y0: 0, xname: 'матч', yfmt: v => v, vfmt: v => fmt(v, 0) });
+  if (ev) { line(); return; }
+  $('r-switch').textContent = pct(m.switch_share); $('r-bot').textContent = pct(m.bot_share);
   const modes = Object.keys(m.mode_share), wn = Object.keys(m.weapon_share);
   barChart($('r-modes'), modes.map(k => m.mode_share[k]), modes.map(k => RU_MODE[k] || k), C.s1);
   barChart($('r-weapons'), wn.map(k => m.weapon_share[k]), wn, C.s3);
-  lineChart($('r-fpm'), [{ name: 'фраги', color: C.s2, pts: m.frags_per_match.map((v, i) => [i + 1, v]), dots: true }],
-            { y0: 0, xname: 'матч', yfmt: v => v, vfmt: v => fmt(v, 0) });
+  line();
 }
 // the worker's frame and map: one picture at a time, the next after the last has loaded
 function pullRecImg(img, k) {

@@ -87,10 +87,12 @@ def dm_record():
     workers = []
     for p in sorted(glob.glob(os.path.join(LIVE_DIR, '*.json'))):
         w = _read_json(p)
-        if os.path.basename(p) != 'record.json' and w and now - w.get('time', 0) < STALE_S:
+        if os.path.basename(p) != 'record.json' and not p.endswith('.done.json') and w and now - w.get('time', 0) < STALE_S:
             workers.append(w)
     if not plan:
         return dict(plan=None, workers=workers)
+    if plan.get('kind') == 'eval':
+        return _eval_progress(plan, workers, now)
     rows = []
     for p in glob.glob(os.path.join(plan['out'], 'ep_*.npz')):
         try:
@@ -116,6 +118,25 @@ def dm_record():
     return dict(plan=plan, workers=workers, done=len(rows), steps=steps,
                 gb=sum(r['bytes'] for r in rows) / 1e9, per_min=60 * rate,
                 eta_s=left / rate if new and left else (0 if not left else None), metrics=metrics)
+
+
+def _eval_progress(plan, workers, now):
+    from doomagent.dm.livetap import LIVE_DIR
+    done = []
+    for p in glob.glob(os.path.join(LIVE_DIR, '*.done.json')):
+        done += [d for d in (_read_json(p) or []) if d.get('time', 0) >= plan['start']]
+    done.sort(key=lambda d: d['time'])
+    rate = len(done) / max(now - plan['start'], 1.0)
+    left = max(plan['total'] - len(done), 0)
+    metrics = None
+    if done:
+        n = len(done)
+        metrics = dict(frags=sum(d['frags'] for d in done) / n, deaths=sum(d['deaths'] for d in done) / n,
+                       kd=sum(d['frags'] for d in done) / max(sum(d['deaths'] for d in done), 1.0),
+                       best_bot=sum(d['best_bot'] for d in done) / n, first_share=sum(bool(d['first']) for d in done) / n,
+                       frags_per_match=[d['frags'] for d in done[-60:]])
+    return dict(plan=plan, workers=workers, done=len(done), per_min=60 * rate,
+                eta_s=left / rate if done and left else (0 if not left else None), metrics=metrics)
 
 
 def dm_neurons(run):

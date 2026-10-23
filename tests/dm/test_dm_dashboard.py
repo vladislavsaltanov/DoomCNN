@@ -93,3 +93,22 @@ def test_record_picture_and_neuron_map(server, tmp_path, monkeypatch):
         assert r.read() == b'\x89PNG'
     with pytest.raises(urllib.error.HTTPError):
         get(server + '/artifact?name=..%2F..%2Fsecret.png')
+
+
+def test_eval_progress_from_finished_matches(tmp_path, monkeypatch):
+    # a teacher check plays matches without saving them: progress and numbers come from the workers' lists
+    import time
+    from doomagent.dm.dashboard import dm_record
+    monkeypatch.chdir(tmp_path)
+    live = tmp_path / 'runs' / 'dm' / 'live'
+    live.mkdir(parents=True)
+    t0 = time.time() - 60
+    (live / 'record.json').write_text(json.dumps(dict(kind='eval', name='check', out='', total=20, start=t0)))
+    (live / 'w1.done.json').write_text(json.dumps([dict(seed=1, time=t0 + 10, frags=8.0, deaths=2.0, best_bot=6.0, first=True),
+                                                   dict(seed=2, time=t0 - 100, frags=0.0, deaths=9.0, best_bot=9.0, first=False)]))
+    (live / 'w2.done.json').write_text(json.dumps([dict(seed=3, time=t0 + 20, frags=4.0, deaths=2.0, best_bot=7.0, first=False)]))
+    d = dm_record()
+    assert d['plan']['kind'] == 'eval' and d['done'] == 2  # seed 2 is from an earlier run
+    m = d['metrics']
+    assert m['frags'] == 6.0 and m['kd'] == 3.0 and m['best_bot'] == 6.5 and m['first_share'] == 0.5
+    assert m['frags_per_match'] == [8.0, 4.0] and d['eta_s'] > 0

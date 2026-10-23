@@ -29,19 +29,25 @@ def _jpg(bgr_or_rgb, rgb=True):
     return cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 80])[1].tobytes()
 
 
-def write_plan(name, out, total, root=LIVE_DIR):
-    # what is being recorded: the dashboard counts the finished matches in out against total
+def write_plan(name, out, total, root=LIVE_DIR, kind='record'):
+    # what runs: 'record' (the dashboard counts the matches saved in out) or 'eval' (a teacher check: the
+    # workers list their finished matches, nothing is saved)
     os.makedirs(root, exist_ok=True)
-    _put(os.path.join(root, 'record.json'),
-         json.dumps(dict(name=name, out=out.replace('\\', '/'), total=int(total), start=time.time())).encode())
+    _put(os.path.join(root, 'record.json'), json.dumps(dict(
+        kind=kind, name=name, out=out.replace('\\', '/'), total=int(total), start=time.time())).encode())
 
 
 class LiveTap:
     def __init__(self, root=LIVE_DIR, every_s=0.1, worker=None, cfg=DM):
         self.root, self.every_s, self.cfg = root, every_s, cfg
         self.worker = worker or f'w{os.getpid()}'
-        self.last, self.mapview, self.sectors = -1e9, None, None
+        self.last, self.mapview, self.sectors, self.done = -1e9, None, None, []
         os.makedirs(root, exist_ok=True)
+
+    def match_done(self, seed, **numbers):
+        # a finished match of a teacher check: its numbers for the dashboard
+        self.done.append(dict(seed=int(seed), time=time.time(), **numbers))
+        _put(os.path.join(self.root, self.worker + '.done.json'), json.dumps(self.done).encode())
 
     def __call__(self, env, priv, teacher, label, action, info):
         now = time.time()

@@ -24,20 +24,33 @@ HIT_WINDOW = 13  # 1.5 s
 WHY = ('shoot', 'switching', 'not_aimed', 'unsafe', 'no_ammo', 'reloading', 'no_combat')
 
 
-def run_one(seed, cfg):
+_TAP = None  # one LiveTap per worker process: the dashboard shows what it plays
+
+
+def run_one(seed, cfg, live=False):
+    global _TAP
     from doomagent.dm.env import DeathmatchEnv
     from doomagent.dm.teacher import DMTeacher
+    if live and _TAP is None:
+        from doomagent.dm.livetap import LiveTap
+        _TAP = LiveTap(cfg=cfg)
     env, teacher = DeathmatchEnv(cfg), DMTeacher(cfg)
     obs, done, rows = env.reset(seed), False, []
     while not done:
         p = env.privileged()
         a = teacher(obs, p)
+        if live:
+            _TAP(env, p, teacher, a, a, dict(seed=seed, step=len(rows), variant=env.variant.name))
         rows.append(dict(why=teacher.why, mode=MODES.index(teacher.mode), health=p.health, ammo=p.weapon_ammo,
                          weapon=p.weapon, frags=p.frags, deaths=p.deaths, hits=p.hits, first=bool(obs.first),
                          bot=bool(visible_bots(p.labels, p.px, p.py, cfg.width)), fire=int(a[2])))
         obs, _, done = env.step(a)
     end = env.privileged()
     env.close()
+    if live:
+        bots = [float(f) for f in end.player_frags[1:]]
+        _TAP.match_done(seed, frags=float(end.frags), deaths=float(end.deaths), best_bot=max(bots, default=0.0),
+                        first=not any(b > float(end.frags) for b in bots))  # rank 1, as summary() counts it
     return dict(seed=seed, rows=rows, player_frags=[float(f) for f in end.player_frags])
 
 
@@ -108,13 +121,18 @@ if __name__ == '__main__':  # workers re-import this file
     ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--set', nargs='*', default=[])
     ap.add_argument('--out', default='runs/dm/diag_teacher')
+    ap.add_argument('--no-live', action='store_true', help='no frames for the dashboard')
     a = ap.parse_args()
     cfg = with_overrides(DM, a.set)
     seeds = {'val': VAL_SEEDS, 'fresh': FRESH_SEEDS}[a.seeds][:a.matches]
+    live = not a.no_live
+    if live:
+        from doomagent.dm.livetap import write_plan
+        write_plan(f'проверка учителя · {" ".join(a.set) or "по умолчанию"} · {a.seeds}', '', len(seeds), kind='eval')
     import multiprocessing as mp
     from concurrent.futures import ProcessPoolExecutor
     with ProcessPoolExecutor(a.workers, mp_context=mp.get_context('spawn')) as ex:
-        matches = list(ex.map(run_one, seeds, [cfg] * len(seeds)))
+        matches = list(ex.map(run_one, seeds, [cfg] * len(seeds), [live] * len(seeds)))
     res = [analyze(m) for m in matches]
     s = summary(res)
     with open(a.out + '.json', 'w') as fh:

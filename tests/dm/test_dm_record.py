@@ -97,3 +97,13 @@ def test_bot_visible_ignores_hidden_bots(tmp_path):
     record_match(FakeMatchEnv([row(first=i == 0, bot=True) for i in range(5)]), 1, lambda o, p, lab: lab,
                  StubTeacher(LABEL), str(tmp_path / 'ep_base_2'))
     assert np.load(tmp_path / 'ep_base_2.npz')['bot_visible'].all()  # unknown pixel counts pass
+
+
+def test_live_tap_lists_finished_matches(tmp_path):
+    import json
+    from doomagent.dm.livetap import LiveTap
+    tap = LiveTap(str(tmp_path), worker='w1')
+    tap.match_done(5, frags=7.0, deaths=2.0, best_bot=6.0, first=True)
+    tap.match_done(6, frags=3.0, deaths=4.0, best_bot=5.0, first=False)
+    done = json.load(open(tmp_path / 'w1.done.json'))
+    assert [d['seed'] for d in done] == [5, 6] and done[0]['frags'] == 7.0 and done[1]['first'] is False
