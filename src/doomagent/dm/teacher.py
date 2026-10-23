@@ -230,9 +230,10 @@ class DMTeacher:
         # the rocket launcher fires on a new press only; the other weapons repeat while the key is held
         ready = priv.attack_ready or (self.fired_last and priv.weapon != 5)
         fresh = not (self.fired_last and priv.weapon == 5)
-        fire = int(abs(rel) <= tol and safe and ready and fresh and weapon == 0 and priv.weapon_ammo >= w.cost)
+        fire_tol = max(tol, c.hitscan_tol) if w.speed == 0.0 else tol
+        fire = int(abs(rel) <= fire_tol and safe and ready and fresh and weapon == 0 and priv.weapon_ammo >= w.cost)
         # the first failed condition, for the diagnostics
-        self.why = ('shoot' if fire else 'switching' if weapon else 'not_aimed' if abs(rel) > tol else
+        self.why = ('shoot' if fire else 'switching' if weapon else 'not_aimed' if abs(rel) > fire_tol else
                     'unsafe' if not safe else 'no_ammo' if priv.weapon_ammo < w.cost else 'reloading')
         fwd = 0
         if t.dist < w.lo + RANGE_MARGIN or (w.splash and t.dist < c.safe_dist + RANGE_MARGIN):

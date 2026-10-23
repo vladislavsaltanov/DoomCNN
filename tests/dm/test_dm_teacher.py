@@ -214,3 +214,10 @@ def test_why_names_the_reason():
     assert t.why == 'not_aimed'
     t(obs(), priv(tic=200))
     assert t.why == 'no_combat'
+
+
+def test_hitscan_fires_within_its_tolerance():
+    p = dict(weapon=4, weapon_ammo=50.0, ammo=50.0, owned=(0, 1, 1, 0, 1, 0, 0, 0), slot_ammo=(0, 0, 50, 0, 50, 0, 0, 0))
+    assert DMTeacher(DM)(obs(), priv(labels=[bot(1, 2.0, 600)], **p))[2] == 0  # 2° off a ±1.5° target
+    assert DMTeacher(replace(DM, hitscan_tol=3.0))(obs(), priv(labels=[bot(1, 2.0, 600)], **p))[2] == 1
+    assert DMTeacher(replace(DM, hitscan_tol=3.0))(obs(), priv(labels=[bot(1, 2.0, 600)]))[2] == 0  # not rockets
