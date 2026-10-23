@@ -1,4 +1,23 @@
-from doomagent.dm.reports import d0_figure, gate_a, match_table_md, teacher_figure
+import json
+
+from doomagent.dm.config import ACTION_NAMES
+from doomagent.dm.reports import curves_figure, d0_figure, gate_a, match_table_md, teacher_figure
+
+
+def test_curves_figure_writes_png(tmp_path):
+    logs = {}
+    for name in ('m0', 'm1'):
+        rows = [dict(epoch=e, holdout_ce=2.0 - 0.1 * e, holdout_acc=0.2 + 0.03 * e, val_score=0.1 * e,
+                     frags=dict(mean=0.1 * e, lo=0.1 * e - 0.5, hi=0.1 * e + 0.5)) for e in (5, 10, 15)]
+        p = tmp_path / f'{name}.log.json'
+        p.write_text(json.dumps(dict(config={}, log=rows)))
+        logs[name] = str(p)
+    conf = [[10 if i == j else (3 if j == 0 else 1) for j in range(10)] for i in range(10)]
+    (tmp_path / 'm1.live.json').write_text(json.dumps(dict(confusion=conf, holdout_confusion=conf)))
+    out = tmp_path / 'c.png'
+    curves_figure(logs, str(out), teacher=ci(6.25), confusion_of=str(tmp_path / 'm1.live.json'),
+                  action_names=ACTION_NAMES)
+    assert out.stat().st_size > 10_000
 
 
 def ci(m):
