@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from dmfiles import make_match
+from doomagent.dm.actions import HEAD_SIZES, HEADS
 from doomagent.dm.config import DM
 from doomagent.dm.train import train
 
@@ -18,7 +19,9 @@ def test_train_smoke_writes_outputs(tmp_path, kind):
     train(kind, [str(tmp_path / 'd')], out, epochs=1, val=[], workers=0, batch_steps=64)
     log = json.load(open(out + '.log.json'))
     live = json.load(open(out + '.live.json'))
-    assert os.path.exists(out) and log['log'] and np.array(live['confusion']).shape == (10, 10)
+    assert os.path.exists(out) and log['log'] and list(live['confusion']) == list(HEADS)
+    assert all(np.array(live['confusion'][h]).shape == (k, k) for h, k in zip(HEADS, HEAD_SIZES))
+    assert all(f'holdout_acc_{h}' in log['log'][-1] for h in HEADS)
     assert log['config']['holdout_files']
     assert not set(log['config']['holdout_files']) & set(log['config']['train_files'])
     assert log['log'][-1]['lr'] < 1e-6  # cosine schedule ends at zero

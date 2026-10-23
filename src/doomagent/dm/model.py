@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from doomagent.dm.config import DM, N_ACTIONS
+from doomagent.dm.actions import HEAD_SIZES, HEADS, N_LOGITS, VEC_DIM
+from doomagent.dm.config import DM
 
 
 class DMNet(nn.Module):
-    # M0 (memory=False): conv features + [health, rockets] -> action head.
-    # M1 (memory=True): the same features + vector go through a GRU of 512; the head reads its state.
+    # M0 (memory=False): conv features + the vector (dm.actions.make_vec) -> one linear layer of N_LOGITS, read as
+    # four heads (split_logits). M1 (memory=True): the same features + vector go through a GRU of 512 first.
     def __init__(self, cfg=DM, memory=False):
         super().__init__()
         self.memory = memory
@@ -19,10 +20,10 @@ class DMNet(nn.Module):
             flat = self.body(torch.zeros(1, cfg.stack, cfg.height, cfg.width)).numel()
         self.fc = nn.Sequential(nn.Linear(flat, 512), nn.ReLU())
         if memory:
-            self.gru = nn.GRU(514, 512, batch_first=True)
-            self.head = nn.Linear(512, N_ACTIONS)
+            self.gru = nn.GRU(512 + VEC_DIM, 512, batch_first=True)
+            self.head = nn.Linear(512, N_LOGITS)
         else:
-            self.head = nn.Linear(514, N_ACTIONS)
+            self.head = nn.Linear(512 + VEC_DIM, N_LOGITS)
 
     def encode(self, frames):
         x = frames.float() / 255.0 if frames.dtype == torch.uint8 else frames
@@ -42,14 +43,25 @@ class DMNet(nn.Module):
         return self.head(hid if self.memory else torch.cat([feat, vec.to(feat.dtype)], -1)), h_out
 
 
-def bc_loss(logits, actions, mask):
-    # cross-entropy over the steps in mask
-    ce = F.cross_entropy(logits.reshape(-1, logits.shape[-1]), actions.reshape(-1), reduction='none')
+def split_logits(logits):
+    # (..., N_LOGITS) -> [move, turn, fire, weapon] logits
+    return list(torch.split(logits, HEAD_SIZES, dim=-1))
+
+
+def bc_loss(logits, actions, mask, weights=(1.0, 1.0, 1.0, 1.0)):
+    # sum over the heads of the cross-entropy over the steps in mask; actions (..., 4)
     m = mask.reshape(-1).float()
     n = m.sum().clamp_min(1.0)
-    loss = (ce * m).sum() / n
-    acc = ((logits.reshape(-1, logits.shape[-1]).argmax(1) == actions.reshape(-1)).float() * m).sum() / n
-    return loss, dict(ce=loss.item(), acc=acc.item())
+    loss, parts, all_ok = 0.0, {}, torch.ones_like(m, dtype=torch.bool)
+    for k, (name, lg) in enumerate(zip(HEADS, split_logits(logits))):
+        a = actions[..., k].reshape(-1)
+        ce = (F.cross_entropy(lg.reshape(-1, lg.shape[-1]), a, reduction='none') * m).sum() / n
+        ok = lg.reshape(-1, lg.shape[-1]).argmax(1) == a
+        all_ok &= ok
+        loss = loss + weights[k] * ce
+        parts[f'ce_{name}'], parts[f'acc_{name}'] = ce.item(), ((ok.float() * m).sum() / n).item()
+    parts['ce'], parts['acc'] = float(loss.item()), ((all_ok.float() * m).sum() / n).item()
+    return loss, parts
 
 
 def load_conv(model, path):

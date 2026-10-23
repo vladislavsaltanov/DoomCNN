@@ -9,10 +9,11 @@ from torch.utils.data import DataLoader
 
 from doomagent.dm.agent import DMChooser, pick_device
 from doomagent.dm.augment import frame_augment
-from doomagent.dm.config import DM, N_ACTIONS, VAL_SEEDS, val_plan
+from doomagent.dm.actions import HEAD_SIZES, HEADS
+from doomagent.dm.config import DM, VAL_SEEDS, val_plan
 from doomagent.dm.data import MatchSegments, MatchSteps, mirror_batch, split_holdout
 from doomagent.dm.evaluate import evaluate_plan, summarize
-from doomagent.dm.model import DMNet, bc_loss, load_conv, load_model, save_model
+from doomagent.dm.model import DMNet, bc_loss, load_conv, load_model, save_model, split_logits
 from doomagent.evaluate import val_score
 from doomagent.variants import BASE
 
@@ -30,8 +31,26 @@ def write_json_atomic(path, obj):
         pass
 
 
+def _confusions():
+    return {h: np.zeros((k, k), np.int64) for h, k in zip(HEADS, HEAD_SIZES)}
+
+
+def _add_conf(conf, act, pred):
+    # act, pred: (N, 4) teacher and network values
+    for k, h in enumerate(HEADS):
+        np.add.at(conf[h], (act[:, k], pred[:, k]), 1)
+
+
+def _acc_per_value(conf):
+    out = {}
+    for h, m in conf.items():
+        rows = m.sum(1)
+        out[h] = [float(m[i, i] / rows[i]) if rows[i] else None for i in range(len(m))]
+    return out
+
+
 class Live:
-    # the dashboard's training charts: loss and accuracy points, confusion of the recent batches
+    # the dashboard's training charts: loss and accuracy points, confusion of the recent batches per head
     def __init__(self, out, n_batches, keep=4000):
         self.out, self.n_batches, self.keep = str(out), n_batches, keep
         self.points, self.total, self.holdout_confusion = [], 0, None
@@ -39,30 +58,32 @@ class Live:
 
     def _clear(self):
         self.sum_ce = self.sum_acc = 0.0
+        self.sum_head = {h: 0.0 for h in HEADS}
         self.n = 0
-        self.conf = np.zeros((N_ACTIONS, N_ACTIONS), np.int64)
+        self.conf = _confusions()
 
     def add(self, epoch, batch, parts, pred, act):
         self.total += 1
         self.sum_ce, self.sum_acc, self.n = self.sum_ce + parts['ce'], self.sum_acc + parts['acc'], self.n + 1
-        np.add.at(self.conf, (act, pred), 1)
+        for h in HEADS:
+            self.sum_head[h] += parts[f'acc_{h}']
+        _add_conf(self.conf, act, pred)
         if batch % EVERY and batch != self.n_batches:
             return
         self.points = (self.points + [dict(batch=self.total, epoch=epoch, ce=self.sum_ce / self.n,
-                                           acc=self.sum_acc / self.n)])[-self.keep:]
+                                           acc=self.sum_acc / self.n,
+                                           **{f'acc_{h}': self.sum_head[h] / self.n for h in HEADS})])[-self.keep:]
         write_json_atomic(self.out + '.progress.json',
                           dict(epoch=epoch, batch=batch, n_batches=self.n_batches, t=time.time(),
                                points=self.points))
-        rows = self.conf.sum(1)
         write_json_atomic(self.out + '.live.json', dict(
-            confusion=self.conf.tolist(),
-            acc_per_action=[float(self.conf[i, i] / rows[i]) if rows[i] else None for i in range(N_ACTIONS)],
+            confusion={h: m.tolist() for h, m in self.conf.items()}, acc_per_value=_acc_per_value(self.conf),
             holdout_confusion=self.holdout_confusion, t=time.time()))
         self._clear()
 
 
 def _to_model(batch, memory, dev):
-    # (frames (B, T, S, H, W) uint8, vec (B, T, 2), action (B, T), mask (B, T)) on the device
+    # (frames (B, T, S, H, W) uint8, vec (B, T, V), action (B, T, 4), mask (B, T)) on the device
     f, v, a = batch['frames'].to(dev), batch['vec'].to(dev), batch['action'].to(dev)
     if memory:
         return f, v, a, (batch['loss'] & batch['valid']).to(dev)
@@ -72,7 +93,7 @@ def _to_model(batch, memory, dev):
 @torch.no_grad()
 def holdout_metrics(model, ds, memory, dev, batch_size):
     model.eval()
-    conf, ce_sum, n = np.zeros((N_ACTIONS, N_ACTIONS), np.int64), 0.0, 0
+    conf, ce_sum, n, all_ok = _confusions(), 0.0, 0, 0
     for batch in DataLoader(ds, batch_size=batch_size, num_workers=0):
         f, v, a, m = _to_model(batch, memory, dev)
         logits, _ = model(f, v)
@@ -80,12 +101,15 @@ def holdout_metrics(model, ds, memory, dev, batch_size):
         k = int(m.sum())
         ce_sum, n = ce_sum + loss.item() * k, n + k
         sel = m.reshape(-1)
-        np.add.at(conf, (a.reshape(-1)[sel].cpu().numpy(), logits.argmax(-1).reshape(-1)[sel].cpu().numpy()), 1)
+        act = a.reshape(-1, a.shape[-1])[sel].cpu().numpy()
+        pred = np.stack([lg.argmax(-1).reshape(-1)[sel].cpu().numpy() for lg in split_logits(logits)], 1)
+        _add_conf(conf, act, pred)
+        all_ok += int((act == pred).all(1).sum())
     model.train()
-    rows = conf.sum(1)
-    return dict(holdout_ce=ce_sum / max(n, 1), holdout_acc=float(np.trace(conf) / max(conf.sum(), 1)),
-                holdout_acc_per_action=[float(conf[i, i] / rows[i]) if rows[i] else None
-                                        for i in range(N_ACTIONS)]), conf
+    out = dict(holdout_ce=ce_sum / max(n, 1), holdout_acc=all_ok / max(n, 1),
+               holdout_acc_per_value=_acc_per_value(conf))
+    out.update({f'holdout_acc_{h}': float(np.trace(m) / max(m.sum(), 1)) for h, m in conf.items()})
+    return out, conf
 
 
 def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=True, eval_every=2,
@@ -133,8 +157,8 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
             opt.step()
             sched.step()
             sel = m.reshape(-1)
-            live.add(epoch, i, parts, logits.argmax(-1).reshape(-1)[sel].cpu().numpy(),
-                     a.reshape(-1)[sel].cpu().numpy())
+            pred = np.stack([lg.argmax(-1).reshape(-1)[sel].cpu().numpy() for lg in split_logits(logits)], 1)
+            live.add(epoch, i, parts, pred, a.reshape(-1, a.shape[-1])[sel].cpu().numpy())
             sums = {k: sums[k] + parts[k] for k in sums}
             n += 1
             if max_minutes and time.time() - t0 > 60 * max_minutes:
@@ -148,7 +172,7 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
         if hold is not None:
             metrics, conf = holdout_metrics(model, hold, memory, dev, bs)
             row.update(metrics)
-            live.holdout_confusion = conf.tolist()
+            live.holdout_confusion = {h: c.tolist() for h, c in conf.items()}
         if val:
             state = {k: t.detach().cpu() for k, t in model.state_dict().items()}
             res = evaluate_plan(val, DMChooser(state, memory, cfg), cfg, workers=eval_workers)
@@ -162,7 +186,7 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
         else:
             save_model(model, out)
         log.append(row)
-        print(json.dumps({k: v for k, v in row.items() if k != 'holdout_acc_per_action'}), flush=True)
+        print(json.dumps({k: v for k, v in row.items() if k != 'holdout_acc_per_value'}), flush=True)
         with open(str(out) + '.log.json', 'w') as fh:
             json.dump(dict(config=config, log=log), fh, indent=1)
         if stop:

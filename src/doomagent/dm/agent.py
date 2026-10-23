@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from doomagent.dm.config import DM
-from doomagent.dm.model import DMNet, gru_gates, load_model
+from doomagent.dm.model import DMNet, gru_gates, load_model, split_logits
 
 
 def pick_device():
@@ -44,14 +44,15 @@ class DMAgent:
         return logits, feat[0, 0], hid, z, prev
 
     def act(self, frames, vec, first):
-        return int(self._step(frames, vec, first)[0].argmax())
+        # (move, turn, fire, weapon): the most likely value of each head
+        return tuple(int(lg.argmax()) for lg in split_logits(self._step(frames, vec, first)[0]))
 
     def explain(self, frames, vec, first):
         logits, feat, hid, z, prev = self._step(frames, vec, first)
-        probs = torch.softmax(logits, 0).cpu().numpy()
+        probs = [torch.softmax(lg, 0).cpu().numpy() for lg in split_logits(logits)]
         cpu = lambda t: None if t is None else t.reshape(-1).cpu().numpy()  # noqa: E731
-        return dict(action=int(probs.argmax()), probs=probs, feat=cpu(feat), h=cpu(hid), h_prev=cpu(prev),
-                    z=cpu(z))
+        return dict(action=tuple(int(p.argmax()) for p in probs), probs=probs, feat=cpu(feat), h=cpu(hid),
+                    h_prev=cpu(prev), z=cpu(z))
 
 
 class DMChooser:

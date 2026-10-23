@@ -5,6 +5,7 @@ import numpy as np
 
 from dmfiles import Poison
 from doomagent.dm.agent import DMAgent, DMChooser, agent_chooser
+from doomagent.dm.actions import HEAD_SIZES, VEC_DIM
 from doomagent.dm.config import DM
 from doomagent.dm.env import DMObs
 from doomagent.dm.model import DMNet
@@ -13,7 +14,7 @@ from doomagent.dm.model import DMNet
 def ob(seed=0, first=False):
     g = np.random.default_rng(seed)
     return DMObs(g.integers(0, 255, (4, DM.height, DM.width), dtype=np.uint8),
-                 g.random(2).astype(np.float32), first)
+                 g.random(VEC_DIM).astype(np.float32), first)
 
 
 def test_agent_takes_pixels_vec_and_first_only():
@@ -22,6 +23,14 @@ def test_agent_takes_pixels_vec_and_first_only():
     m = DMNet(DM, memory=True)
     DMChooser(m.state_dict(), True)(ob(first=True), Poison())
     agent_chooser(DMAgent(m))(ob(first=True), Poison())
+
+
+def test_act_is_a_tuple_of_heads():
+    a = DMAgent(DMNet(DM, memory=False).eval())
+    act = a.act(*astuple(ob(0, first=True)))
+    info = a.explain(*astuple(ob(0, first=True)))
+    assert isinstance(act, tuple) and len(act) == 4 and all(0 <= v < k for v, k in zip(act, HEAD_SIZES))
+    assert [p.shape[0] for p in info['probs']] == list(HEAD_SIZES) and info['action'] == act
 
 
 def test_first_resets_the_memory():
@@ -40,7 +49,8 @@ def test_chooser_resets_between_matches():
     seq = [ob(i, first=i == 0) for i in range(8)]
     first_run = [c(o, None) for o in seq]
     c.reset()
-    assert [c(o, None) for o in seq] == first_run == [DMChooser(m.state_dict(), True)(o, None) for o in seq]
+    fresh = DMChooser(m.state_dict(), True)  # one new chooser for the whole match, not one per step
+    assert [c(o, None) for o in seq] == first_run == [fresh(o, None) for o in seq]
 
 
 def test_reset_every_step_equals_first_every_step():
