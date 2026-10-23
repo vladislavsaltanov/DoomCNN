@@ -74,7 +74,7 @@ class DMChooser:
     def __call__(self, obs, priv):
         if self.agent is None:
             dev = pick_device()
-            m = DMNet(self.cfg, self.memory)
+            m = DMNet(self.cfg, self.memory, aux='aux.weight' in self.state)
             m.load_state_dict(self.state)
             self.agent = DMAgent(m.to(dev), self.reset_every_step)
         self.steps += 1

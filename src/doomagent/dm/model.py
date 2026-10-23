@@ -3,15 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from doomagent.dm.actions import HEAD_SIZES, HEADS, N_LOGITS, VEC_DIM
+from doomagent.dm.auxtargets import AUX_SIZES
 from doomagent.dm.config import DM
 
 
 class DMNet(nn.Module):
     # M0 (memory=False): conv features + the vector (dm.actions.make_vec) -> one linear layer of N_LOGITS, read as
     # four heads (split_logits). M1 (memory=True): the same features + vector go through a GRU of 512 first.
-    def __init__(self, cfg=DM, memory=False):
+    def __init__(self, cfg=DM, memory=False, aux=False):
         super().__init__()
-        self.memory = memory
+        self.memory, self.aux_on = memory, aux
         self.body = nn.Sequential(
             nn.Conv2d(cfg.stack, 32, 8, 4), nn.ReLU(),
             nn.Conv2d(32, 64, 4, 2), nn.ReLU(),
@@ -24,6 +25,8 @@ class DMNet(nn.Module):
             self.head = nn.Linear(512, N_LOGITS)
         else:
             self.head = nn.Linear(512 + VEC_DIM, N_LOGITS)
+        if aux:  # auxiliary heads (dm.auxtargets) read what the action heads read
+            self.aux = nn.Linear(self.head.in_features, sum(AUX_SIZES.values()))
 
     def encode(self, frames):
         x = frames.float() / 255.0 if frames.dtype == torch.uint8 else frames
@@ -39,8 +42,17 @@ class DMNet(nn.Module):
         return feat, hid, h_out
 
     def forward(self, frames, vec, h=None):
+        logits, h_out, _ = self.forward_aux(frames, vec, h, aux=False)
+        return logits, h_out
+
+    def forward_aux(self, frames, vec, h=None, aux=True):
+        # the action logits, the GRU state and {target: logits} of the auxiliary heads (None without them)
         feat, hid, h_out = self.features(frames, vec, h)
-        return self.head(hid if self.memory else torch.cat([feat, vec.to(feat.dtype)], -1)), h_out
+        z = hid if self.memory else torch.cat([feat, vec.to(feat.dtype)], -1)
+        out = None
+        if aux and self.aux_on:
+            out = dict(zip(AUX_SIZES, torch.split(self.aux(z), list(AUX_SIZES.values()), dim=-1)))
+        return self.head(z), h_out, out
 
 
 def split_logits(logits):
@@ -62,6 +74,44 @@ def bc_loss(logits, actions, mask, weights=(1.0, 1.0, 1.0, 1.0)):
         parts[f'ce_{name}'], parts[f'acc_{name}'] = ce.item(), ((ok.float() * m).sum() / n).item()
     parts['ce'], parts['acc'] = float(loss.item()), ((all_ok.float() * m).sum() / n).item()
     return loss, parts
+
+
+def aux_loss(aux, b, mask):
+    # mean of the auxiliary losses over the steps in mask that have the target: enemy on screen (BCE),
+    # its column, the map cell, the heading (CE; -1 = none or mirrored), items in view (BCE), coarse depth (MSE)
+    m = mask.reshape(-1)
+    T = mask.shape[-1] if mask.dim() > 1 else 1
+    per_step = lambda ok: ok.reshape(-1, 1).expand(-1, T).reshape(-1) if ok.dim() == 1 else ok.reshape(-1)
+    flat = {k: v.reshape(m.shape[0], -1) for k, v in aux.items()}
+    total, parts = 0.0, {}
+
+    def ce(name, key):
+        nonlocal total
+        y = b[key].reshape(-1).to(m.device)
+        ok = m & (y >= 0)
+        if ok.any():
+            lg = flat[name][ok]
+            total = total + F.cross_entropy(lg, y[ok])
+            parts[key + '_acc'] = (lg.argmax(1) == y[ok]).float().mean().item()
+
+    y = b['aux_enemy'].reshape(-1).to(m.device).float()
+    if m.any():
+        lg = flat['enemy'][:, 0][m]
+        total = total + F.binary_cross_entropy_with_logits(lg, y[m])
+        parts['aux_enemy_acc'] = ((lg > 0).float() == (y[m] > 0.5).float()).float().mean().item()
+    ce('enemy_x', 'aux_x')
+    ce('pos', 'aux_pos')
+    ce('heading', 'aux_head')
+    ok = m & per_step(b['aux_items_ok'].to(m.device))
+    if ok.any():
+        total = total + F.binary_cross_entropy_with_logits(flat['items'][ok], b['aux_items'].reshape(m.shape[0], -1).to(m.device)[ok])
+    ok = m & per_step(b['aux_depth_ok'].to(m.device))
+    if ok.any():
+        mse = F.mse_loss(torch.sigmoid(flat['depth'][ok]), b['aux_depth'].reshape(m.shape[0], -1).to(m.device)[ok])
+        total = total + mse
+        parts['aux_depth_mse'] = mse.item()
+    parts['aux'] = float(total.detach()) if torch.is_tensor(total) else 0.0
+    return total, parts
 
 
 def load_conv(model, path):
@@ -90,11 +140,11 @@ def gru_gates(gru, x, h):
 
 
 def save_model(model, path):
-    torch.save(dict(state=model.state_dict(), memory=model.memory), path)
+    torch.save(dict(state=model.state_dict(), memory=model.memory, aux=model.aux_on), path)
 
 
 def load_model(path, cfg=DM, map_location='cpu'):
     d = torch.load(path, map_location=map_location)
-    m = DMNet(cfg, memory=d['memory'])
+    m = DMNet(cfg, memory=d['memory'], aux=d.get('aux', False))
     m.load_state_dict(d['state'])
     return m

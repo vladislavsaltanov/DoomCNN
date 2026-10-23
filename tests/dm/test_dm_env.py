@@ -30,7 +30,8 @@ def test_reset_observation(env):
     o = env.reset(35000)
     assert o.frames.shape == (4, SHORT.height, SHORT.width) and o.frames.dtype == np.uint8 and o.first
     assert all((o.frames[0] == o.frames[i]).all() for i in range(1, 4))
-    assert o.vec.dtype == np.float32 and np.allclose(o.vec, make_vec(100.0, 0.0, 2, 50.0))
+    assert o.vec.dtype == np.float32 and np.allclose(o.vec[:10], make_vec(100.0, 0.0, 2, 50.0)[:10])
+    assert o.vec[10] == 1.0 and o.vec[11:16].sum() == 0  # the pistol only
 
 
 def test_start_weapon_is_pistol(env):
@@ -218,3 +219,16 @@ def test_flick_turn_is_done_after_the_first_tic(deg):
     env.step((STAY, turn_index(deg), 0, 0), on_tic=lambda rgb, p: seen.append(p.angle))
     env.close()
     assert abs(wrap(seen[0] - a0) - deg) <= 0.2 and abs(wrap(seen[-1] - a0) - deg) <= 0.2
+
+
+def test_coarse_depth_only_when_asked(env):
+    from doomagent.dm.env import DeathmatchEnv
+    env.reset(35000)
+    assert env.privileged().depth is None
+    e = DeathmatchEnv(replace(SHORT, depth=True))
+    try:
+        e.reset(35000)
+        d = e.privileged().depth
+        assert d.shape == (8, 16) and d.dtype == np.uint8 and d.max() > d.min()  # walls near and far
+    finally:
+        e.close()

@@ -56,3 +56,15 @@ def test_progress_knows_the_epochs_and_the_start(tmp_path):
     train('m0', [str(tmp_path / 'd')], out, epochs=2, val=[], workers=0, batch_steps=64)
     p = json.load(open(out + '.progress.json'))
     assert p['epochs'] == 2 and p['start'] <= p['t']
+
+
+@pytest.mark.parametrize('kind', ['m0', 'm1'])
+def test_train_with_aux_heads(tmp_path, kind):
+    for s in range(3):
+        make_match(tmp_path / 'd', s, T=70, first_at=(0, 30), aux=True)
+    out = str(tmp_path / f'{kind}.pt')
+    train(kind, [str(tmp_path / 'd')], out, epochs=1, val=[], workers=0, batch_steps=64, aux_w=1.0)
+    row = json.load(open(out + '.log.json'))['log'][-1]
+    assert {'holdout_aux_pos_acc', 'holdout_aux_x_acc', 'holdout_aux_enemy_acc', 'train_aux'} <= set(row)
+    from doomagent.dm.model import load_model
+    assert load_model(out).aux_on

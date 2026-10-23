@@ -3,6 +3,7 @@ import os
 from collections import deque
 from dataclasses import dataclass, field
 
+import cv2
 import numpy as np
 import vizdoom as vzd
 
@@ -47,7 +48,7 @@ def unthrottle_children():
 @dataclass(frozen=True)
 class DMObs:
     frames: np.ndarray  # (stack, height, width) uint8, oldest..newest
-    vec: np.ndarray     # (10,) float32, dm.actions.make_vec: health, armor, ammo in hand, weapon one-hot
+    vec: np.ndarray     # (22,) float32, dm.actions.make_vec: health, armor, ammo in hand, weapon one-hot, inventory
     first: bool         # first step of a life: match start or just after a respawn
 
 
@@ -85,6 +86,7 @@ class DMPrivileged:
     slot_ammo: tuple = ()     # AMMO0..7
     owned: tuple = ()         # WEAPON0..7
     vis_px: dict = field(default_factory=dict)  # label object id -> its pixels on the render (640x480)
+    depth: np.ndarray = None  # (8, 16) uint8 mean depth per cell, only with cfg.depth (dm.auxtargets)
 
 
 def game_args(c):
@@ -129,7 +131,7 @@ class DeathmatchEnv:
         g.set_labels_buffer_enabled(True)
         g.set_objects_info_enabled(True)
         g.set_sectors_info_enabled(True)
-        g.set_depth_buffer_enabled(False)
+        g.set_depth_buffer_enabled(c.depth)
         g.clear_available_buttons()
         for b in BUTTONS:
             g.add_available_button(b)
@@ -159,7 +161,7 @@ class DeathmatchEnv:
         slot_ammo = tuple(float(v) for v in values[14:14 + N_SLOTS])
         owned = tuple(int(v) for v in values[14 + N_SLOTS:len(VARS)])
         p = self._priv
-        labels, objects, vis_px = p.labels, p.objects, p.vis_px
+        labels, objects, vis_px, depth = p.labels, p.objects, p.vis_px, p.depth
         if st is not None:
             sx, sy = c.width / c.render_w, c.height / c.render_h
             labels = [Label(int(lb.value), int(lb.object_id), lb.object_name, lb.x * sx, lb.y * sy,
@@ -170,14 +172,18 @@ class DeathmatchEnv:
                        for o in st.objects if not _is_self(o.name, o.position_x, o.position_y, px, py)]
             counts = np.bincount(st.labels_buffer.ravel(), minlength=256)
             vis_px = {lb.object_id: int(counts[lb.value]) for lb in labels}
+            if c.depth:
+                from doomagent.dm.auxtargets import DEPTH_SHAPE
+                depth = cv2.resize(st.depth_buffer, DEPTH_SHAPE[::-1], interpolation=cv2.INTER_AREA)
         self._priv = DMPrivileged(labels, objects, self.sectors, px, py, angle, health, armor, ammo,
                                   bool(ready), frags, deaths, hits, damage, items, int(players),
                                   tuple(values[len(VARS):]), int(g.get_episode_time()), int(weapon), float(ammo),
-                                  slot_ammo, owned, vis_px)
+                                  slot_ammo, owned, vis_px, depth)
 
     def _obs(self, first):
         p = self._priv
-        return DMObs(np.stack(self._frames), make_vec(p.health, p.armor, p.weapon, p.weapon_ammo), bool(first))
+        return DMObs(np.stack(self._frames), make_vec(p.health, p.armor, p.weapon, p.weapon_ammo, p.owned, p.slot_ammo),
+                     bool(first))
 
     def _restack(self):
         self._frames.clear()

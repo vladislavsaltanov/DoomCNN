@@ -114,3 +114,48 @@ def test_checkpoint_roundtrip(tmp_path):
     save_model(m, tmp_path / 'm.pt')
     f, v = batch(1, 2)
     assert torch.allclose(m(f, v)[0], load_model(tmp_path / 'm.pt').eval()(f, v)[0])
+
+
+def _aux_batch(B, T, mirrored=False):
+    from doomagent.dm.auxtargets import AUX_SIZES
+    g = torch.Generator().manual_seed(1)
+    return dict(aux_enemy=torch.randint(0, 2, (B, T), generator=g).float(),
+                aux_x=torch.randint(-1, 8, (B, T), generator=g), aux_pos=torch.randint(-1, 99, (B, T), generator=g),
+                aux_head=torch.randint(0, 8, (B, T), generator=g), aux_items=torch.randint(0, 2, (B, T, 4), generator=g).float(),
+                aux_items_ok=torch.ones(B, dtype=torch.bool), aux_depth_ok=torch.ones(B, dtype=torch.bool),
+                aux_depth=torch.rand(B, T, AUX_SIZES['depth'], generator=g))
+
+
+@pytest.mark.parametrize('memory', [False, True])
+def test_aux_heads_shapes_and_loss(memory):
+    from doomagent.dm.auxtargets import AUX_SIZES
+    from doomagent.dm.model import aux_loss
+    f, v = batch()
+    net = DMNet(DM, memory=memory, aux=True)
+    logits, h, aux = net.forward_aux(f, v)
+    assert logits.shape == (2, 3, N_LOGITS) and {k: a.shape[-1] for k, a in aux.items()} == AUX_SIZES
+    b = _aux_batch(2, 3)
+    loss, parts = aux_loss(aux, b, torch.ones(2, 3, dtype=torch.bool))
+    assert loss.item() > 0 and {'aux_enemy_acc', 'aux_x_acc', 'aux_pos_acc', 'aux_head_acc', 'aux_depth_mse'} <= set(parts)
+    loss.backward()
+    assert net.aux.weight.grad is not None
+
+
+def test_aux_loss_skips_missing_targets():
+    from doomagent.dm.model import aux_loss
+    aux = {k: torch.zeros(1, 2, n) for k, n in __import__('doomagent.dm.auxtargets', fromlist=['AUX_SIZES']).AUX_SIZES.items()}
+    b = _aux_batch(1, 2)
+    b.update(aux_x=torch.full((1, 2), -1), aux_pos=torch.full((1, 2), -1), aux_head=torch.full((1, 2), -1),
+             aux_items_ok=torch.zeros(1, dtype=torch.bool), aux_depth_ok=torch.zeros(1, dtype=torch.bool))
+    b['aux_enemy'] = torch.full((1, 2), 0.5)  # BCE on logit 0 -> log 2 only from the enemy head
+    loss, _ = aux_loss(aux, b, torch.ones(1, 2, dtype=torch.bool))
+    assert loss.item() == pytest.approx(float(torch.log(torch.tensor(2.0))), rel=1e-4)
+
+
+def test_save_load_keeps_the_aux_heads(tmp_path):
+    from doomagent.dm.agent import DMChooser
+    net = DMNet(DM, memory=True, aux=True)
+    save_model(net, str(tmp_path / 'a.pt'))
+    m = load_model(str(tmp_path / 'a.pt'))
+    assert m.aux_on and m.memory
+    DMChooser(net.state_dict(), True)  # builds the same net from a state with aux heads

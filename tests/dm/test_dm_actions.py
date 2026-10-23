@@ -27,8 +27,18 @@ def test_turn_index():
 
 def test_make_vec():
     v = make_vec(150.0, 100.0, 5, 25.0)
-    assert v.shape == (VEC_DIM,) == (10,) and v.dtype == np.float32
-    assert np.allclose(v[:3], [1.5, 0.5, 0.5]) and v[3:].tolist() == [0, 0, 0, 0, 1, 0, 0]
+    assert v.shape == (VEC_DIM,) == (22,) and v.dtype == np.float32
+    assert np.allclose(v[:3], [1.5, 0.5, 0.5]) and v[3:10].tolist() == [0, 0, 0, 0, 1, 0, 0]
+    assert not v[10:].any()  # no inventory given
+
+
+def test_make_vec_inventory():
+    # what a player sees on the status bar: weapons owned (slots 2-7) and their ammo
+    owned = (0, 1, 1, 0, 1, 0, 0, 0)          # WEAPON0..7: fist, pistol, chaingun
+    slot_ammo = (0, 0, 100, 0, 100, 0, 0, 0)  # AMMO0..7: bullets shared by pistol and chaingun
+    v = make_vec(100.0, 0.0, 2, 100.0, owned, slot_ammo)
+    assert v[10:16].tolist() == [1, 0, 1, 0, 0, 0]
+    assert np.allclose(v[16:22], [0.5, 0, 0.5, 0, 0, 0])
 
 
 def test_make_vec_fist_has_no_ammo():

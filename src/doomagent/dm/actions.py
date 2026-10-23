@@ -20,7 +20,8 @@ MOVE_MIRROR = (STAY, FORWARD, BACK, STRAFE_RIGHT, STRAFE_LEFT, FORWARD_RIGHT, FO
 TURN_MIRROR = tuple(TURN_DEG.index(-d) for d in TURN_DEG)
 NOOP = (STAY, 0, 0, 0)
 N_WEAPON_SLOTS = 7
-VEC_DIM = 3 + N_WEAPON_SLOTS
+INV_SLOTS = (2, 3, 4, 5, 6, 7)  # weapons a player can own besides the fist, as on the status bar
+VEC_DIM = 3 + N_WEAPON_SLOTS + 2 * len(INV_SLOTS)
 
 # move value -> (forward, back, left, right)
 _MOVE_KEYS = ((0, 0, 0, 0), (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1), (1, 0, 1, 0), (1, 0, 0, 1),
@@ -36,10 +37,17 @@ def turn_index(deg):
     return TURN_DEG.index(float(deg))
 
 
-def make_vec(health, armor, weapon, weapon_ammo):
-    # [health/100, armor/200, ammo of the weapon in hand / its maximum, weapon slot one-hot]; the fist
-    # (slot 1) has no ammo
+def make_vec(health, armor, weapon, weapon_ammo, owned=(), slot_ammo=()):
+    # [health/100, armor/200, ammo of the weapon in hand / its maximum, weapon slot one-hot, weapons owned
+    # (slots 2-7), their ammo / its maximum]; the fist (slot 1) has no ammo; owned and slot_ammo are the
+    # game's WEAPON0..7 and AMMO0..7, what the status bar shows a player
     v = np.zeros(VEC_DIM, np.float32)
+    n = 3 + N_WEAPON_SLOTS
+    for i, s in enumerate(INV_SLOTS):
+        if s < len(owned):
+            v[n + i] = float(owned[s] > 0)
+        if s < len(slot_ammo):
+            v[n + len(INV_SLOTS) + i] = slot_ammo[s] / AMMO_MAX[s]
     v[0], v[1] = health / 100.0, armor / 200.0
     if weapon > 1:
         v[2] = weapon_ammo / AMMO_MAX[int(weapon)]

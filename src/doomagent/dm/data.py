@@ -6,6 +6,8 @@ import torch
 from torch.utils.data import Dataset
 
 from doomagent.dm.actions import MOVE_MIRROR, TURN_MIRROR
+from doomagent.dm.auxtargets import (AUX_SIZES, DEPTH_SHAPE, ENEMY_X_BINS, ITEM_KINDS, heading_bin,
+                                     pos_cell)
 from doomagent.dm.config import DM
 
 MOVE_T, TURN_T = torch.tensor(MOVE_MIRROR), torch.tensor(TURN_MIRROR)
@@ -53,6 +55,25 @@ def split_holdout(dirs, share=0.05):
     return [p for p in match_files(dirs) if p not in set(hold)], hold
 
 
+def _aux(z):
+    # targets of the auxiliary heads (dm.auxtargets); files recorded before them have none of the
+    # per-step targets (-1 and not-ok), the map cell and heading come from the pose every file has
+    T = len(z['actions'])
+    pose = z['pose']
+    a = dict(aux_enemy=z['bot_visible'].astype(np.float32),
+             aux_x=z['enemy_x'].astype(np.int64) if 'enemy_x' in z.files else np.full(T, -1, np.int64),
+             aux_pos=np.array([pos_cell(x, y) for x, y in pose[:, :2]], np.int64),
+             aux_head=np.array([heading_bin(h) for h in pose[:, 2]], np.int64))
+    a['items_ok'] = 'items' in z.files
+    a['aux_items'] = z['items'].astype(np.float32) if a['items_ok'] else np.zeros((T, len(ITEM_KINDS)), np.float32)
+    a['depth_ok'] = 'depth' in z.files
+    a['aux_depth'] = z['depth'].reshape(T, -1) if a['depth_ok'] else np.zeros((T, AUX_SIZES['depth']), np.uint8)
+    return a
+
+
+AUX_STEP = ('aux_enemy', 'aux_x', 'aux_pos', 'aux_head', 'aux_items')
+
+
 class _Matches(Dataset):
     # labels in RAM; frames through memmaps opened lazily in each loader process
     def __init__(self, files, stack):
@@ -61,7 +82,7 @@ class _Matches(Dataset):
         for p in self.files:
             z = np.load(p)
             self.eps.append(dict(actions=z['actions'], vec=z['vec'].astype(np.float32),
-                                 first=z['first'], starts=life_starts(z['first'])))
+                                 first=z['first'], starts=life_starts(z['first']), **_aux(z)))
 
     def __getstate__(self):
         return dict(self.__dict__, _mm={})
@@ -85,8 +106,12 @@ class MatchSteps(_Matches):
         i, t = self.index[k]
         e = self.eps[i]
         frames = np.ascontiguousarray(stack_at(self._frames(i), t, e['starts'][t], self.stack))
-        return dict(frames=torch.from_numpy(frames), vec=torch.from_numpy(e['vec'][t]),
-                    action=torch.from_numpy(e['actions'][t].astype(np.int64)), loss=True)
+        out = dict(frames=torch.from_numpy(frames), vec=torch.from_numpy(e['vec'][t]),
+                   action=torch.from_numpy(e['actions'][t].astype(np.int64)), loss=True,
+                   aux_depth=torch.from_numpy(e['aux_depth'][t].astype(np.float32) / 255.0),
+                   aux_items_ok=e['items_ok'], aux_depth_ok=e['depth_ok'])
+        out.update({k: torch.as_tensor(e[k][t]) for k in AUX_STEP})
+        return out
 
 
 class MatchSegments(_Matches):
@@ -112,9 +137,15 @@ class MatchSegments(_Matches):
         action[:e - s] = ep['actions'][s:e]
         valid = np.arange(L) < e - s
         loss = valid & (np.arange(L) >= lf - s)
-        return dict(frames=torch.from_numpy(frames), vec=torch.from_numpy(vec),
-                    action=torch.from_numpy(action), loss=torch.from_numpy(loss),
-                    valid=torch.from_numpy(valid))
+        out = dict(frames=torch.from_numpy(frames), vec=torch.from_numpy(vec),
+                   action=torch.from_numpy(action), loss=torch.from_numpy(loss),
+                   valid=torch.from_numpy(valid), aux_items_ok=ep['items_ok'], aux_depth_ok=ep['depth_ok'])
+        for k in AUX_STEP + ('aux_depth',):
+            src = ep[k][s:e]
+            pad = np.full((L,) + src.shape[1:], -1 if src.dtype == np.int64 else 0, src.dtype)
+            pad[:e - s] = src
+            out[k] = torch.from_numpy(pad.astype(np.float32) / 255.0 if k == 'aux_depth' else pad)
+        return out
 
 
 def mirror_batch(b):
@@ -125,4 +156,10 @@ def mirror_batch(b):
     a[..., 0] = MOVE_T.to(a.device)[a[..., 0]]
     a[..., 1] = TURN_T.to(a.device)[a[..., 1]]
     out['action'] = a
+    if 'aux_x' in b:  # the enemy column flips; the map cell and heading of a mirrored world do not exist
+        out['aux_x'] = torch.where(b['aux_x'] >= 0, ENEMY_X_BINS - 1 - b['aux_x'], b['aux_x'])
+        out['aux_pos'] = torch.full_like(b['aux_pos'], -1)
+        out['aux_head'] = torch.full_like(b['aux_head'], -1)
+        d = b['aux_depth']
+        out['aux_depth'] = torch.flip(d.reshape(*d.shape[:-1], *DEPTH_SHAPE), dims=[-1]).reshape(d.shape)
     return out

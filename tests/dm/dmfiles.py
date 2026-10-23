@@ -78,8 +78,9 @@ class Poison:
         raise AssertionError(f'the agent read privileged data: {name}')
 
 
-def make_match(d, seed, T=40, first_at=(0,), variant='base'):
-    # a synthetic match in the recorder format; frame t is filled with t % 256
+def make_match(d, seed, T=40, first_at=(0,), variant='base', aux=False):
+    # a synthetic match in the recorder format; frame t is filled with t % 256; aux: with the auxiliary
+    # targets (enemy column t % 9 - 1, items, depth) and a pose that walks east across the map
     import os
     os.makedirs(d, exist_ok=True)
     pre = os.path.join(str(d), f'ep_{variant}_{seed}')
@@ -93,4 +94,12 @@ def make_match(d, seed, T=40, first_at=(0,), variant='base'):
              modes=np.zeros(T, np.int8), pose=np.zeros((T, 3), np.float32),
              stats=np.zeros((T, 4), np.float32), counters=np.zeros((T, 3), np.float32),
              bot_visible=np.zeros(T, bool), seed=seed, variant=variant, scenario='deathmatch')
+    if aux:
+        z = dict(np.load(pre + '.npz'))
+        z['enemy_x'] = (np.arange(T) % 9 - 1).astype(np.int8)
+        z['bot_visible'] = z['enemy_x'] >= 0
+        z['items'] = np.stack([np.arange(T) % 2 == 0] * 4, 1)
+        z['depth'] = np.tile(np.arange(16, dtype=np.uint8), (T, 8, 1))
+        z['pose'] = np.stack([np.linspace(-700, 1900, T), np.zeros(T), np.zeros(T)], 1).astype(np.float32)
+        np.savez(pre + '.npz', **z)
     return pre

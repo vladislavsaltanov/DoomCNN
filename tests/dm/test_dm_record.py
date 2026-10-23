@@ -107,3 +107,12 @@ def test_live_tap_lists_finished_matches(tmp_path):
     tap.match_done(6, frags=3.0, deaths=4.0, best_bot=5.0, first=False)
     done = json.load(open(tmp_path / 'w1.done.json'))
     assert [d['seed'] for d in done] == [5, 6] and done[0]['frags'] == 7.0 and done[1]['first'] is False
+
+
+def test_record_keeps_the_aux_targets(tmp_path):
+    # where the bot is on screen and which items are in view, for the auxiliary heads; depth only if read
+    env = FakeMatchEnv([row(first=i == 0, bot=i % 2 == 0) for i in range(6)])
+    record_match(env, 1, lambda o, p, lab: lab, StubTeacher(LABEL), str(tmp_path / 'ep_base_1'))
+    z = np.load(tmp_path / 'ep_base_1.npz')
+    assert z['enemy_x'].tolist() == [4, -1, 4, -1, 4, -1] and z['items'].shape == (6, 4)
+    assert 'depth' not in z.files

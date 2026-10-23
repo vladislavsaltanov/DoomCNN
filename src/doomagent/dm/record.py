@@ -3,6 +3,7 @@ import glob
 import json
 import os
 from collections import Counter
+from dataclasses import replace
 
 import numpy as np
 
@@ -31,6 +32,7 @@ class MatchNoise:
 
 
 def record_match(env, seed, executor, teacher, prefix, cfg=DM, live=None):
+    from doomagent.dm.auxtargets import aux_step
     from doomagent.dm.teacher import visible_bots
     # one whole match: the teacher labels every step, the executor decides what is played; live (a LiveTap)
     # shows the dashboard what is played right now
@@ -39,7 +41,7 @@ def record_match(env, seed, executor, teacher, prefix, cfg=DM, live=None):
         executor.reset(seed)
     obs, done = env.reset(seed), False
     rows = {k: [] for k in ('actions', 'executed', 'vec', 'first', 'rewards', 'modes', 'pose',
-                            'stats', 'counters', 'bot_visible', 'weapon')}
+                            'stats', 'counters', 'bot_visible', 'weapon', 'enemy_x', 'items', 'depth')}
     frames = []
     while not done:
         p = env.privileged()
@@ -57,6 +59,11 @@ def record_match(env, seed, executor, teacher, prefix, cfg=DM, live=None):
         # a bot the teacher can see: labels of bots hidden behind walls have no pixels (min_vis_px)
         rows['bot_visible'].append(bool(visible_bots(p.labels, p.px, p.py, cfg.width, p.vis_px, cfg.min_vis_px)))
         rows['weapon'].append(p.weapon)
+        ex, items, depth = aux_step(p, cfg)  # targets of the auxiliary heads
+        rows['enemy_x'].append(ex)
+        rows['items'].append(items)
+        if depth is not None:
+            rows['depth'].append(depth)
         if live is not None:
             live(env, p, teacher, label, action, dict(seed=seed, step=len(frames) - 1, variant=env.variant.name))
         obs, r, done = env.step(action)
@@ -64,8 +71,8 @@ def record_match(env, seed, executor, teacher, prefix, cfg=DM, live=None):
     np.save(prefix + '.frames.npy', np.stack(frames).astype(np.uint8))
     dtypes = dict(actions=np.int64, executed=np.int64, vec=np.float32, first=bool, rewards=np.float32,
                   modes=np.int8, pose=np.float32, stats=np.float32, counters=np.float32,
-                  bot_visible=bool, weapon=np.int8)
-    np.savez(prefix + '.npz', **{k: np.array(v, dtype=dtypes[k]) for k, v in rows.items()},
+                  bot_visible=bool, weapon=np.int8, enemy_x=np.int8, items=bool, depth=np.uint8)
+    np.savez(prefix + '.npz', **{k: np.array(v, dtype=dtypes[k]) for k, v in rows.items() if len(v)},
              seed=seed, variant=env.variant.name, scenario='deathmatch')
     return len(frames)
 
@@ -141,5 +148,7 @@ if __name__ == '__main__':
         plan = [(BASE, C.PILOT_SEEDS)]
     else:
         plan = spread_seeds(load_variants('train', C.VARIANTS_DIR), C.VARIANT_SEEDS, a.per_variant)
-    record_dataset(a.out, plan, MatchNoise(a.noise), DM, workers=a.workers, live=not a.no_live)
+    # the depth buffer feeds the coarse depth target only; the teacher and the network do not read it
+    record_dataset(a.out, plan, MatchNoise(a.noise), replace(DM, depth=True), workers=a.workers,
+                   live=not a.no_live)
     print(open(os.path.join(a.out, 'meta.json')).read())

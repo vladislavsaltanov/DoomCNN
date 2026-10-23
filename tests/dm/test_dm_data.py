@@ -110,3 +110,32 @@ def test_dataset_stack_equals_env_stack():
     ls = life_starts(first)
     assert first.sum() >= 2
     assert all(np.array_equal(stack_at(frames, i, ls[i]), stacks[i]) for i in range(len(frames)))
+
+
+def test_aux_targets_in_steps_and_segments(tmp_path):
+    from doomagent.dm.auxtargets import pos_cell
+    make_match(tmp_path, 1, T=40, aux=True)
+    files = sorted(str(p) for p in tmp_path.glob('ep_*.npz'))
+    it = MatchSteps(files)[3]
+    assert it['aux_enemy'] and it['aux_x'] == 2 and it['aux_items_ok'] and it['aux_depth_ok']
+    assert it['aux_depth'].shape == (128,) and float(it['aux_depth'].max()) == pytest.approx(15 / 255)
+    z = np.load(files[0])
+    assert it['aux_pos'] == pos_cell(*z['pose'][3, :2]) and it['aux_head'] == 0
+    seg = MatchSegments(files, seg_len=32, burn_in=8)[0]
+    assert seg['aux_x'].shape == (32,) and seg['aux_depth'].shape == (32, 128) and seg['aux_x'][3] == 2
+
+
+def test_aux_targets_missing_in_old_files(tmp_path):
+    make_match(tmp_path, 1, T=10)
+    it = MatchSteps(sorted(str(p) for p in tmp_path.glob('ep_*.npz')))[0]
+    assert it['aux_x'] == -1 and not it['aux_items_ok'] and not it['aux_depth_ok'] and it['aux_pos'] >= 0
+
+
+def test_mirror_batch_flips_aux_and_drops_the_map_targets():
+    import torch
+    b = dict(frames=torch.zeros(2, 4, 3, 5), vec=torch.zeros(2, 22), action=torch.zeros(2, 4, dtype=torch.long),
+             aux_x=torch.tensor([0, -1]), aux_pos=torch.tensor([5, 6]), aux_head=torch.tensor([1, 2]),
+             aux_depth=torch.arange(256.).reshape(2, 128))
+    m = mirror_batch(b)
+    assert m['aux_x'].tolist() == [7, -1] and m['aux_pos'].tolist() == [-1, -1] and m['aux_head'].tolist() == [-1, -1]
+    assert m['aux_depth'][0, :16].tolist() == list(range(15, -1, -1))

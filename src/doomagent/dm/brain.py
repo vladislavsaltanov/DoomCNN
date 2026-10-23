@@ -106,12 +106,15 @@ def render(t, frames, vec):
         cv2.rectangle(img, (fx, fy + 32 * cell + 6), (fx + 140, fy + 32 * cell + 14), (60, 60, 60), -1)
         cv2.rectangle(img, (fx, fy + 32 * cell + 6), (fx + zbar, fy + 32 * cell + 14), POS, -1)
         labels.append((fx, fy + 32 * cell + 16, f'держит память: {t["gates"]["z"].mean():.2f}', F_SMALL, MUTED))
-    # the vector and its share in the chosen move: health, armor, ammo, weapon (one-hot, summed)
+    # the vector and its share in the chosen move: health, armor, ammo, weapon (one-hot, summed), the
+    # weapons owned with their ammo (summed)
     move = t['action'][0]
     c = t['vec_contrib'][0][move]
-    slot = int(np.argmax(vec[3:])) if np.asarray(vec[3:]).max() > 0 else -1
+    hand = np.asarray(vec[3:10])
+    slot = int(np.argmax(hand)) if hand.max() > 0 else -1
     groups = (('здоровье', vec[0], c[0]), ('броня', vec[1], c[1]), ('патроны', vec[2], c[2]),
-              (RU_SLOTS[slot] if slot >= 0 else 'оружие', 1.0 if slot >= 0 else 0.0, float(c[3:].sum())))
+              (RU_SLOTS[slot] if slot >= 0 else 'оружие', 1.0 if slot >= 0 else 0.0, float(c[3:10].sum())),
+              ('запас оружия', float(np.mean(vec[10:16])), float(c[10:].sum())))
     for i, (name, val, cc) in enumerate(groups):
         y = 384 + 22 * i
         cv2.rectangle(img, (fx, y), (fx + int(70 * min(max(float(val), 0), 1)), y + 6), INK, -1)
