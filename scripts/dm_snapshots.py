@@ -2,6 +2,8 @@
 
     python scripts/dm_snapshots.py stack --out artifacts/d0_stack.png
     python scripts/dm_snapshots.py view --out artifacts/d0_view.png
+    python scripts/dm_snapshots.py brain runs/dm_m1_pilot.pt --at 300 --out artifacts/d2_brain_m1.png
+    python scripts/dm_snapshots.py memory runs/dm_m1_pilot.pt --at 400 --out artifacts/d2_memory_m1.png
 """
 import argparse
 import os
@@ -65,11 +67,54 @@ def view(out, seed):
     cv2.imwrite(out, compose_view(best[1], best[2], None, None, DM, True, Hud()))
 
 
+def play_to(model_path, seed, at):
+    # the model plays its own match up to step `at`; the network view and the memory tape of that step
+    import torch
+    from doomagent.dm.agent import DMAgent
+    from doomagent.dm.brain import trace
+    from doomagent.dm.memory_view import MemoryTape, events_from
+    from doomagent.dm.model import load_model
+    agent = DMAgent(load_model(model_path, DM))
+    env, tape = DeathmatchEnv(DM), MemoryTape()
+    obs, prev = env.reset(seed), None
+    for step in range(at + 1):
+        priv = env.privileged()
+        info = agent.explain(obs.frames, obs.vec, obs.first)
+        if info['h'] is not None:
+            tape.push(info['h'], info['z'], events_from(prev, priv, obs.first, step == 0))
+        if step == at:
+            h = None if info['h_prev'] is None else torch.from_numpy(info['h_prev']).reshape(1, 1, 512)
+            t = trace(agent.model, obs.frames, obs.vec, h)
+            break
+        prev = priv
+        obs, _, done = env.step(info['action'])
+        assert not done, f'the match ended before step {at}'
+    env.close()
+    return t, obs, tape
+
+
+def brain(out, seed, model, at):
+    from doomagent.dm.brain import render
+    t, obs, _ = play_to(model, seed, at)
+    cv2.imwrite(out, render(t, obs.frames, obs.vec))
+
+
+def memory(out, seed, model, at):
+    _, _, tape = play_to(model, seed, at)
+    assert tape.cols, f'{model} has no memory (M0): the tape is only for M1'
+    cv2.imwrite(out, tape.render())
+
+
 ap = argparse.ArgumentParser()
-ap.add_argument('what', choices=['stack', 'view'])
+ap.add_argument('what', choices=['stack', 'view', 'brain', 'memory'])
+ap.add_argument('model', nargs='?', help='brain, memory: a dm_*.pt checkpoint')
 ap.add_argument('--out', required=True)
 ap.add_argument('--seed', type=int, default=VAL_SEEDS[0])
+ap.add_argument('--at', type=int, default=300, help='brain, memory: the step to draw')
 a = ap.parse_args()
 os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
-{'stack': stack, 'view': view}[a.what](a.out, a.seed)
+if a.what in ('brain', 'memory'):
+    {'brain': brain, 'memory': memory}[a.what](a.out, a.seed, a.model, a.at)
+else:
+    {'stack': stack, 'view': view}[a.what](a.out, a.seed)
 print('written', a.out)

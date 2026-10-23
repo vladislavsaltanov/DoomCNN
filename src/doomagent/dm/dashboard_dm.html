@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DoomCNN deathmatch</title>
+<style>
+  :root {
+    --bg: #0e1013; --panel: #161a1f; --line: #262c34; --grid: #20262d; --text: #e6e9ee; --muted: #8b95a3;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --gray: #898781; --accent: #ffb547;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 14px; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 17px; } header h1 span { color: var(--accent); }
+  header .sub { color: var(--muted); font-size: 12px; flex: 1; }
+  .pill { padding: 3px 10px; border-radius: 999px; background: #222831; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  main { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.15fr); gap: 12px; padding: 12px 16px; }
+  @media (max-width: 1100px) { main { grid-template-columns: minmax(0, 1fr); } }
+  .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; min-width: 0; }
+  .card h2 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .9px; color: var(--muted); font-weight: 600; }
+  .card .note { color: var(--muted); font-size: 11px; margin-top: 4px; }
+  img.view { width: 100%; display: block; background: #000; border-radius: 6px; }
+  .controls { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .controls label { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .row { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  select, input, button { background: #0f1216; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; font: inherit; min-width: 0; }
+  button { cursor: pointer; background: #222a33; } button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 600; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tile { background: #0f1216; border-radius: 8px; padding: 6px 8px; }
+  .tile small { display: block; color: var(--muted); font-size: 11px; }
+  .tile b { font-size: 20px; font-weight: 600; }
+  .tile i { font-style: normal; color: var(--muted); font-size: 11px; }
+  .chart { position: relative; }
+  .chart svg { width: 100%; display: block; overflow: visible; }
+  .legend { display: flex; gap: 14px; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 3px; border-radius: 2px; background: var(--c); margin-right: 5px; vertical-align: middle; }
+  .legend span.dot::before { width: 8px; height: 8px; border-radius: 50%; }
+  .legend span.band::before { width: 12px; height: 8px; border-radius: 2px; opacity: .35; }
+  .tip { position: absolute; pointer-events: none; background: #0b0d10; border: 1px solid var(--line); border-radius: 6px;
+         padding: 4px 7px; font-size: 11px; color: var(--text); white-space: nowrap; display: none; z-index: 5; }
+  .tip small { color: var(--muted); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .empty { color: var(--muted); font-size: 12px; padding: 18px 0; text-align: center; }
+  table.hist { width: 100%; border-collapse: collapse; font-size: 11px; }
+  table.hist td, table.hist th { padding: 2px 4px; text-align: right; border-bottom: 1px solid var(--grid); }
+  table.hist th { color: var(--muted); font-weight: 500; } table.hist td:first-child, table.hist th:first-child { text-align: left; }
+</style>
+</head>
+<body>
+<header>
+  <h1>DoomCNN <span>deathmatch</span></h1>
+  <div class="sub">cig.wad MAP01, 7 ботов, матч 2 минуты. Сеть видит только кадры и [здоровье, ракеты]; учитель играет «в тени» и подписывает каждый шаг.</div>
+  <div class="pill" id="sys">—</div>
+</header>
+<main>
+  <section class="col">
+    <div class="card">
+      <h2>Живая игра</h2>
+      <img class="view" src="/live/screen.mjpg" alt="кадр игры">
+      <div class="controls">
+        <label>игрок<select id="model"></select></label>
+        <label>графика<select id="variant"></select></label>
+        <label>seed<input id="seed" type="number" value="35000"></label>
+        <label>скорость<select id="speed"><option>0.5</option><option selected>1</option><option>2</option><option>4</option></select></label>
+      </div>
+      <div class="row">
+        <button class="primary" id="play">Играть</button><button id="stop">Стоп</button>
+        <label><input type="checkbox" id="boxes" checked> рамки</label>
+        <label><input type="checkbox" id="hud" checked> строка состояния</label>
+        <span class="note" id="status">—</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Матч</h2>
+      <div class="tiles">
+        <div class="tile"><small>фраги</small><b id="t-frags">—</b></div>
+        <div class="tile"><small>смерти</small><b id="t-deaths">—</b> <i id="t-kd"></i></div>
+        <div class="tile"><small>здоровье · ракеты</small><b id="t-hp">—</b></div>
+        <div class="tile"><small>согласие с учителем</small><b id="t-agree">—</b></div>
+      </div>
+      <div class="note" id="t-action">—</div>
+    </div>
+    <div class="two">
+      <div class="card"><h2>Согласие с учителем</h2><div class="chart" id="c-agree"></div>
+        <div class="note">доля шагов за последние 25, где сеть выбрала то же, что учитель</div></div>
+      <div class="card"><h2>Фраги за матч</h2><div class="chart" id="c-frags"></div></div>
+    </div>
+    <div class="card"><h2>Прошлые матчи</h2><div id="hist" class="empty">пока нет</div></div>
+  </section>
+
+  <section class="col">
+    <div class="card"><h2>Карта сверху</h2><img class="view" src="/live/map.mjpg" alt="мини-карта" style="max-width:360px;margin:auto">
+      <div class="note">белый — игрок и его поле зрения, красные — боты, оранжевая линия — путь учителя; кольца — предметы (зелёный аптечка, жёлтый ракеты, розовый броня), закрашены — те, что учитель уже видел. Карту знает только учитель, сеть — нет</div></div>
+    <div class="card"><h2>Нейросеть изнутри</h2><img class="view" src="/live/brain.mjpg" alt="вид сети">
+      <div class="note">вход и что влияет на решение, карты свёрток, 512 нейронов, вклад [здоровье, ракеты], вероятности 10 действий. Только для сети, не для учителя.</div></div>
+    <div class="card"><h2>Память M1</h2><img class="view" id="memimg" src="/live/memory.mjpg" alt="растр памяти">
+      <div class="note" id="memnote">512 ячеек GRU за последние 20 с; есть только у M1</div></div>
+  </section>
+
+  <section class="col">
+    <div class="card">
+      <h2>Обучение</h2>
+      <div class="row" style="margin-top:0"><label>прогон <select id="run"></select></label><span class="note" id="runinfo"></span></div>
+    </div>
+    <div class="two">
+      <div class="card"><h2>Потери (кросс-энтропия)</h2><div class="chart" id="c-ce"></div></div>
+      <div class="card"><h2>Точность</h2><div class="chart" id="c-acc"></div></div>
+    </div>
+    <div class="card"><h2>Фраги на val по чекпойнтам</h2><div class="chart" id="c-val"></div>
+      <div class="note">среднее за матч и 95% CI; серая полоса — учитель на тех же seed (D1)</div></div>
+    <div class="card"><h2>Точность по действиям, отложенная выборка</h2><div class="chart" id="c-per"></div></div>
+    <div class="card"><h2>Матрица путаницы</h2><div class="chart" id="c-conf"></div>
+      <div class="note" id="confnote">строка — действие учителя, столбец — действие сети; тон — доля строки</div></div>
+  </section>
+</main>
+
+<script>
+const C = { s1: '#3987e5', s2: '#d95926', s3: '#199e70', gray: '#898781', grid: '#20262d', muted: '#8b95a3', text: '#e6e9ee', surface: '#161a1f' };
+const RU = ['вперёд', 'вперёд-влево', 'вперёд-вправо', 'влево', 'вправо', 'чуть влево', 'чуть вправо', 'шаг влево', 'шаг вправо', 'выстрел'];
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const fmt = (v, d = 2) => v == null ? '—' : (+v).toFixed(d);
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function ticks(lo, hi, n = 4) {
+  const span = hi - lo || 1, raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw);
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function frame(box, h = 150) {
+  // an empty chart: the svg, the tooltip and the plot area
+  box.innerHTML = '';
+  const w = box.clientWidth || 300;
+  const svg = el('svg', { viewBox: `0 0 ${w} ${h}`, height: h });
+  box.appendChild(svg);
+  const tip = document.createElement('div');
+  tip.className = 'tip';
+  box.appendChild(tip);
+  return { svg, tip, w, h, L: 34, R: 8, T: 8, B: 20 };
+}
+function axes(f, x0, x1, y0, y1, xfmt = v => v, yfmt = v => v) {
+  const X = v => f.L + (v - x0) / ((x1 - x0) || 1) * (f.w - f.L - f.R);
+  const Y = v => f.h - f.B - (v - y0) / ((y1 - y0) || 1) * (f.h - f.T - f.B);
+  for (const t of ticks(y0, y1)) {
+    el('line', { x1: f.L, x2: f.w - f.R, y1: Y(t), y2: Y(t), stroke: C.grid }, f.svg);
+    el('text', { x: f.L - 5, y: Y(t) + 3, 'text-anchor': 'end', fill: C.muted, 'font-size': 10 }, f.svg).textContent = yfmt(t);
+  }
+  for (const t of ticks(x0, x1, 4))
+    el('text', { x: X(t), y: f.h - 5, 'text-anchor': 'middle', fill: C.muted, 'font-size': 10 }, f.svg).textContent = xfmt(t);
+  return { X, Y };
+}
+function showTip(f, x, y, html) {
+  f.tip.innerHTML = html;
+  f.tip.style.display = 'block';
+  const tw = f.tip.offsetWidth;
+  f.tip.style.left = Math.min(Math.max(x + 10, 0), f.w - tw) + 'px';
+  f.tip.style.top = Math.max(y - 30, 0) + 'px';
+}
+function legend(box, items) {
+  const d = document.createElement('div');
+  d.className = 'legend';
+  d.innerHTML = items.map(([name, color, kind]) => `<span class="${kind || ''}" style="--c:${color}">${name}</span>`).join('');
+  box.prepend(d);
+}
+
+// lines (and optional dots) on one y axis with a crosshair and a tooltip of every series at that x
+function lineChart(box, series, o = {}) {
+  const all = series.flatMap(s => s.pts);
+  if (!all.length) { box.innerHTML = '<div class="empty">пока нет данных</div>'; return; }
+  const f = frame(box, o.h || 150);
+  const xs = all.map(p => p[0]), ys = all.map(p => p[1]);
+  const x0 = o.x0 ?? Math.min(...xs), x1 = o.x1 ?? Math.max(...xs);
+  const y0 = o.y0 ?? Math.min(...ys), y1 = o.y1 ?? Math.max(...ys) * 1.05;
+  const { X, Y } = axes(f, x0, x1, y0, y1, o.xfmt, o.yfmt);
+  for (const s of series) {
+    if (s.dots) {
+      for (const p of s.pts) el('circle', { cx: X(p[0]), cy: Y(p[1]), r: 4, fill: s.color, stroke: C.surface, 'stroke-width': 2 }, f.svg);
+    } else if (s.pts.length) {
+      el('path', { d: 'M' + s.pts.map(p => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('L'), fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round' }, f.svg);
+    }
+  }
+  const last = series.find(s => s.label && s.pts.length);  // one direct label: the latest value
+  if (last) {
+    const p = last.pts[last.pts.length - 1];
+    el('text', { x: Math.min(X(p[0]) + 4, f.w - 30), y: Y(p[1]) - 6, fill: C.text, 'font-size': 10 }, f.svg).textContent = (o.vfmt || fmt)(p[1]);
+  }
+  if (series.length > 1) legend(box, series.map(s => [s.name, s.color, s.dots ? 'dot' : '']));
+  const cross = el('line', { y1: f.T, y2: f.h - f.B, stroke: C.muted, 'stroke-dasharray': '3 3', visibility: 'hidden' }, f.svg);
+  const hit = el('rect', { x: f.L, y: f.T, width: f.w - f.L - f.R, height: f.h - f.T - f.B, fill: 'transparent' }, f.svg);
+  hit.addEventListener('mousemove', e => {
+    const r = f.svg.getBoundingClientRect(), mx = (e.clientX - r.left) * f.w / r.width;
+    const xv = x0 + (mx - f.L) / (f.w - f.L - f.R) * (x1 - x0);
+    const rows = series.map(s => {
+      if (!s.pts.length) return null;
+      const p = s.pts.reduce((a, b) => Math.abs(b[0] - xv) < Math.abs(a[0] - xv) ? b : a);
+      return [s, p];
+    }).filter(Boolean);
+    const px = rows[0][1][0];
+    cross.setAttribute('x1', X(px)); cross.setAttribute('x2', X(px)); cross.setAttribute('visibility', 'visible');
+    showTip(f, mx, e.clientY - r.top, `<small>${o.xname || 'x'} ${(o.xfmt || (v => v))(px)}</small><br>` +
+      rows.map(([s, p]) => `<span style="color:${s.color}">●</span> ${s.name}: ${(o.vfmt || fmt)(p[1])}`).join('<br>'));
+  });
+  hit.addEventListener('mouseleave', () => { cross.setAttribute('visibility', 'hidden'); f.tip.style.display = 'none'; });
+}
+
+function barChart(box, values, names, color) {
+  if (!values || !values.some(v => v != null)) { box.innerHTML = '<div class="empty">появится после первой проверки</div>'; return; }
+  const f = frame(box, 170);
+  f.B = 44;
+  const n = values.length, { Y } = axes(f, 0, 1, 0, 1, () => '', v => Math.round(v * 100) + '%');
+  const bw = (f.w - f.L - f.R) / n;
+  values.forEach((v, i) => {
+    const x = f.L + i * bw + 1, w = bw - 2;  // 2px surface gap between bars
+    el('text', { x: x + w / 2, y: f.h - f.B + 12, 'text-anchor': 'end', fill: C.muted, 'font-size': 9,
+      transform: `rotate(-35 ${x + w / 2} ${f.h - f.B + 12})` }, f.svg).textContent = names[i];
+    const hit = el('rect', { x: x, y: f.T, width: w, height: f.h - f.T - f.B, fill: 'transparent' }, f.svg);
+    if (v == null) return;
+    const y = Y(v), hgt = f.h - f.B - y;
+    el('path', { d: barPath(x, y, w, hgt), fill: color }, f.svg);
+    f.svg.appendChild(hit);
+    hit.addEventListener('mousemove', e => { const r = f.svg.getBoundingClientRect(); showTip(f, (e.clientX - r.left) * f.w / r.width, e.clientY - r.top, `${names[i]}: ${Math.round(v * 100)}%`); });
+    hit.addEventListener('mouseleave', () => f.tip.style.display = 'none');
+  });
+}
+function barPath(x, y, w, h) {
+  // rounded data end (4px), square at the baseline
+  const r = Math.min(4, w / 2, h);
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+
+function confusion(box, m, names) {
+  if (!m) { box.innerHTML = '<div class="empty">пока нет данных</div>'; return; }
+  const n = m.length, f = frame(box, 260);
+  const L = 84, T = 4, size = Math.min((f.w - L - 4) / n, (f.h - T - 64) / n);
+  const rows = m.map(r => r.reduce((a, b) => a + b, 0));
+  m.forEach((r, i) => {
+    el('text', { x: L - 5, y: T + i * size + size / 2 + 3, 'text-anchor': 'end', fill: C.muted, 'font-size': 9 }, f.svg).textContent = names[i];
+    el('text', { x: L + i * size + size / 2, y: T + n * size + 8, 'text-anchor': 'end', fill: C.muted, 'font-size': 9,
+      transform: `rotate(-50 ${L + i * size + size / 2} ${T + n * size + 8})` }, f.svg).textContent = names[i];
+    r.forEach((v, j) => {
+      const share = rows[i] ? v / rows[i] : 0;
+      const cell = el('rect', { x: L + j * size + 1, y: T + i * size + 1, width: size - 2, height: size - 2, rx: 2,
+        fill: C.s1, 'fill-opacity': rows[i] ? 0.06 + 0.94 * share : 0 , stroke: rows[i] ? 'none' : C.grid }, f.svg);
+      cell.addEventListener('mousemove', e => { const b = f.svg.getBoundingClientRect(); showTip(f, (e.clientX - b.left) * f.w / b.width, e.clientY - b.top,
+        `учитель: ${names[i]}<br>сеть: ${names[j]}<br>${v} шагов, ${Math.round(share * 100)}% строки`); });
+      cell.addEventListener('mouseleave', () => f.tip.style.display = 'none');
+    });
+  });
+}
+
+function valChart(box, log, teacher) {
+  const rows = (log || []).filter(r => r.frags);
+  if (!rows.length) { box.innerHTML = '<div class="empty">появится после первой проверки на val</div>'; return; }
+  const f = frame(box, 160);
+  const ys = rows.flatMap(r => [r.frags.lo, r.frags.hi]).concat(teacher ? [teacher.lo, teacher.hi] : []);
+  const x0 = 0, x1 = Math.max(...rows.map(r => r.epoch)) + 1;
+  const { X, Y } = axes(f, x0, x1, Math.min(0, ...ys), Math.max(...ys) * 1.1, v => v, v => v);
+  if (teacher) {
+    el('rect', { x: f.L, width: f.w - f.L - f.R, y: Y(teacher.hi), height: Y(teacher.lo) - Y(teacher.hi), fill: C.gray, 'fill-opacity': 0.25 }, f.svg);
+    el('line', { x1: f.L, x2: f.w - f.R, y1: Y(teacher.mean), y2: Y(teacher.mean), stroke: C.gray, 'stroke-width': 2 }, f.svg);
+    el('text', { x: f.w - f.R - 4, y: Y(teacher.mean) - 5, 'text-anchor': 'end', fill: C.text, 'font-size': 10 }, f.svg).textContent = `учитель ${fmt(teacher.mean)}`;
+  }
+  for (const r of rows) {
+    el('line', { x1: X(r.epoch), x2: X(r.epoch), y1: Y(r.frags.lo), y2: Y(r.frags.hi), stroke: C.s1, 'stroke-width': 2, 'stroke-linecap': 'round' }, f.svg);
+    const dot = el('circle', { cx: X(r.epoch), cy: Y(r.frags.mean), r: 5, fill: C.s1, stroke: C.surface, 'stroke-width': 2 }, f.svg);
+    const hit = el('circle', { cx: X(r.epoch), cy: Y(r.frags.mean), r: 12, fill: 'transparent' }, f.svg);
+    hit.addEventListener('mousemove', e => { const b = f.svg.getBoundingClientRect(); showTip(f, (e.clientX - b.left) * f.w / b.width, e.clientY - b.top,
+      `эпоха ${r.epoch}<br>фраги ${fmt(r.frags.mean)} [${fmt(r.frags.lo)}, ${fmt(r.frags.hi)}]<br>K/D ${fmt(r.kd_total)} · застревание ${fmt(100 * r.stuck_share, 1)}%`); });
+    hit.addEventListener('mouseleave', () => f.tip.style.display = 'none');
+  }
+  const best = rows.reduce((a, b) => b.val_score > a.val_score ? b : a);
+  el('text', { x: X(best.epoch), y: Y(best.frags.hi) - 6, 'text-anchor': 'middle', fill: C.text, 'font-size': 10 }, f.svg).textContent = `лучший ${fmt(best.frags.mean)}`;
+  legend(box, [['ученик', C.s1, 'dot'], ['учитель', C.gray, 'band']]);
+}
+
+// ---------------------------------------------------------------- live game
+let opts = null;
+async function api(p) { const r = await fetch(p); return r.json(); }
+async function loadOptions() {
+  opts = await api('/api/options');
+  const sel = $('model'), cur = sel.value;
+  sel.innerHTML = opts.models.map(m => `<option value="${m}">${m === 'teacher' ? 'учитель' : m.replace('runs/', '')}</option>`).join('');
+  if (cur && opts.models.includes(cur)) sel.value = cur;
+  $('variant').innerHTML = opts.variants.map(v => `<option>${v}</option>`).join('');
+}
+function control(kw) { return fetch('/api/control?' + new URLSearchParams(kw)); }
+$('play').onclick = () => control({ model: $('model').value, variant: $('variant').value, seed: $('seed').value, speed: $('speed').value, running: 1 });
+$('stop').onclick = () => control({ running: 0 });
+$('speed').onchange = () => control({ speed: $('speed').value });
+$('boxes').onchange = () => control({ boxes: $('boxes').checked ? 1 : 0 });
+$('hud').onchange = () => control({ hud: $('hud').checked ? 1 : 0 });
+
+function rolling(pts, k) {
+  const out = [];
+  let s = 0;
+  pts.forEach((p, i) => { s += p.agree; if (i >= k) s -= pts[i - k].agree; out.push([p.step, s / Math.min(i + 1, k)]); });
+  return out;
+}
+async function tickLive() {
+  const d = await api('/api/live'), s = d.state;
+  $('status').textContent = s.status + (s.step ? ` · шаг ${s.step} · seed ${s.seed}` : '');
+  if (s.step) {
+    $('t-frags').textContent = s.frags;
+    $('t-deaths').textContent = s.deaths;
+    $('t-kd').textContent = 'K/D ' + fmt(s.kd);
+    $('t-hp').textContent = `${Math.max(0, Math.round(s.health))} · ${Math.round(s.ammo)}`;
+    $('t-agree').textContent = s.model === 'teacher' ? '—' : Math.round(100 * s.agree) + '%';
+    const a = RU[d.actions.indexOf(s.action)], t = RU[d.actions.indexOf(s.teacher)];
+    $('t-action').textContent = s.model === 'teacher' ? `учитель: ${t} · режим ${s.mode}` : `сеть: ${a} · учитель бы: ${t} · режим учителя ${s.mode}`;
+    $('memnote').textContent = s.memory ? '512 ячеек GRU за последние 20 с, события сверху, вентиль обновления снизу' : 'у этого игрока нет памяти: растр есть только у M1';
+  }
+  const ser = d.series;
+  if (s.model !== 'teacher' && ser.length)
+    lineChart($('c-agree'), [{ name: 'согласие', color: C.s1, pts: rolling(ser, 25), label: true }], { y0: 0, y1: 1, xname: 'шаг', yfmt: v => Math.round(v * 100) + '%', vfmt: v => Math.round(v * 100) + '%' });
+  else $('c-agree').innerHTML = '<div class="empty">' + (s.model === 'teacher' ? 'играет сам учитель' : 'пока нет данных') + '</div>';
+  lineChart($('c-frags'), [{ name: 'фраги', color: C.s1, pts: ser.map(p => [p.step, p.frags]), label: true }], { y0: 0, xname: 'шаг', yfmt: v => v, vfmt: v => v });
+  $('hist').className = d.history.length ? '' : 'empty';
+  if (d.history.length)
+    $('hist').innerHTML = '<table class="hist"><tr><th>игрок</th><th>seed</th><th>фраги</th><th>смерти</th><th>согласие</th></tr>' +
+      d.history.slice(0, 8).map(h => `<tr><td>${h.model === 'teacher' ? 'учитель' : h.model.replace('runs/', '')}</td><td>${h.seed}</td><td>${h.frags}</td><td>${h.deaths}</td><td>${h.model === 'teacher' ? '—' : Math.round(100 * h.agree) + '%'}</td></tr>`).join('') + '</table>';
+}
+
+// ---------------------------------------------------------------- training
+async function loadRuns() {
+  const runs = await api('/api/runs'), sel = $('run'), cur = sel.value;
+  sel.innerHTML = runs.map(r => `<option value="${r.name}">${r.name}${r.active ? ' · идёт' : ''}${r.best != null ? ' · лучший ' + fmt(r.best) : ''}</option>`).join('');
+  if (cur && runs.some(r => r.name === cur)) sel.value = cur;
+}
+$('run').onchange = tickTrain;
+async function tickTrain() {
+  if (!$('run').value) return;
+  const d = await api('/api/train?run=' + encodeURIComponent($('run').value));
+  const pts = (d.progress || {}).points || [], log = (d.log || {}).log || [];
+  const nb = (d.progress || {}).n_batches || 1;
+  const ep = p => p.batch / nb;  // batches as epochs on the x axis
+  $('runinfo').textContent = d.progress ? `эпоха ${d.progress.epoch}, батч ${d.progress.batch} из ${d.progress.n_batches}` : '';
+  const hold = (k) => log.filter(r => r[k] != null).map(r => [r.epoch, r[k]]);
+  lineChart($('c-ce'), [{ name: 'обучение', color: C.s1, pts: pts.map(p => [ep(p), p.ce]), label: true },
+                        { name: 'отложенная', color: C.s2, pts: hold('holdout_ce'), dots: true }],
+            { y0: 0, xname: 'эпоха', xfmt: v => +(+v).toFixed(1) });
+  lineChart($('c-acc'), [{ name: 'обучение', color: C.s1, pts: pts.map(p => [ep(p), p.acc]), label: true },
+                         { name: 'отложенная', color: C.s2, pts: hold('holdout_acc'), dots: true }],
+            { y0: 0, y1: 1, xname: 'эпоха', xfmt: v => +(+v).toFixed(1), yfmt: v => Math.round(v * 100) + '%', vfmt: v => Math.round(v * 100) + '%' });
+  valChart($('c-val'), log, d.teacher);
+  const lastHold = [...log].reverse().find(r => r.holdout_acc_per_action);
+  barChart($('c-per'), lastHold ? lastHold.holdout_acc_per_action : null, RU, C.s1);
+  const live = d.live || {};
+  confusion($('c-conf'), live.holdout_confusion || live.confusion, RU);
+  $('confnote').textContent = 'строка — действие учителя, столбец — действие сети; тон — доля строки; ' +
+    (live.holdout_confusion ? 'отложенная выборка, последняя проверка' : 'последние батчи обучения');
+}
+
+async function tickSys() {
+  const s = (await api('/api/system')).now || {};
+  $('sys').textContent = s.gpu_util != null ? `GPU ${s.gpu_util}% · ${fmt(s.vram_used, 1)}/${fmt(s.vram_total, 0)} ГБ · CPU ${Math.round(s.cpu || 0)}%` : 'нагрузка: —';
+}
+
+loadOptions(); loadRuns().then(tickTrain);
+setInterval(tickLive, 700); setInterval(tickTrain, 5000); setInterval(tickSys, 3000);
+setInterval(loadRuns, 15000); setInterval(loadOptions, 30000);
+tickLive(); tickSys();
+</script>
+</body>
+</html>
