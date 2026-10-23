@@ -1,4 +1,4 @@
-"""Graphics variants of cig.wad MAP01: new wall and floor textures (tex), the bots drawn as another
+"""Graphics variants of a cig.wad map (MAP02 since spec v2): new wall and floor textures (tex), the bots drawn as another
 monster (spr), or both (mix). Bots are DoomPlayer actors, drawn with the PLAY sprite, so only PLAY is
 replaced; the player's weapon, the rockets and the items keep their look. Built on the first
 section's wadgen helpers, which stay unchanged.
@@ -40,16 +40,20 @@ def sprite_block(sprites, donor):
     return [('S_START', b'')] + cover_sprites(sprites, donor, TARGET) + [('S_END', b'')]
 
 
-def source_lumps():
+def source_lumps(map_name=None):
+    # the textures and flats of one cig.wad map (the deathmatch map by default) and freedoom2's sprites
     import vizdoom as vzd
-    walls, flats = map_textures(map_lumps(read_wad(os.path.join(vzd.scenarios_path, 'cig.wad'))))
+
+    from doomagent.dm.config import DM
+    name = (map_name or DM.map).upper()
+    walls, flats = map_textures(map_lumps(read_wad(os.path.join(vzd.scenarios_path, 'cig.wad')), name))
     sprites = sprite_lumps(read_wad(os.path.join(os.path.dirname(vzd.__file__), 'freedoom2.wad')))
     return walls, flats, sprites
 
 
-def make_variants(out, seed=0, splits=('train', 'val', 'test'), kinds=('tex', 'spr', 'mix')):
+def make_variants(out, seed=0, splits=('train', 'val', 'test'), kinds=('tex', 'spr', 'mix'), map_name=None):
     # writes <out>/<name>.wad and <name>.json per variant; returns the names
-    walls, flats, sprites = source_lumps()
+    walls, flats, sprites = source_lumps(map_name)
     for d in {d for ds in (SPR_DONORS, MIX_DONORS) for v in ds.values() for d in v}:
         assert any(n.startswith(d) for n in sprites), f'no {d} sprites in freedoom2.wad'
     rng = np.random.default_rng(seed)

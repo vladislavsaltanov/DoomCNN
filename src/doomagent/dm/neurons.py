@@ -9,8 +9,9 @@ import numpy as np
 
 from doomagent.dm.config import DM, MODES
 from doomagent.dm.evaluate import STUCK_STEPS
+from doomagent.dm.weapons import WEAPONS
 
-CONDITIONS = ('bot_visible', 'bot_recent', 'health_low', 'items', 'patrol')
+CONDITIONS = ('bot_visible', 'bot_recent', 'health_low', 'gear', 'items', 'patrol', 'weapon_strong')
 
 
 class ShadowChooser:
@@ -49,7 +50,8 @@ def _recent(enemy, first, k=STUCK_STEPS):
 
 def activations_from(results, memory):
     # the per-step arrays of evaluate_plan(..., trace=True) results joined over matches
-    parts = {k: [] for k in ('act', 'feat', 'px', 'py', 'mode', 'bot_visible', 'bot_recent', 'health_low', 'match')}
+    parts = {k: [] for k in ('act', 'feat', 'px', 'py', 'mode', 'bot_visible', 'bot_recent', 'health_low', 'weapon_strong',
+                             'match')}
     for i, r in enumerate(results):
         t, c = r['trace'], r['chooser']
         parts['act'].append(c['h'] if memory else c['feat'])
@@ -60,6 +62,7 @@ def activations_from(results, memory):
         parts['bot_visible'].append(t['enemy'].astype(bool))
         parts['bot_recent'].append(_recent(t['enemy'].astype(bool), t['first'].astype(bool)))
         parts['health_low'].append(t['health'] < DM.low_health)
+        parts['weapon_strong'].append(np.array([WEAPONS.get(int(w), WEAPONS[2]).rank >= 3 for w in t['weapon']], bool))
         parts['match'].append(np.full(len(t['px']), i))
     return {k: np.concatenate(v) for k, v in parts.items()}
 
@@ -105,8 +108,9 @@ def place_maps(acts, top=8, cell=64.0, min_visits=5):
 def condition_masks(acts):
     mode = np.asarray(acts['mode'])
     return dict(bot_visible=np.asarray(acts['bot_visible'], bool), bot_recent=np.asarray(acts['bot_recent'], bool),
-                health_low=np.asarray(acts['health_low'], bool), items=mode == MODES.index('items'),
-                patrol=mode == MODES.index('patrol'))
+                health_low=np.asarray(acts['health_low'], bool), gear=mode == MODES.index('gear'),
+                items=mode == MODES.index('items'), patrol=mode == MODES.index('patrol'),
+                weapon_strong=np.asarray(acts['weapon_strong'], bool))
 
 
 def selectivity(acts, conditions=CONDITIONS):

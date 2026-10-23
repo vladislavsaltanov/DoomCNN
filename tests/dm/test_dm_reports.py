@@ -11,7 +11,8 @@ def test_dataset_stats_counts(tmp_path):
         make_match(tmp_path / 'd', s, T=40, first_at=(0, 20), variant='base' if s else 'tex_train_00')
     st = dataset_stats([str(tmp_path / 'd')])
     assert st['matches'] == 3 and st['steps'] == 120 and st['lives_per_match'] == [2, 2, 2]
-    assert abs(sum(st['action_share']) - 1) < 1e-9 and st['action_share'][0] == 0.1
+    assert all(abs(sum(v) - 1) < 1e-9 for v in st['action_share'].values()) and st['action_share']['move'][0] == 0.125
+    assert st['weapon_share'][2] == 1.0
     assert st['mode_share'][0] == 1.0 and st['noise_share'] == 0.0
     assert st['per_variant'] == {'base': 2, 'tex_train_00': 1} and st['gb'] > 0
 
@@ -24,19 +25,20 @@ def test_dataset_figure_writes_png(tmp_path):
     assert out.stat().st_size > 10_000
 
 
-def test_curves_figure_writes_png(tmp_path):
+def test_curves_figure_heads_writes_png(tmp_path):
+    from doomagent.dm.actions import HEAD_SIZES, HEADS
     logs = {}
     for name in ('m0', 'm1'):
-        rows = [dict(epoch=e, holdout_ce=2.0 - 0.1 * e, holdout_acc=0.2 + 0.03 * e, val_score=0.1 * e,
-                     frags=dict(mean=0.1 * e, lo=0.1 * e - 0.5, hi=0.1 * e + 0.5)) for e in (5, 10, 15)]
+        rows = [dict(epoch=e, holdout_ce=2.0 - 0.1 * e, holdout_acc=0.1 + 0.02 * e, val_score=0.1 * e,
+                     frags=dict(mean=0.1 * e, lo=0.1 * e - 0.5, hi=0.1 * e + 0.5),
+                     **{f'holdout_acc_{h}': 0.3 + 0.02 * e for h in HEADS}) for e in (5, 10, 15)]
         p = tmp_path / f'{name}.log.json'
         p.write_text(json.dumps(dict(config={}, log=rows)))
         logs[name] = str(p)
-    conf = [[10 if i == j else (3 if j == 0 else 1) for j in range(10)] for i in range(10)]
+    conf = {h: [[10 if i == j else 1 for j in range(k)] for i in range(k)] for h, k in zip(HEADS, HEAD_SIZES)}
     (tmp_path / 'm1.live.json').write_text(json.dumps(dict(confusion=conf, holdout_confusion=conf)))
     out = tmp_path / 'c.png'
-    curves_figure(logs, str(out), teacher=ci(6.25), confusion_of=str(tmp_path / 'm1.live.json'),
-                  action_names=[str(i) for i in range(10)])
+    curves_figure(logs, str(out), teacher=ci(6.25), confusion_of=str(tmp_path / 'm1.live.json'))
     assert out.stat().st_size > 10_000
 
 

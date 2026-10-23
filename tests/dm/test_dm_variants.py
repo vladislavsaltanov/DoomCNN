@@ -15,9 +15,11 @@ def test_map_lumps_takes_one_map():
     assert map_lumps(binary) == binary[:3]
 
 
-def test_cig_map01_textures_only():
-    walls, flats, _ = source_lumps()
-    assert walls and flats and 'F_SKY1' not in flats
+def test_map02_textures_only():
+    walls, flats, _ = source_lumps('MAP02')
+    w1, f1, _ = source_lumps('MAP01')
+    assert walls and flats and 'F_SKY1' not in flats and (set(walls) != set(w1) or set(flats) != set(f1))
+    assert source_lumps()[:2] == (walls, flats)  # the default is the deathmatch map, MAP02
 
 
 def test_sprite_block_targets_play_only():
@@ -40,7 +42,8 @@ def test_make_variants_writes_json_and_wad(tmp_path):
 
 @pytest.mark.vizdoom
 def test_a_tex_variant_changes_the_frames(tmp_path):
-    from doomagent.dm.config import DM, FORWARD
+    from doomagent.dm.actions import FORWARD
+    from doomagent.dm.config import DM
     from doomagent.dm.env import DeathmatchEnv
     from doomagent.variants import BASE, load_variants
     make_variants(str(tmp_path), splits=('val',), kinds=('tex',))
@@ -50,7 +53,7 @@ def test_a_tex_variant_changes_the_frames(tmp_path):
         env = DeathmatchEnv(DM, var)
         obs = env.reset(35000)
         for _ in range(5):
-            obs, _, _ = env.step(FORWARD)
+            obs, _, _ = env.step((FORWARD, 0, 0, 0))
         frames.append(obs.frames[-1].astype(np.float32))
         env.close()
     assert np.abs(frames[0] - frames[1]).mean() > 8

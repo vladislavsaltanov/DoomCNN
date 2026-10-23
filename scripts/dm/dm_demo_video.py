@@ -15,7 +15,10 @@ import os
 import cv2
 import numpy as np
 
-from doomagent.dm.config import ACTION_NAMES, DM
+from doomagent.dm.actions import HEADS, MOVE_NAMES, TURN_DEG
+from doomagent.dm.config import DM
+
+VALUES = (MOVE_NAMES, tuple(f'{d:+g}' for d in TURN_DEG), ('no', 'fire'), ('keep', 'next'))
 from doomagent.dm.env import DeathmatchEnv
 from doomagent.dm.memory_view import MemoryTape, diverging, events_from
 from doomagent.dm.minimap import MapView
@@ -57,19 +60,18 @@ def side_panel(p, teacher, mapview, info, label, tape, agree, frags):
     img = np.full((H, W - 860, 3), BG, np.uint8)
     img[10:270, 80:340] = cv2.resize(mapview.draw(p, teacher), (260, 260), interpolation=cv2.INTER_AREA)
     y0 = 300
-    if info is None:
-        text(img, f'teacher mode: {teacher.mode}', 16, y0, 0.55, ACTIVE)
-        text(img, f'action: {ACTION_NAMES[label]}', 16, y0 + 24, 0.5, INK)
-    else:
-        a = int(np.argmax(info['probs']))
-        for i, name in enumerate(ACTION_NAMES):
-            y = y0 + 15 * i - 8
-            color = ACTIVE if i == a else INK
-            cv2.rectangle(img, (130, y - 9), (130 + int(140 * info['probs'][i]), y + 1), color, -1)
-            text(img, name + (' *' if i == label else ''), 16, y, 0.4, color)
-        text(img, '* the shadow teacher', 286, y0 + 120, 0.36, MUTED)
+    text(img, f'teacher mode: {teacher.mode}', 16, y0 - 8, 0.45, MUTED)
+    for k, h in enumerate(HEADS):
+        y = y0 + 16 + 30 * k
+        chosen = int(np.argmax(info['probs'][k])) if info is not None else int(label[k])
+        text(img, h, 16, y, 0.42, MUTED)
+        text(img, VALUES[k][chosen] + (f'  {info["probs"][k][chosen]:.2f}' if info is not None else ''), 90, y, 0.45,
+             ACTIVE)
+        if info is not None:
+            cv2.rectangle(img, (90, y + 4), (90 + int(140 * info['probs'][k][chosen]), y + 8), ACTIVE, -1)
+            text(img, f'teacher: {VALUES[k][int(label[k])]}', 250, y, 0.4, INK if chosen == int(label[k]) else MUTED)
     y = 460
-    for i, (name, v, scale) in enumerate((('health', p.health, 100.0), ('rockets', p.ammo, 50.0))):
+    for i, (name, v, scale) in enumerate((('health', p.health, 100.0), ('ammo', p.weapon_ammo, 200.0))):
         cv2.rectangle(img, (130, y + 22 * i - 9), (130 + int(140 * min(max(v, 0) / scale, 1)), y + 22 * i + 1), INK, -1)
         text(img, f'{name} {max(v, 0):.0f}', 16, y + 22 * i, 0.42, INK)
     if tape is not None and tape.cols:
@@ -78,7 +80,7 @@ def side_panel(p, teacher, mapview, info, label, tape, agree, frags):
         full[:, TAPE_STEPS - ras.shape[1]:] = ras
         img[525:585, 16:404] = cv2.resize(full, (388, 60), interpolation=cv2.INTER_AREA)
         text(img, 'M1 memory, last 5 s (512 GRU units)', 16, 518, 0.4, MUTED)
-    run_chart(img, 16, 625, 180, 80, agree, 0, 1, 'agreement with teacher',
+    run_chart(img, 16, 625, 180, 80, agree, 0, 1, 'move+turn = teacher',
               f'{agree[-1]:.0%}' if agree else '')
     run_chart(img, 224, 625, 180, 80, frags, min(min(frags, default=0), 0), max(max(frags, default=1), 1),
               'frags', f'{frags[-1]:.0f}' if frags else '')
@@ -115,7 +117,7 @@ def play(name, path, seed, seconds, sink, brain_sink):
                 brain_sink.write(pic)
         prev = priv
         if info is not None:
-            agree_hist.append(int(action == label))
+            agree_hist.append(int(tuple(action[:2]) == tuple(label[:2])))  # move and turn both
             agree.append(float(np.mean(agree_hist[-25:])))
 
         def tic(rgb, p, action=action, info=info, label=label):
@@ -126,7 +128,7 @@ def play(name, path, seed, seconds, sink, brain_sink):
             frame[:, 860:] = side_panel(p, teacher, mapview, info, label, tape, agree, frags)
             sink.write(frame)
 
-        obs, _, done = env.step(int(action), on_tic=tic)
+        obs, _, done = env.step(action, on_tic=tic)
         frags.append(float(env.privileged().frags))
         if done:
             break

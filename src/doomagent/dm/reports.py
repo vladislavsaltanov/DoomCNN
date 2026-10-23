@@ -269,87 +269,90 @@ def states_figure(xy, mode, out_png):
     plt.close(fig)
 
 
-def curves_figure(logs, out_png, teacher=None, confusion_of=None, action_names=None):
-    # logs: {name ('m0', 'm1'): path to .log.json}; held-out loss and accuracy by epoch, val frags by
-    # checkpoint with the teacher's CI band, and the row-normalized confusion of one run's .live.json
+def curves_figure(logs, out_png, teacher=None, confusion_of=None, head='turn'):
+    # logs: {name ('m0', 'm1'): path to .log.json}. Held-out loss (sum of the heads) and accuracy of each head by
+    # epoch (small multiples, one panel per head), val frags by checkpoint with the teacher's CI band, and the
+    # row-normalized held-out confusion of one head of one run's .live.json
     import json
     import numpy as np
-    fig, ax = plt.subplots(1, 4, figsize=(18, 4.2), facecolor=SURFACE,
-                           gridspec_kw=dict(width_ratios=(1, 1, 1, 1.15)))
-    majority = None
+    from doomagent.dm.actions import HEADS, MOVE_NAMES, TURN_DEG
+    values = dict(move=list(MOVE_NAMES), turn=[f'{d:+g}' for d in TURN_DEG], fire=['no', 'fire'], weapon=['keep', 'next'])
+    fig = plt.figure(figsize=(20, 7.6), facecolor=SURFACE)
+    gs = fig.add_gridspec(2, 4, height_ratios=(1, 1))
+    ax_ce, ax_val = fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1])
+    ax_heads = [fig.add_subplot(gs[1, k]) for k in range(4)]
+    ax_conf = fig.add_subplot(gs[0, 2:])
     conf = None
     if confusion_of:
         live = json.load(open(confusion_of))
-        conf = np.array(live.get('holdout_confusion') or live['confusion'], float)
-        majority = conf.sum(1).max() / max(conf.sum(), 1)  # the most frequent teacher action's share
+        conf = np.array((live.get('holdout_confusion') or live['confusion'])[head], float)
     for name, path in logs.items():
         log = json.load(open(path))['log']
         e = [r['epoch'] for r in log]
         color = ENTITY.get(name, CATEGORICAL[0])
-        for a, key in ((ax[0], 'holdout_ce'), (ax[1], 'holdout_acc')):
-            ys = [r.get(key) for r in log]
+        ax_ce.plot(e, [r.get('holdout_ce') for r in log], color=color, linewidth=2, marker='o', markersize=4,
+                   label=name.upper())
+        for a, h in zip(ax_heads, HEADS):
+            ys = [r.get(f'holdout_acc_{h}') for r in log]
             a.plot(e, ys, color=color, linewidth=2, marker='o', markersize=4, label=name.upper())
             _end_label(a, e[-1], ys[-1], name.upper())
         f = [r['frags'] for r in log if 'frags' in r]
         ef = [r['epoch'] for r in log if 'frags' in r]
         off = -0.4 if name == 'm0' else 0.4
-        ax[2].errorbar([x + off for x in ef], [d['mean'] for d in f],
-                       yerr=[[d['mean'] - d['lo'] for d in f], [d['hi'] - d['mean'] for d in f]],
-                       fmt='o', color=color, capsize=3, markersize=6, label=name.upper())
-    if majority is not None:
-        ax[1].axhline(majority, color=MUTED, linestyle='--', linewidth=1)
-        _end_label(ax[1], ax[1].get_xlim()[0], majority + 0.02, f'most frequent action {majority:.0%}')
-    ax[1].axhline(0.1, color=MUTED, linestyle=':', linewidth=1)
-    _end_label(ax[1], ax[1].get_xlim()[0], 0.12, 'chance 10%')
-    ax[1].set_ylim(0, 1)
+        ax_val.errorbar([x + off for x in ef], [d['mean'] for d in f],
+                        yerr=[[d['mean'] - d['lo'] for d in f], [d['hi'] - d['mean'] for d in f]],
+                        fmt='o', color=color, capsize=3, markersize=6, label=name.upper())
+    for a, h in zip(ax_heads, HEADS):
+        a.set_ylim(0, 1)
+        _style(a, f'Held-out accuracy: {h}')
+        _xlabel(a, 'epoch')
     if teacher:
-        ax[2].axhspan(teacher['lo'], teacher['hi'], color=ENTITY['teacher'], alpha=0.15, linewidth=0)
-        ax[2].axhline(teacher['mean'], color=ENTITY['teacher'], linewidth=1.5)
-        _end_label(ax[2], ax[2].get_xlim()[0], teacher['mean'] + 0.3, f'teacher {teacher["mean"]:.2f}')
-    ax[2].axhline(0, color='#c9c8c2', linewidth=0.8)
-    _style(ax[0], 'Held-out loss (cross-entropy)')
-    _style(ax[1], 'Held-out accuracy')
-    _style(ax[2], 'Frags per val match (95% CI)')
-    for a in ax[:3]:
+        ax_val.axhspan(teacher['lo'], teacher['hi'], color=ENTITY['teacher'], alpha=0.15, linewidth=0)
+        ax_val.axhline(teacher['mean'], color=ENTITY['teacher'], linewidth=1.5)
+        _end_label(ax_val, ax_val.get_xlim()[0], teacher['mean'] + 0.3, f'teacher {teacher["mean"]:.2f}')
+    ax_val.axhline(0, color='#c9c8c2', linewidth=0.8)
+    _style(ax_ce, 'Held-out loss (sum of the four heads)')
+    _style(ax_val, 'Frags per val match (95% CI)')
+    for a in (ax_ce, ax_val):
         _xlabel(a, 'epoch')
         a.legend(fontsize=7, frameon=False, labelcolor=MUTED)
-    a = ax[3]
     if conf is not None:
         share = conf / np.maximum(conf.sum(1, keepdims=True), 1)
-        a.imshow(share, cmap='Blues', vmin=0, vmax=1)
+        ax_conf.imshow(share, cmap='Blues', vmin=0, vmax=1)
         n = len(share)
         for i in range(n):
             for j in range(n):
                 if share[i, j] >= 0.1:
-                    a.text(j, i, f'{share[i, j]:.0%}'[:-1], ha='center', va='center', fontsize=6,
-                           color='white' if share[i, j] > 0.5 else INK)
-        names = action_names or [str(i) for i in range(n)]
-        a.set_xticks(range(n), names, rotation=50, ha='right', fontsize=7, color=MUTED)
-        a.set_yticks(range(n), names, fontsize=7, color=MUTED)
-        a.tick_params(length=0)
-        for s in a.spines.values():
-            s.set_visible(False)
-        a.set_title('Held-out confusion, % of row', color=INK, fontsize=10, loc='left')
-        a.set_ylabel('teacher', color=MUTED, fontsize=8)
-        a.set_xlabel('network', color=MUTED, fontsize=8)
+                    ax_conf.text(j, i, f'{share[i, j]:.0%}'[:-1], ha='center', va='center', fontsize=6,
+                                 color='white' if share[i, j] > 0.5 else INK)
+        ax_conf.set_xticks(range(n), values[head], rotation=50, ha='right', fontsize=7, color=MUTED)
+        ax_conf.set_yticks(range(n), values[head], fontsize=7, color=MUTED)
+        ax_conf.tick_params(length=0)
+        for sp in ax_conf.spines.values():
+            sp.set_visible(False)
+        ax_conf.set_title(f'Held-out confusion of the {head} head, % of row', color=INK, fontsize=10, loc='left')
+        ax_conf.set_ylabel('teacher', color=MUTED, fontsize=8)
+        ax_conf.set_xlabel('network', color=MUTED, fontsize=8)
     else:
-        a.axis('off')
+        ax_conf.axis('off')
     fig.tight_layout()
-    fig.savefig(out_png, dpi=130, facecolor=SURFACE)
+    fig.savefig(out_png, dpi=120, facecolor=SURFACE)
     plt.close(fig)
 
 
 def dataset_stats(dirs):
-    # what the recorded teacher matches hold: size, lives, label and mode shares, noise, frags
+    # what the recorded teacher matches hold: size, lives, label shares per head, modes, noise, weapon, frags
     import glob
     import os
     from collections import Counter
 
     import numpy as np
 
-    from doomagent.dm.config import MODES, N_ACTIONS
+    from doomagent.dm.actions import HEAD_SIZES, HEADS, N_WEAPON_SLOTS
+    from doomagent.dm.config import MODES
     files = sorted(f for d in dirs for f in glob.glob(os.path.join(d, 'ep_*.npz')))
-    actions, modes = np.zeros(N_ACTIONS), np.zeros(len(MODES))
+    heads = {h: np.zeros(k) for h, k in zip(HEADS, HEAD_SIZES)}
+    modes, weapons = np.zeros(len(MODES)), np.zeros(N_WEAPON_SLOTS + 1)
     steps, lives, frags, noisy, size, per = [], [], [], 0, 0, Counter()
     for f in files:
         z = np.load(f)
@@ -357,35 +360,43 @@ def dataset_stats(dirs):
         steps.append(len(a))
         lives.append(int(z['first'].sum()))
         frags.append(float(z['rewards'].sum()))
-        actions += np.bincount(a, minlength=N_ACTIONS)
+        for k, h in enumerate(HEADS):
+            heads[h] += np.bincount(a[:, k], minlength=HEAD_SIZES[k])
         modes += np.bincount(z['modes'], minlength=len(MODES))
-        noisy += int((z['executed'] != a).sum())
+        weapons += np.bincount(np.clip(z['weapon'], 0, N_WEAPON_SLOTS), minlength=N_WEAPON_SLOTS + 1)
+        noisy += int((z['executed'] != a).any(1).sum())
         per[str(z['variant'])] += 1
         size += os.path.getsize(f) + os.path.getsize(f[:-4] + '.frames.npy')
     n = max(sum(steps), 1)
     return dict(matches=len(files), steps=int(sum(steps)), gb=size / 2 ** 30,
                 steps_per_match=float(np.mean(steps)) if steps else 0.0,
                 lives_per_match=lives, frags_per_match=frags,
-                action_share=(actions / n).tolist(), mode_share=(modes / n).tolist(),
+                action_share={h: (v / n).tolist() for h, v in heads.items()}, mode_share=(modes / n).tolist(),
+                weapon_share={k: float(weapons[k] / n) for k in range(1, N_WEAPON_SLOTS + 1)},
                 noise_share=noisy / n, per_variant=dict(per))
 
 
 def dataset_figure(stats, out_png):
     import numpy as np
 
-    from doomagent.dm.config import ACTION_NAMES, MODES
+    from doomagent.dm.actions import MOVE_NAMES, TURN_DEG
+    from doomagent.dm.config import MODES
+    from doomagent.dm.weapons import WEAPONS
     color = ENTITY['teacher']
-    fig, ax = plt.subplots(1, 4, figsize=(18, 3.9), facecolor=SURFACE,
-                           gridspec_kw=dict(width_ratios=(1.6, 0.9, 1, 1)))
-    for a, names, share, title in ((ax[0], ACTION_NAMES, stats['action_share'], "Teacher's labels by action"),
-                                   (ax[1], MODES, stats['mode_share'], "Steps by teacher's mode")):
-        bars = a.bar(range(len(names)), share, color=color, width=0.7)
-        a.bar_label(bars, labels=[f'{v:.0%}' for v in share], color=MUTED, fontsize=7, padding=2)
-        a.set_xticks(range(len(names)), [n.replace('_', ' ') for n in names], rotation=35, ha='right', fontsize=7)
+    fig, ax = plt.subplots(2, 3, figsize=(18, 7.6), facecolor=SURFACE)
+    bars = ((ax[0, 0], [n.replace('_', ' ') for n in MOVE_NAMES], stats['action_share']['move'], "Teacher's move labels"),
+            (ax[0, 1], [f'{d:+g}' for d in TURN_DEG], stats['action_share']['turn'], "Teacher's turn labels (degrees)"),
+            (ax[0, 2], list(MODES), stats['mode_share'], "Steps by teacher's mode"),
+            (ax[1, 0], [WEAPONS[k].name for k in sorted(stats['weapon_share'])],
+             [stats['weapon_share'][k] for k in sorted(stats['weapon_share'])], 'Weapon in hand'))
+    for a, names, share, title in bars:
+        b = a.bar(range(len(names)), share, color=color, width=0.7)
+        a.bar_label(b, labels=[f'{v:.0%}' for v in share], color=MUTED, fontsize=7, padding=2)
+        a.set_xticks(range(len(names)), names, rotation=35, ha='right', fontsize=7)
         a.set_yticks([])
         _style(a, title)
-    for a, values, title, unit in ((ax[2], stats['lives_per_match'], 'Lives per match', 'lives'),
-                                   (ax[3], stats['frags_per_match'], "Teacher's frags per match", 'frags')):
+    for a, values, title, unit in ((ax[1, 1], stats['lives_per_match'], 'Lives per match', 'lives'),
+                                   (ax[1, 2], stats['frags_per_match'], "Teacher's frags per match", 'frags')):
         lo, hi = int(np.floor(min(values))), int(np.ceil(max(values)))
         a.hist(values, bins=np.arange(lo - 0.5, hi + 1.5), color=color, edgecolor=SURFACE, linewidth=2)
         a.yaxis.set_major_locator(plt.MaxNLocator(integer=True))  # whole matches
@@ -393,9 +404,11 @@ def dataset_figure(stats, out_png):
         _end_label(a, np.mean(values), a.get_ylim()[1] * 0.92, f'mean {np.mean(values):.1f}')
         _xlabel(a, unit)
         _style(a, title)
-    fig.suptitle(f'{stats["matches"]} matches, {stats["steps"]:,} steps, {stats["gb"]:.1f} GB; '
+    fire = stats['action_share']['fire'][1]
+    fig.suptitle(f'{stats["matches"]} matches, {stats["steps"]:,} steps, {stats["gb"]:.1f} GB; fire on {fire:.0%} of steps; '
                  f'{stats["noise_share"]:.1%} of steps played a noise action'.replace(',', ' '),
                  color=INK, fontsize=11, x=0.01, ha='left')
     fig.tight_layout()
-    fig.savefig(out_png, dpi=130, facecolor=SURFACE)
+    fig.savefig(out_png, dpi=120, facecolor=SURFACE)
     plt.close(fig)
+

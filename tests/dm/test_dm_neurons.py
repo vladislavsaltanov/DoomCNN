@@ -1,7 +1,7 @@
 import numpy as np
 
 from dmfiles import Poison, StubTeacher
-from doomagent.dm.config import MODES, TURN_LEFT
+from doomagent.dm.config import MODES
 from doomagent.dm.env import DMObs
 from doomagent.dm.neurons import CONDITIONS, ShadowChooser, _recent, place_maps, selectivity, state_map
 from doomagent.dm.reports import place_figure, selectivity_figure, states_figure
@@ -18,7 +18,7 @@ def test_shadow_chooser_keeps_the_student_on_pixels():
             seen.append(priv)
             return 0
 
-    c = ShadowChooser(Spy(), StubTeacher(TURN_LEFT))
+    c = ShadowChooser(Spy(), StubTeacher((0, 3, 0, 0)))
     c(DMObs(np.zeros((4, 120, 160), np.uint8), np.zeros(2, np.float32), True), Poison())
     assert seen == [None] and c.take_trace()['modes'].tolist() == [MODES.index('patrol')]
 
@@ -38,8 +38,8 @@ def test_place_map_finds_a_left_half_unit():
 
 def synthetic(n=4000):
     g = np.random.default_rng(0)
-    acts = {k: g.random(n) < 0.3 for k in ('bot_visible', 'bot_recent', 'health_low')}
-    acts['mode'] = g.integers(0, 4, n)
+    acts = {k: g.random(n) < 0.3 for k in ('bot_visible', 'bot_recent', 'health_low', 'weapon_strong')}
+    acts['mode'] = g.integers(0, len(MODES), n)
     acts['act'] = g.normal(0, 1, (n, 512))
     acts['act'][:, 3] += 3 * acts['bot_visible']
     return acts
@@ -72,3 +72,11 @@ def test_figures_write_png(tmp_path):
     states_figure(g.normal(0, 1, (300, 2)), g.integers(0, 4, 300), tmp_path / 't.png')
     for f in ('p', 's', 't'):
         assert (tmp_path / f'{f}.png').stat().st_size > 10_000
+
+
+def test_conditions_include_gear_and_a_strong_weapon():
+    assert {'gear', 'weapon_strong'} <= set(CONDITIONS)
+    acts = synthetic()
+    acts['act'][:, 9] += 3 * acts['weapon_strong']
+    best, strength, _ = selectivity(acts)
+    assert CONDITIONS[best[9]] == 'weapon_strong'
