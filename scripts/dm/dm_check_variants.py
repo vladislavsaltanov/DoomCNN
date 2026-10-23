@@ -4,8 +4,8 @@
 
 A variant is disabled (disabled, reason in its JSON) if the teacher's frags fall below 0.7 of the
 base on CHECK_SEEDS, or if a tex or mix variant changes the network frame by less than 8 on average.
-Writes artifacts/dm/d3_variants.png (one 320x240 frame per variant with a bot on screen) and
-reports/dm/d3_variants.md.
+Writes artifacts/dm/e3_variants.png (one 320x240 frame per variant with a bot on screen) and
+reports/dm/e3_variants.md.
 """
 import argparse
 import json
@@ -14,7 +14,8 @@ import os
 import cv2
 import numpy as np
 
-from doomagent.dm.config import BOT, CHECK_SEEDS, DM, FORWARD, TURN_RIGHT, VARIANTS_DIR
+from doomagent.dm.actions import FORWARD, STAY, turn_index
+from doomagent.dm.config import BOT, CHECK_SEEDS, DM, VARIANTS_DIR
 from doomagent.dm.env import DeathmatchEnv
 from doomagent.dm.evaluate import evaluate_plan, summarize
 from doomagent.dm.teacher import DMTeacher
@@ -22,6 +23,7 @@ from doomagent.variants import BASE, load_variants
 
 DIFF_STEPS = 20
 BOT_STEPS = 400  # the snapshot looks for the widest bot in the first 45 s
+WALK = ((FORWARD, 0, 0, 0), (STAY, turn_index(20.0), 0, 0))  # forward, forward, turn right 20 degrees
 
 
 def net_frames(v):
@@ -29,7 +31,7 @@ def net_frames(v):
     env = DeathmatchEnv(DM, v)
     obs, out = env.reset(CHECK_SEEDS[0]), []
     for i in range(DIFF_STEPS):
-        obs, _, _ = env.step(FORWARD if i % 3 else TURN_RIGHT)
+        obs, _, _ = env.step(WALK[0] if i % 3 else WALK[1])
         out.append(obs.frames[-1].astype(np.int16))
     env.close()
     return np.stack(out)
@@ -103,9 +105,9 @@ if __name__ == '__main__':  # evaluation workers re-import this file
                     f'{f["mean"] / base:.2f} | {by[v.name]["kd_total"]:.2f} | {diff:.1f} | {reason or "ok"} |')
         print(rows[-1], flush=True)
     os.makedirs('artifacts/dm', exist_ok=True)
-    grid(tiles, 'artifacts/dm/d3_variants.png')
+    grid(tiles, 'artifacts/dm/e3_variants.png')
     b = by['base']
-    head = ['# D3: graphics variants of cig MAP01', '',
+    head = ['# E3: graphics variants of cig MAP02', '',
             f'Teacher on CHECK_SEEDS ({len(CHECK_SEEDS)} matches per variant). Base: frags '
             f'{base:.2f} [{b["frags"]["lo"]:.2f}, {b["frags"]["hi"]:.2f}], K/D {b["kd_total"]:.2f}. '
             'A variant is switched off below 0.7 of the base frags, or (tex, mix) with a mean network-frame '
@@ -113,7 +115,7 @@ if __name__ == '__main__':  # evaluation workers re-import this file
             '| variant | split | kind | frags [95% CI] | of base | K/D | frame diff | status |',
             '|---|---|---|---|---|---|---|---|']
     ok = sum(r.endswith('| ok |') for r in rows)
-    with open('reports/dm/d3_variants.md', 'w', encoding='utf-8') as fh:
+    with open('reports/dm/e3_variants.md', 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(head + rows + ['', f'{ok} of {len(rows)} variants kept.',
-                                          '', '![variants](../../artifacts/dm/d3_variants.png)', '']))
-    print(f'{ok} of {len(rows)} variants kept; written reports/dm/d3_variants.md, artifacts/dm/d3_variants.png')
+                                          '', '![variants](../../artifacts/dm/e3_variants.png)', '']))
+    print(f'{ok} of {len(rows)} variants kept; written reports/dm/e3_variants.md, artifacts/dm/e3_variants.png')
