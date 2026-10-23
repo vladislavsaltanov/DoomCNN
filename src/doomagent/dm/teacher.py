@@ -48,8 +48,12 @@ class Enemy:
         return (self.left + self.right) / 2.0
 
 
-def pick_target(enemies, lock_id=None, keep=1.25):
-    # nearest bot, but keep the locked one unless another is clearly closer
+def pick_target(enemies, lock_id=None, keep=1.25, by='dist'):
+    # by='dist': the nearest bot, but keep the locked one unless another is clearly closer;
+    # by='angle': the locked bot while it is seen, else the one nearest the crosshair (least turning)
+    if by == 'angle':
+        locked = [e for e in enemies if e.id == lock_id]
+        return locked[0] if locked else min(enemies, key=lambda e: abs(e.offset))
     nearest = min(enemies, key=lambda e: e.dist)
     for e in enemies:
         if e.id == lock_id and e.dist <= keep * nearest.dist:
@@ -228,7 +232,7 @@ class DMTeacher:
 
     def _combat(self, priv, me, bots):
         c = self.cfg
-        t = pick_target(bots, self.lock)
+        t = pick_target(bots, self.lock, by=c.target)
         self.lock, self.target = t.id, t
         weapon = self._switch(priv, best_weapon(priv.owned, priv.slot_ammo, t.dist))
         w = WEAPONS.get(priv.weapon, WEAPONS[2])

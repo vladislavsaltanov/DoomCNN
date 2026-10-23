@@ -72,6 +72,22 @@ def test_a_bot_barely_on_screen_is_not_seen():
     assert fire == 1
 
 
+def test_target_by_angle_takes_the_bot_at_the_crosshair_and_keeps_it():
+    # by distance it turns 35 degrees away from a bot it could shoot now; by angle it shoots
+    far_ahead, near_side = bot(1, 2.0, 900), bot(2, 35.0, 300)
+    t = DMTeacher(DM)
+    t(obs(), priv(labels=[far_ahead, near_side]))
+    assert t.target.id == 2
+    t = DMTeacher(replace(DM, target='angle'))
+    t(obs(), priv(labels=[far_ahead, near_side]))
+    assert t.target.id == 1
+    # the locked bot stays the target while it is seen, even when another comes nearer the crosshair
+    t(obs(), priv(labels=[bot(1, 10.0, 900), bot(2, 1.0, 300)], tic=104))
+    assert t.target.id == 1
+    t(obs(), priv(labels=[bot(2, 1.0, 300)], tic=108))
+    assert t.target.id == 2
+
+
 def test_turns_towards_target_with_big_turn():
     _, turn, fire, _ = DMTeacher(DM)(obs(), priv(labels=[bot(1, 40.0, 600)]))
     assert TURN_DEG[turn] == 40.0 and fire == 0
