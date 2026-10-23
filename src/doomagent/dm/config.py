@@ -37,6 +37,9 @@ class DMCfg:
     hitscan_tol: float = 0.0   # degrees: hitscan weapons also fire this far off (their spread); 0: off
     track_ahead: bool = False  # turn to where the target will be after this step, not where it is
     barrel_check: bool = False  # no shot with a barrel in the line of fire closer than BARREL_R
+    weapon_first: float = 0.0  # with only weapons below gear_rank: fight bots closer than this, else gear up; 0: off
+    armor_below: float = 0.0   # go for armor below this much armor; 0: off
+    retreat_health: float = 0.0  # leave a fight for a medikit below this health; 0: off
     seg_len: int = 32          # M1 training windows, steps
     burn_in: int = 8           # steps that only warm up the GRU in windows that start mid-life
 

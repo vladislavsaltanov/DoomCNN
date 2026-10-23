@@ -239,3 +239,31 @@ def test_barrel_check_holds_fire():
     assert DMTeacher(replace(DM, barrel_check=True))(obs(), priv(labels=labels))[2] == 0
     far = [bot(1, 0.0, 600), thing('ExplosiveBarrel', ME[0] + 400.0, ME[1])]
     assert DMTeacher(replace(DM, barrel_check=True))(obs(), priv(labels=far))[2] == 1
+
+
+def test_weapon_first_skips_far_fights_with_a_pistol():
+    gun = dict(weapon=2, weapon_ammo=50.0, ammo=50.0, owned=(0, 1, 1, 0, 0, 0, 0, 0), slot_ammo=(0, 0, 50, 0, 50, 0, 0, 0),
+               objects=[MapObject(1, 'Chaingun', 600.0, 900.0, 0.0)])
+    for cfg, dist, mode in ((DM, 600, 'combat'), (replace(DM, weapon_first=256.0), 600, 'gear'),
+                            (replace(DM, weapon_first=256.0), 200, 'combat')):
+        t = DMTeacher(cfg)
+        t(obs(first=True), priv(labels=[bot(1, 0.0, dist)], **gun))
+        assert t.mode == mode
+
+
+def test_armor_below_goes_for_armor():
+    spots = [MapObject(1, 'BlueArmor', 600.0, 700.0, 0.0)]
+    t = DMTeacher(DM)
+    t(obs(first=True), priv(armor=0.0, objects=spots))
+    assert t.mode == 'patrol'
+    t = DMTeacher(replace(DM, armor_below=50.0))
+    t(obs(first=True), priv(armor=0.0, objects=spots))
+    assert t.mode == 'items' and math.hypot(t.goal[0] - 600, t.goal[1] - 700) < 1
+
+
+def test_retreat_leaves_a_fight_for_a_medikit():
+    spots = [MapObject(1, 'Medikit', 600.0, 700.0, 0.0)]
+    for cfg, mode in ((DM, 'combat'), (replace(DM, retreat_health=30.0), 'items')):
+        t = DMTeacher(cfg)
+        t(obs(first=True), priv(health=20.0, labels=[bot(1, 0.0, 600)], objects=spots))
+        assert t.mode == mode

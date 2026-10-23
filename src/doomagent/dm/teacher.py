@@ -158,7 +158,9 @@ class DMTeacher:
         c = self.cfg
         if bots:
             near = min(bots, key=lambda e: e.dist)
-            if any(s != 1 for s in usable(priv.owned, priv.slot_ammo)) or near.dist < WEAPONS[1].hi:
+            weak = c.weapon_first > 0.0 and near.dist > c.weapon_first and self._gear_spot(priv, me) is not None
+            hurt = priv.health < c.retreat_health and self._item_spot(priv, me) is not None
+            if (any(s != 1 for s in usable(priv.owned, priv.slot_ammo)) or near.dist < WEAPONS[1].hi) and not weak                     and not hurt:
                 self.mode = 'combat'
                 return self._combat(priv, me, bots)
         self.target, self.aim, self.why = None, None, 'no_combat'
@@ -209,6 +211,10 @@ class DMTeacher:
         c = self.cfg
         if priv.health < c.low_health:
             spot = self._nearest(me, priv.tic, {n for n, k in ITEM_KIND.items() if k == 'health'})
+            if spot is not None:
+                return spot
+        if priv.armor < c.armor_below:
+            spot = self._nearest(me, priv.tic, {n for n, k in ITEM_KIND.items() if k == 'armor'})
             if spot is not None:
                 return spot
         dry = [s for s, w in WEAPONS.items() if w.rank >= c.gear_rank and s < len(priv.owned) and priv.owned[s]
