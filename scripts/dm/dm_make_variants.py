@@ -1,6 +1,6 @@
 """Graphics variants of cig.wad MAP01 into variants_dm/: 16 train, 4 val, 6 test.
 
-    python scripts/dm_make_variants.py [--out variants_dm] [--seed 0]
+    python scripts/dm/dm_make_variants.py [--out variants_dm] [--seed 0]
 """
 import argparse
 

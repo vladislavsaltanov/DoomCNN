@@ -1,12 +1,12 @@
 """Where the deathmatch teacher loses: deaths, shots and fights on the val matches.
 
-    python scripts/dm_teacher_diag.py [--matches 20] [--workers 2] [--set key=value ...]
+    python scripts/dm/dm_teacher_diag.py [--matches 20] [--workers 2] [--set key=value ...]
 
 Per death: a suicide (frags went down), a spawn death (life shorter than 2 s), whether a bot was on
 screen in the 2 s before, the teacher's mode and health 2 s before. Per shot: did the hit counter
 rise within 1.5 s, the distance and width of the target. Per fight (a run of steps with a bot on
 screen): steps to the first shot, kill or death within it. Plus the teacher's rank among the 8
-players. Writes reports/d3_teacher_diag.{md,json}.
+players. Writes reports/dm/d3_teacher_diag.{md,json}.
 """
 import argparse
 import json
@@ -182,7 +182,7 @@ if __name__ == '__main__':  # workers re-import this file
     ap.add_argument('--seeds', choices=['val', 'fresh'], default='val')
     ap.add_argument('--workers', type=int, default=2)
     ap.add_argument('--set', nargs='*', default=[])
-    ap.add_argument('--out', default='reports/d3_teacher_diag')
+    ap.add_argument('--out', default='reports/dm/d3_teacher_diag')
     a = ap.parse_args()
     cfg = replace(DM, **parse_set(a.set))
     seeds = {'val': VAL_SEEDS, 'fresh': FRESH_SEEDS}[a.seeds][:a.matches]

@@ -1,4 +1,4 @@
-from doomagent.vzseed import INT_MAX, first_mt19937, vizdoom_seed
+from doomagent.dm.vzseed import INT_MAX, first_mt19937, vizdoom_seed
 
 
 def test_first_mt19937_matches_the_standard():

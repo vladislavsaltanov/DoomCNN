@@ -38,11 +38,11 @@ def test_unknown_path_is_404(server):
 
 def test_runs_and_train_read_the_run_files(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    (tmp_path / 'runs').mkdir()
+    (tmp_path / 'runs' / 'dm').mkdir(parents=True)
     log = dict(config={}, log=[dict(epoch=5, val_score=3.5), dict(epoch=10, val_score=4.0)])
-    (tmp_path / 'runs' / 'dm_m1_x.pt.log.json').write_text(json.dumps(log))
-    (tmp_path / 'runs' / 'dm_m0_y.pt.progress.json').write_text(json.dumps(dict(epoch=1, points=[])))
+    (tmp_path / 'runs' / 'dm' / 'm1_x.pt.log.json').write_text(json.dumps(log))
+    (tmp_path / 'runs' / 'dm' / 'm0_y.pt.progress.json').write_text(json.dumps(dict(epoch=1, points=[])))
     runs = {r['name']: r for r in dm_runs()}
-    assert runs['dm_m1_x']['best'] == 4.0 and runs['dm_m0_y']['best'] is None
-    d = dm_train('../runs/dm_m1_x')  # a path in the query string is cut to the run name
+    assert runs['m1_x']['best'] == 4.0 and runs['m0_y']['best'] is None
+    d = dm_train('../runs/dm/m1_x')  # a path in the query string is cut to the run name
     assert d['log']['log'][-1]['epoch'] == 10 and len(d['actions']) == 10

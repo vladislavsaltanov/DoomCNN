@@ -288,7 +288,7 @@ async function api(p) { const r = await fetch(p); return r.json(); }
 async function loadOptions() {
   opts = await api('/api/options');
   const sel = $('model'), cur = sel.value;
-  sel.innerHTML = opts.models.map(m => `<option value="${m}">${m === 'teacher' ? 'учитель' : m.replace('runs/', '')}</option>`).join('');
+  sel.innerHTML = opts.models.map(m => `<option value="${m}">${m === 'teacher' ? 'учитель' : m.replace('runs/dm/', '')}</option>`).join('');
   if (cur && opts.models.includes(cur)) sel.value = cur;
   $('variant').innerHTML = opts.variants.map(v => `<option>${v}</option>`).join('');
 }
@@ -326,7 +326,7 @@ async function tickLive() {
   $('hist').className = d.history.length ? '' : 'empty';
   if (d.history.length)
     $('hist').innerHTML = '<table class="hist"><tr><th>игрок</th><th>seed</th><th>фраги</th><th>смерти</th><th>согласие</th></tr>' +
-      d.history.slice(0, 8).map(h => `<tr><td>${h.model === 'teacher' ? 'учитель' : h.model.replace('runs/', '')}</td><td>${h.seed}</td><td>${h.frags}</td><td>${h.deaths}</td><td>${h.model === 'teacher' ? '—' : Math.round(100 * h.agree) + '%'}</td></tr>`).join('') + '</table>';
+      d.history.slice(0, 8).map(h => `<tr><td>${h.model === 'teacher' ? 'учитель' : h.model.replace('runs/dm/', '')}</td><td>${h.seed}</td><td>${h.frags}</td><td>${h.deaths}</td><td>${h.model === 'teacher' ? '—' : Math.round(100 * h.agree) + '%'}</td></tr>`).join('') + '</table>';
 }
 
 // ---------------------------------------------------------------- training

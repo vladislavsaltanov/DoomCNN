@@ -34,10 +34,10 @@ def _run_name(p):
 
 def dm_runs():
     # every dm_* training run: from its log (after the first evaluation) or its progress file
-    names = {_run_name(p) for p in glob.glob('runs/dm_*.pt.log.json') + glob.glob('runs/dm_*.pt.progress.json')}
+    names = {_run_name(p) for p in glob.glob('runs/dm/*.pt.log.json') + glob.glob('runs/dm/*.pt.progress.json')}
     out = []
     for name in names:
-        files = [f'runs/{name}.pt.{k}.json' for k in ('log', 'progress')]
+        files = [f'runs/dm/{name}.pt.{k}.json' for k in ('log', 'progress')]
         last = max((os.path.getmtime(f) for f in files if os.path.exists(f)), default=0)
         log = (_read_json(files[0]) or {}).get('log', [])
         best = max((r['val_score'] for r in log if 'val_score' in r), default=None)
@@ -48,13 +48,13 @@ def dm_runs():
 
 def dm_train(name):
     name = os.path.basename(name)  # no paths from the query string
-    d = {k: _read_json(f'runs/{name}.pt.{k}.json') for k in ('progress', 'live', 'log')}
-    teacher = (_read_json('reports/d1_teacher.json') or {}).get('report', {}).get('teacher', {}).get('frags')
+    d = {k: _read_json(f'runs/dm/{name}.pt.{k}.json') for k in ('progress', 'live', 'log')}
+    teacher = (_read_json('reports/dm/d1_teacher.json') or {}).get('report', {}).get('teacher', {}).get('frags')
     return dict(name=name, actions=list(ACTION_NAMES), teacher=teacher, **d)
 
 
 def dm_options():
-    models = sorted(glob.glob('runs/dm_*.pt'), key=os.path.getmtime, reverse=True)
+    models = sorted(glob.glob('runs/dm/*.pt'), key=os.path.getmtime, reverse=True)
     variants = ['base']
     try:
         from doomagent.variants import load_variants

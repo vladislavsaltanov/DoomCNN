@@ -9,7 +9,7 @@ import vizdoom as vzd
 from doomagent.dm.config import AMMO_SCALE, BOT, BOT_NAMES, DM, HEALTH_SCALE, DMCfg
 from doomagent.env import DELTA_SIGN, RESOLUTIONS, Label, to_net
 from doomagent.variants import BASE, Variant
-from doomagent.vzseed import vizdoom_seed
+from doomagent.dm.vzseed import vizdoom_seed
 
 GV = vzd.GameVariable
 BOTS_CFG = os.path.join(os.path.dirname(vzd.__file__), 'bots.cfg')

@@ -1,9 +1,9 @@
 """PNG snapshots of the deathmatch work for the slice reports.
 
-    python scripts/dm_snapshots.py stack --out artifacts/d0_stack.png
-    python scripts/dm_snapshots.py view --out artifacts/d0_view.png
-    python scripts/dm_snapshots.py brain runs/dm_m1_pilot.pt --at 300 --out artifacts/d2_brain_m1.png
-    python scripts/dm_snapshots.py memory runs/dm_m1_pilot.pt --at 400 --out artifacts/d2_memory_m1.png
+    python scripts/dm/dm_snapshots.py stack --out artifacts/dm/d0_stack.png
+    python scripts/dm/dm_snapshots.py view --out artifacts/dm/d0_view.png
+    python scripts/dm/dm_snapshots.py brain runs/dm/m1_pilot.pt --at 300 --out artifacts/dm/d2_brain_m1.png
+    python scripts/dm/dm_snapshots.py memory runs/dm/m1_pilot.pt --at 400 --out artifacts/dm/d2_memory_m1.png
 """
 import argparse
 import os

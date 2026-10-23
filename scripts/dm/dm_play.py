@@ -1,7 +1,7 @@
 """Watch or record a deathmatch player on cig.wad MAP01.
 
-    python scripts/dm_play.py --who random --seed 35000 --boxes --hud
-    python scripts/dm_play.py --who random --seed 35000 --boxes --hud --no-window --record artifacts/d0_random.mp4
+    python scripts/dm/dm_play.py --who random --seed 35000 --boxes --hud
+    python scripts/dm/dm_play.py --who random --seed 35000 --boxes --hud --no-window --record artifacts/dm/d0_random.mp4
 
 One frame per game tic (35 per second). Boxes, the status bar and the action list are drawn for the
 viewer only. --who takes random, teacher or a dm_*.pt checkpoint (M0 or M1).

@@ -1,7 +1,7 @@
 """Teacher and random player on the val matches, Gate A.
 
-    python scripts/dm_teacher_report.py [--set safe_dist=224] [--workers 4]
-    ->  reports/d1_teacher.md, reports/d1_teacher.png, reports/d1_teacher.json
+    python scripts/dm/dm_teacher_report.py [--set safe_dist=224] [--workers 4]
+    ->  reports/dm/d1_teacher.md, reports/dm/d1_teacher.png, reports/dm/d1_teacher.json
 """
 import argparse
 import json
@@ -32,7 +32,7 @@ if __name__ == '__main__':  # worker processes re-import this file
     ap = argparse.ArgumentParser()
     ap.add_argument('--set', action='append', help='Cfg override, name=value')
     ap.add_argument('--workers', type=int, default=4)
-    ap.add_argument('--out', default='reports/d1_teacher')
+    ap.add_argument('--out', default='reports/dm/d1_teacher')
     a = ap.parse_args()
     cfg = with_overrides(DM, a.set)
     plan = val_plan()

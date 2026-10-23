@@ -1,7 +1,27 @@
 import json
 
 from doomagent.dm.config import ACTION_NAMES
-from doomagent.dm.reports import curves_figure, d0_figure, gate_a, match_table_md, teacher_figure
+from dmfiles import make_match
+from doomagent.dm.reports import (curves_figure, d0_figure, dataset_figure, dataset_stats, gate_a, match_table_md,
+                                  teacher_figure)
+
+
+def test_dataset_stats_counts(tmp_path):
+    for s in range(3):
+        make_match(tmp_path / 'd', s, T=40, first_at=(0, 20), variant='base' if s else 'tex_train_00')
+    st = dataset_stats([str(tmp_path / 'd')])
+    assert st['matches'] == 3 and st['steps'] == 120 and st['lives_per_match'] == [2, 2, 2]
+    assert abs(sum(st['action_share']) - 1) < 1e-9 and st['action_share'][0] == 0.1
+    assert st['mode_share'][0] == 1.0 and st['noise_share'] == 0.0
+    assert st['per_variant'] == {'base': 2, 'tex_train_00': 1} and st['gb'] > 0
+
+
+def test_dataset_figure_writes_png(tmp_path):
+    for s in range(3):
+        make_match(tmp_path / 'd', s, T=40, first_at=(0, 20))
+    out = tmp_path / 'ds.png'
+    dataset_figure(dataset_stats([str(tmp_path / 'd')]), str(out))
+    assert out.stat().st_size > 10_000
 
 
 def test_curves_figure_writes_png(tmp_path):

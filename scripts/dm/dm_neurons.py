@@ -1,6 +1,6 @@
 """Neuron maps of a deathmatch network from its own matches (a shadow teacher names the mode only).
 
-    python scripts/dm_neurons.py --model runs/dm_m1_pilot.pt --plan val10 --tag m1 --prefix artifacts/d2_
+    python scripts/dm/dm_neurons.py --model runs/dm/m1_pilot.pt --plan val10 --tag m1 --prefix artifacts/dm/d2_
 
 Writes {prefix}place_{tag}.png, {prefix}select_{tag}.png, {prefix}states_{tag}.png and the
 activations next to the model (runs/<name>.acts.npz).
@@ -18,7 +18,7 @@ if __name__ == '__main__':  # evaluation workers re-import this file
     ap.add_argument('--model', required=True)
     ap.add_argument('--plan', choices=['val10', 'val', 'test'], default='val10')
     ap.add_argument('--tag', required=True)
-    ap.add_argument('--prefix', default='artifacts/d2_')
+    ap.add_argument('--prefix', default='artifacts/dm/d2_')
     ap.add_argument('--workers', type=int, default=4)
     a = ap.parse_args()
     plan = {'val10': lambda: [(BASE, VAL_SEEDS[:10])], 'val': val_plan,

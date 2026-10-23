@@ -269,3 +269,65 @@ def curves_figure(logs, out_png, teacher=None, confusion_of=None, action_names=N
     fig.tight_layout()
     fig.savefig(out_png, dpi=130, facecolor=SURFACE)
     plt.close(fig)
+
+
+def dataset_stats(dirs):
+    # what the recorded teacher matches hold: size, lives, label and mode shares, noise, frags
+    import glob
+    import os
+    from collections import Counter
+
+    import numpy as np
+
+    from doomagent.dm.config import MODES, N_ACTIONS
+    files = sorted(f for d in dirs for f in glob.glob(os.path.join(d, 'ep_*.npz')))
+    actions, modes = np.zeros(N_ACTIONS), np.zeros(len(MODES))
+    steps, lives, frags, noisy, size, per = [], [], [], 0, 0, Counter()
+    for f in files:
+        z = np.load(f)
+        a = z['actions']
+        steps.append(len(a))
+        lives.append(int(z['first'].sum()))
+        frags.append(float(z['rewards'].sum()))
+        actions += np.bincount(a, minlength=N_ACTIONS)
+        modes += np.bincount(z['modes'], minlength=len(MODES))
+        noisy += int((z['executed'] != a).sum())
+        per[str(z['variant'])] += 1
+        size += os.path.getsize(f) + os.path.getsize(f[:-4] + '.frames.npy')
+    n = max(sum(steps), 1)
+    return dict(matches=len(files), steps=int(sum(steps)), gb=size / 2 ** 30,
+                steps_per_match=float(np.mean(steps)) if steps else 0.0,
+                lives_per_match=lives, frags_per_match=frags,
+                action_share=(actions / n).tolist(), mode_share=(modes / n).tolist(),
+                noise_share=noisy / n, per_variant=dict(per))
+
+
+def dataset_figure(stats, out_png):
+    import numpy as np
+
+    from doomagent.dm.config import ACTION_NAMES, MODES
+    color = ENTITY['teacher']
+    fig, ax = plt.subplots(1, 4, figsize=(18, 3.9), facecolor=SURFACE,
+                           gridspec_kw=dict(width_ratios=(1.6, 0.9, 1, 1)))
+    for a, names, share, title in ((ax[0], ACTION_NAMES, stats['action_share'], "Teacher's labels by action"),
+                                   (ax[1], MODES, stats['mode_share'], "Steps by teacher's mode")):
+        bars = a.bar(range(len(names)), share, color=color, width=0.7)
+        a.bar_label(bars, labels=[f'{v:.0%}' for v in share], color=MUTED, fontsize=7, padding=2)
+        a.set_xticks(range(len(names)), [n.replace('_', ' ') for n in names], rotation=35, ha='right', fontsize=7)
+        a.set_yticks([])
+        _style(a, title)
+    for a, values, title, unit in ((ax[2], stats['lives_per_match'], 'Lives per match', 'lives'),
+                                   (ax[3], stats['frags_per_match'], "Teacher's frags per match", 'frags')):
+        lo, hi = int(np.floor(min(values))), int(np.ceil(max(values)))
+        a.hist(values, bins=np.arange(lo - 0.5, hi + 1.5), color=color, edgecolor=SURFACE, linewidth=2)
+        a.yaxis.set_major_locator(plt.MaxNLocator(integer=True))  # whole matches
+        a.axvline(np.mean(values), color=INK, linewidth=1, linestyle='--')
+        _end_label(a, np.mean(values), a.get_ylim()[1] * 0.92, f'mean {np.mean(values):.1f}')
+        _xlabel(a, unit)
+        _style(a, title)
+    fig.suptitle(f'{stats["matches"]} matches, {stats["steps"]:,} steps, {stats["gb"]:.1f} GB; '
+                 f'{stats["noise_share"]:.1%} of steps played a noise action'.replace(',', ' '),
+                 color=INK, fontsize=11, x=0.01, ha='left')
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=130, facecolor=SURFACE)
+    plt.close(fig)

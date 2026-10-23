@@ -1,0 +1,791 @@
+{
+ "summary": {
+  "matches": 20,
+  "frags": 6.25,
+  "deaths": 3.6,
+  "rank_mean": 1.2,
+  "rank_first_share": 0.8,
+  "best_bot_mean": 3.65,
+  "deaths_total": 65,
+  "suicide_share": 0.12307692307692308,
+  "spawn_share": 0.0,
+  "unseen_share": 0.07692307692307693,
+  "death_mode_share": {
+   "combat": 0.7230769230769231,
+   "chase": 0.046153846153846156,
+   "items": 0.18461538461538463,
+   "patrol": 0.046153846153846156
+  },
+  "death_health_before": 82.3076923076923,
+  "shots_per_match": 34.3,
+  "hit_share": 0.4446064139941691,
+  "no_target_shot_share": 0.056851311953352766,
+  "hit_by_dist": {
+   "0-256": [
+    0.6530612244897959,
+    49
+   ],
+   "256-512": [
+    0.5,
+    174
+   ],
+   "512-1024": [
+    0.5,
+    304
+   ],
+   "1024-inf": [
+    0.26666666666666666,
+    120
+   ]
+  },
+  "fights": 403,
+  "fight_kill_share": 0.2977667493796526,
+  "fight_death_share": 0.1315136476426799,
+  "fight_no_shot_share": 0.369727047146402,
+  "steps_to_first_shot": 5.0,
+  "fights_low_health_share": 0.02729528535980149,
+  "low_health_combat_share": 0.012724047135645965,
+  "close_bot_share": 0.009722457454590567
+ },
+ "per_match": [
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 1,
+   "best_bot": 3.0,
+   "frags": 4.0,
+   "n_deaths": 4.0,
+   "steps": 1050,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.007619047619047619
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": false,
+     "mode": "items",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 81.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 1,
+   "best_bot": 4.0,
+   "frags": 10.0,
+   "n_deaths": 5.0,
+   "steps": 1049,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.00667302192564347
+  },
+  {
+   "deaths": [],
+   "rank": 2,
+   "best_bot": 5.0,
+   "frags": 3.0,
+   "n_deaths": 0.0,
+   "steps": 1050,
+   "low_health_combat": 0.023809523809523808,
+   "close_no_shot": 0.0019047619047619048
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 14.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 41.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 83.0,
+     "shots_before": 0
+    }
+   ],
+   "rank": 1,
+   "best_bot": 3.0,
+   "frags": 4.0,
+   "n_deaths": 4.0,
+   "steps": 1049,
+   "low_health_combat": 0.030505243088655862,
+   "close_no_shot": 0.05147759771210677
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "chase",
+     "health_before": 80.0,
+     "shots_before": 0
+    }
+   ],
+   "rank": 1,
+   "best_bot": 2.0,
+   "frags": 13.0,
+   "n_deaths": 1.0,
+   "steps": 1049,
+   "low_health_combat": 0.016205910390848427,
+   "close_no_shot": 0.011439466158245948
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 51.0,
+     "shots_before": 0
+    }
+   ],
+   "rank": 1,
+   "best_bot": 2.0,
+   "frags": 10.0,
+   "n_deaths": 2.0,
+   "steps": 1049,
+   "low_health_combat": 0.061010486177311724,
+   "close_no_shot": 0.0
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 41.0,
+     "shots_before": 2
+    }
+   ],
+   "rank": 1,
+   "best_bot": 3.0,
+   "frags": 6.0,
+   "n_deaths": 4.0,
+   "steps": 1050,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.008571428571428572
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 52.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 17.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 1,
+   "best_bot": 6.0,
+   "frags": 10.0,
+   "n_deaths": 4.0,
+   "steps": 1049,
+   "low_health_combat": 0.02478551000953289,
+   "close_no_shot": 0.0038131553860819827
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": false,
+     "mode": "patrol",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 100.0,
+     "shots_before": 0
+    }
+   ],
+   "rank": 1,
+   "best_bot": 1.0,
+   "frags": 5.0,
+   "n_deaths": 3.0,
+   "steps": 1050,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.004761904761904762
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 57.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 100.0,
+     "shots_before": 0
+    }
+   ],
+   "rank": 2,
+   "best_bot": 3.0,
+   "frags": 1.0,
+   "n_deaths": 4.0,
+   "steps": 1049,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.0009532888465204957
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": false,
+     "mode": "patrol",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": true,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 55.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 2,
+   "best_bot": 4.0,
+   "frags": 3.0,
+   "n_deaths": 3.0,
+   "steps": 1050,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.0009523809523809524
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "chase",
+     "health_before": 35.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 65.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 1,
+   "best_bot": 5.0,
+   "frags": 6.0,
+   "n_deaths": 4.0,
+   "steps": 1049,
+   "low_health_combat": 0.02001906577693041,
+   "close_no_shot": 0.032411820781696854
+  },
+  {
+   "deaths": [
+    {
+     "suicide": true,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "chase",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 0
+    }
+   ],
+   "rank": 1,
+   "best_bot": 5.0,
+   "frags": 5.0,
+   "n_deaths": 5.0,
+   "steps": 1049,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.030505243088655862
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 53.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 87.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 93.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 1,
+   "best_bot": 4.0,
+   "frags": 6.0,
+   "n_deaths": 4.0,
+   "steps": 1049,
+   "low_health_combat": 0.0009532888465204957,
+   "close_no_shot": 0.0
+  },
+  {
+   "deaths": [
+    {
+     "suicide": true,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 81.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": true,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 94.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 24.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 64.0,
+     "shots_before": 0
+    }
+   ],
+   "rank": 1,
+   "best_bot": 2.0,
+   "frags": 7.0,
+   "n_deaths": 5.0,
+   "steps": 1050,
+   "low_health_combat": 0.04285714285714286,
+   "close_no_shot": 0.006666666666666667
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 1,
+   "best_bot": 6.0,
+   "frags": 9.0,
+   "n_deaths": 2.0,
+   "steps": 1049,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.0076263107721639654
+  },
+  {
+   "deaths": [
+    {
+     "suicide": true,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 74.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 61.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 45.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": true,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 60.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 1,
+   "best_bot": 6.0,
+   "frags": 11.0,
+   "n_deaths": 7.0,
+   "steps": 1048,
+   "low_health_combat": 0.01717557251908397,
+   "close_no_shot": 0.007633587786259542
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": false,
+     "mode": "patrol",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 100.0,
+     "shots_before": 0
+    }
+   ],
+   "rank": 2,
+   "best_bot": 5.0,
+   "frags": 4.0,
+   "n_deaths": 2.0,
+   "steps": 1050,
+   "low_health_combat": 0.0,
+   "close_no_shot": 0.0
+  },
+  {
+   "deaths": [
+    {
+     "suicide": true,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": false,
+     "mode": "items",
+     "health_before": 41.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 100.0,
+     "shots_before": 1
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 1
+    }
+   ],
+   "rank": 1,
+   "best_bot": 3.0,
+   "frags": 7.0,
+   "n_deaths": 5.0,
+   "steps": 1049,
+   "low_health_combat": 0.0038131553860819827,
+   "close_no_shot": 0.011439466158245948
+  },
+  {
+   "deaths": [
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 0
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "items",
+     "health_before": 49.0,
+     "shots_before": 2
+    },
+    {
+     "suicide": false,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 100.0,
+     "shots_before": 3
+    },
+    {
+     "suicide": true,
+     "spawn": false,
+     "bot_seen": true,
+     "mode": "combat",
+     "health_before": 52.0,
+     "shots_before": 2
+    }
+   ],
+   "rank": 1,
+   "best_bot": 1.0,
+   "frags": 1.0,
+   "n_deaths": 4.0,
+   "steps": 1049,
+   "low_health_combat": 0.01334604385128694,
+   "close_no_shot": 0.0
+  }
+ ]
+}

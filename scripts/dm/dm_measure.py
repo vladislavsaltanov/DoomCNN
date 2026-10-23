@@ -1,7 +1,7 @@
 """D0 measurements on cig MAP01: physics per step, number of bots, labels and items, map specials,
 repeatability and distinct seeds.
 
-    python scripts/dm_measure.py   ->  reports/d0_env.md, reports/d0_env.png
+    python scripts/dm/dm_measure.py   ->  reports/dm/d0_env.md, reports/dm/d0_env.png
 """
 import argparse
 import hashlib
@@ -191,7 +191,7 @@ def report_md(phys, bots, names, items, picked, specials, same, distinct):
 if __name__ == '__main__':  # worker processes re-import this file
     ap = argparse.ArgumentParser()
     ap.add_argument('--workers', type=int, default=4)
-    ap.add_argument('--out', default='reports/d0_env')
+    ap.add_argument('--out', default='reports/dm/d0_env')
     a = ap.parse_args()
     phys = physics()
     print('physics', json.dumps(phys))

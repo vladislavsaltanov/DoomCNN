@@ -35,7 +35,7 @@ class DMCfg:
     hud: bool = False
     fine_turn_delta: float = 0.5  # fine turns: 2 degrees per step
     fine_zone: float = 0.15    # teacher turns finely within this share of the half screen
-    aim_margin: float = 0.0    # D1 grid (reports/d1_grid.md)
+    aim_margin: float = 0.0    # D1 grid (reports/dm/d1_grid.md)
     min_target_w: float = 0.0  # px at network resolution; narrower bots are not shot
     noise_p: float = 0.10
     bots: int = 7              # D0 decision
@@ -70,7 +70,7 @@ VAL_OOD_MATCHES = 5   # per val variant
 TEST_OOD_MATCHES = 8  # per test variant
 VARIANTS_DIR = 'variants_dm'
 
-# label names on cig MAP01 (probed); scripts/dm_discover_labels.py fails on any other name
+# label names on cig MAP01 (probed); scripts/dm/dm_discover_labels.py fails on any other name
 BOT = 'DoomPlayer'  # every bot, and the player itself (DeathmatchEnv filters it out)
 ITEM_KIND = {'Medikit': 'health', 'RocketAmmo': 'ammo', 'RocketBox': 'ammo',
              'GreenArmor': 'armor', 'BlueArmor': 'armor'}
