@@ -83,6 +83,7 @@ class DMPrivileged:
     weapon_ammo: float = 0.0
     slot_ammo: tuple = ()     # AMMO0..7
     owned: tuple = ()         # WEAPON0..7
+    vis_px: dict = field(default_factory=dict)  # label object id -> its pixels on the render (640x480)
 
 
 def _is_self(name, x, y, px, py):
@@ -152,7 +153,7 @@ class DeathmatchEnv:
         slot_ammo = tuple(float(v) for v in values[14:14 + N_SLOTS])
         owned = tuple(int(v) for v in values[14 + N_SLOTS:len(VARS)])
         p = self._priv
-        labels, objects = p.labels, p.objects
+        labels, objects, vis_px = p.labels, p.objects, p.vis_px
         if st is not None:
             sx, sy = c.width / c.render_w, c.height / c.render_h
             labels = [Label(int(lb.value), int(lb.object_id), lb.object_name, lb.x * sx, lb.y * sy,
@@ -161,10 +162,12 @@ class DeathmatchEnv:
                       if not _is_self(lb.object_name, lb.object_position_x, lb.object_position_y, px, py)]
             objects = [MapObject(int(o.id), o.name, o.position_x, o.position_y, o.angle)
                        for o in st.objects if not _is_self(o.name, o.position_x, o.position_y, px, py)]
+            counts = np.bincount(st.labels_buffer.ravel(), minlength=256)
+            vis_px = {lb.object_id: int(counts[lb.value]) for lb in labels}
         self._priv = DMPrivileged(labels, objects, self.sectors, px, py, angle, health, armor, ammo,
                                   bool(ready), frags, deaths, hits, damage, items, int(players),
                                   tuple(values[len(VARS):]), int(g.get_episode_time()), int(weapon), float(ammo),
-                                  slot_ammo, owned)
+                                  slot_ammo, owned, vis_px)
 
     def _obs(self, first):
         p = self._priv

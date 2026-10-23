@@ -154,6 +154,19 @@ def test_own_player_is_not_in_labels_or_objects(env):
         env.step(LEFT10)
 
 
+def test_visible_pixels_of_every_label(env):
+    # ViZDoom also labels objects hidden behind walls and ledges: their box is set, their pixels are 0
+    env.reset(35009)
+    seen = 0
+    for _ in range(60):
+        p = env.privileged()
+        assert set(p.vis_px) == {int(lb.object_id) for lb in p.labels}
+        assert all(v >= 0 for v in p.vis_px.values())
+        seen += sum(p.vis_px[int(lb.object_id)] > 0 for lb in p.labels if lb.object_name == BOT)
+        env.step(LEFT10)
+    assert seen > 0
+
+
 def test_sectors_are_static(env):
     env.reset(35000)
     a = env.sectors

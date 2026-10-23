@@ -62,6 +62,16 @@ def test_shoots_and_strafes_in_one_step():
     assert fire == 1 and move in SIDE_MOVES and TURN_DEG[turn] == 0.0 and weapon == 0
 
 
+def test_a_bot_barely_on_screen_is_not_seen():
+    # a sliver over a step or past a pillar: the network can hardly see it and shots there hit the wall
+    cfg = replace(DM, min_vis_px=200.0)
+    t = DMTeacher(cfg)
+    _, _, fire, _ = t(obs(), priv(labels=[bot(1, 0.0, 600)], vis_px={1: 30}))
+    assert fire == 0 and t.mode != 'combat'
+    _, _, fire, _ = DMTeacher(cfg)(obs(), priv(labels=[bot(1, 0.0, 600)], vis_px={1: 500}))
+    assert fire == 1
+
+
 def test_turns_towards_target_with_big_turn():
     _, turn, fire, _ = DMTeacher(DM)(obs(), priv(labels=[bot(1, 40.0, 600)]))
     assert TURN_DEG[turn] == 40.0 and fire == 0

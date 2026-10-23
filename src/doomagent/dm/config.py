@@ -40,6 +40,7 @@ class DMCfg:
     weapon_first: float = 256.0  # with only weapons below gear_rank: fight bots closer than this, else gear up; 0: off (E1 cycle: +1.40 [+0.25, +2.60] on 40 fresh seeds)
     armor_below: float = 0.0   # go for armor below this much armor; 0: off
     retreat_health: float = 0.0  # leave a fight for a medikit below this health; 0: off
+    min_vis_px: float = 0.0    # a bot with fewer pixels on the 640x480 render is not seen (a sliver past a wall); 0: off
     seg_len: int = 32          # M1 training windows, steps
     burn_in: int = 8           # steps that only warm up the GRU in windows that start mid-life
 

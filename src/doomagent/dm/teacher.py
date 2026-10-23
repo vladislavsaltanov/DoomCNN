@@ -62,10 +62,13 @@ def bearing(px, py, angle, x, y):
     return target_angle(px, py, angle, x, y)
 
 
-def visible_bots(labels, px, py, screen_w):
+def visible_bots(labels, px, py, screen_w, vis_px=None, min_px=0.0):
+    # bots on screen; with min_px, not those showing fewer pixels (unknown counts pass)
     out = []
     for lb in labels:
         if lb.object_name != BOT:
+            continue
+        if min_px > 0.0 and vis_px and vis_px.get(int(lb.object_id), math.inf) < min_px:
             continue
         dist = math.hypot(lb.object_position_x - px, lb.object_position_y - py)
         if dist < 1.0:  # the player's own label, if the env let one through
@@ -120,7 +123,7 @@ class DMTeacher:
         for _, _, x, y in self.spots:
             if math.hypot(x - me[0], y - me[1]) < PICKUP_R:
                 self.used[(x, y)] = priv.tic
-        bots = visible_bots(priv.labels, priv.px, priv.py, c.width)
+        bots = visible_bots(priv.labels, priv.px, priv.py, c.width, priv.vis_px, c.min_vis_px)
         seen = {e.id for e in bots}
         self.tracks = {k: v for k, v in self.tracks.items() if k in seen}
         threats, shots = [], {}

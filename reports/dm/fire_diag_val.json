@@ -1,0 +1,8128 @@
+{
+ "summary": {
+  "steps": 10496,
+  "fire_share": 0.10461128048780488,
+  "hitscan": {
+   "n": 1008,
+   "hit": 0.5674603174603174
+  },
+  "by_los": {
+   "True": {
+    "n": 958,
+    "hit": 0.581419624217119
+   },
+   "False": {
+    "n": 50,
+    "hit": 0.3
+   }
+  },
+  "by_vis": {
+   "0-50": {
+    "n": 150,
+    "hit": 0.12666666666666668
+   },
+   "50-200": {
+    "n": 237,
+    "hit": 0.3924050632911392
+   },
+   "200-800": {
+    "n": 238,
+    "hit": 0.7058823529411765
+   },
+   "800-3200": {
+    "n": 336,
+    "hit": 0.7767857142857143
+   },
+   "3200-": {
+    "n": 47,
+    "hit": 0.6595744680851063
+   }
+  },
+  "by_weapon": {
+   "chaingun": {
+    "n": 780,
+    "hit": 0.6346153846153846
+   },
+   "pistol": {
+    "n": 158,
+    "hit": 0.23417721518987342
+   },
+   "super shotgun": {
+    "n": 70,
+    "hit": 0.5714285714285714
+   }
+  },
+  "bot_labels": {
+   "n": 11400,
+   "blocked": 695,
+   "blocked_small": 614,
+   "blocked_share": 0.06096491228070176
+  }
+ },
+ "shots": [
+  {
+   "vis": 841,
+   "los": true,
+   "hit": true,
+   "dist": 395.75144307566825,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1233,
+   "los": true,
+   "hit": true,
+   "dist": 335.6675803096007,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1811,
+   "los": true,
+   "hit": true,
+   "dist": 288.57400256855044,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 745,
+   "los": true,
+   "hit": true,
+   "dist": 469.31898189257754,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 14,
+   "los": false,
+   "hit": false,
+   "dist": 215.33977694866164,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1174,
+   "los": true,
+   "hit": false,
+   "dist": 290.45654901388326,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 31,
+   "los": false,
+   "hit": false,
+   "dist": 211.04914310724533,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1881,
+   "los": true,
+   "hit": false,
+   "dist": 207.59760457729254,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 2604,
+   "los": true,
+   "hit": false,
+   "dist": 196.1787535273404,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 3368,
+   "los": true,
+   "hit": true,
+   "dist": 186.6273107876507,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1997,
+   "los": true,
+   "hit": false,
+   "dist": 241.97342206460246,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1683,
+   "los": true,
+   "hit": false,
+   "dist": 250.1360332882487,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 2023,
+   "los": true,
+   "hit": false,
+   "dist": 256.8687395758273,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1811,
+   "los": true,
+   "hit": false,
+   "dist": 288.5069965311876,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 11053,
+   "los": true,
+   "hit": false,
+   "dist": 62.66599875651172,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 10107,
+   "los": true,
+   "hit": false,
+   "dist": 66.76247964668252,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1348,
+   "los": true,
+   "hit": true,
+   "dist": 341.24988468635564,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1275,
+   "los": true,
+   "hit": true,
+   "dist": 351.64449033990695,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1360,
+   "los": true,
+   "hit": true,
+   "dist": 335.78568285620037,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1237,
+   "los": true,
+   "hit": false,
+   "dist": 350.94405892472855,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1339,
+   "los": true,
+   "hit": false,
+   "dist": 343.7414792031054,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1327,
+   "los": true,
+   "hit": false,
+   "dist": 344.78585391726915,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1323,
+   "los": true,
+   "hit": false,
+   "dist": 345.25606788718176,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1087,
+   "los": true,
+   "hit": true,
+   "dist": 354.7386627906734,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1232,
+   "los": true,
+   "hit": false,
+   "dist": 354.7731637762298,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1521,
+   "los": true,
+   "hit": false,
+   "dist": 316.48014522695115,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1592,
+   "los": true,
+   "hit": false,
+   "dist": 301.3859416911512,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1214,
+   "los": true,
+   "hit": false,
+   "dist": 359.5685187059321,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 10231,
+   "los": true,
+   "hit": false,
+   "dist": 52.66814231870925,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 5407,
+   "los": true,
+   "hit": false,
+   "dist": 58.658607070431216,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 3465,
+   "los": true,
+   "hit": false,
+   "dist": 81.2430717213711,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 7970,
+   "los": true,
+   "hit": true,
+   "dist": 128.24229343605302,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1594,
+   "los": true,
+   "hit": true,
+   "dist": 302.9044347680166,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1561,
+   "los": true,
+   "hit": true,
+   "dist": 309.95870756794534,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1348,
+   "los": true,
+   "hit": true,
+   "dist": 341.34342488165015,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1258,
+   "los": true,
+   "hit": true,
+   "dist": 348.72982867339897,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1198,
+   "los": true,
+   "hit": true,
+   "dist": 356.16731696641517,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1246,
+   "los": true,
+   "hit": false,
+   "dist": 350.70582734678345,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1317,
+   "los": true,
+   "hit": false,
+   "dist": 342.3747278529703,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1325,
+   "los": true,
+   "hit": false,
+   "dist": 344.8555041058321,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 26173,
+   "los": true,
+   "hit": false,
+   "dist": 42.481017876630254,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 5246,
+   "los": true,
+   "hit": true,
+   "dist": 171.17733623044452,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 3,
+   "los": true,
+   "hit": false,
+   "dist": 1091.1014660979333,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 73,
+   "los": true,
+   "hit": true,
+   "dist": 968.3215489999023,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 82,
+   "los": true,
+   "hit": true,
+   "dist": 968.1707513829338,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 91,
+   "los": true,
+   "hit": false,
+   "dist": 1043.8452392078837,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 90,
+   "los": true,
+   "hit": true,
+   "dist": 1168.4902371983235,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 91,
+   "los": true,
+   "hit": true,
+   "dist": 1168.3895508367523,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 83,
+   "los": true,
+   "hit": false,
+   "dist": 1166.0343557477647,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 58,
+   "los": true,
+   "hit": true,
+   "dist": 1004.1854770515903,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 22,
+   "los": false,
+   "hit": true,
+   "dist": 1048.3750713624534,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 650,
+   "los": true,
+   "hit": true,
+   "dist": 488.6744021252467,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 862,
+   "los": true,
+   "hit": true,
+   "dist": 421.0982578629763,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 20396,
+   "los": true,
+   "hit": true,
+   "dist": 81.82390783064638,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 3399,
+   "los": true,
+   "hit": true,
+   "dist": 200.60824407008397,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 628.0702676673068,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 820.2950511435884,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 677.1930208288936,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 559.0290863874148,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1219,
+   "los": true,
+   "hit": true,
+   "dist": 346.3213718899625,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1343,
+   "los": true,
+   "hit": true,
+   "dist": 305.0304735179417,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 904,
+   "los": true,
+   "hit": false,
+   "dist": 415.93862137948577,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 551,
+   "los": true,
+   "hit": true,
+   "dist": 456.89621953201856,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 627,
+   "los": true,
+   "hit": true,
+   "dist": 495.1161245828168,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 66,
+   "los": true,
+   "hit": true,
+   "dist": 754.3294936451592,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 262,
+   "los": true,
+   "hit": true,
+   "dist": 783.6565433135845,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 724.3769027203214,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 701.3749303840507,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 149,
+   "los": false,
+   "hit": true,
+   "dist": 801.1643774900773,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 4,
+   "los": false,
+   "hit": false,
+   "dist": 784.4617356488424,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 37,
+   "los": false,
+   "hit": false,
+   "dist": 746.0371110504954,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 145,
+   "los": false,
+   "hit": false,
+   "dist": 675.068002754741,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 21,
+   "los": false,
+   "hit": true,
+   "dist": 695.9898503984517,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 175,
+   "los": true,
+   "hit": true,
+   "dist": 866.6413588340155,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 206,
+   "los": true,
+   "hit": true,
+   "dist": 872.7445477764492,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 244,
+   "los": true,
+   "hit": true,
+   "dist": 801.5308428156509,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 1267.146941532398,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 878.0162433423948,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 789.0570210958117,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": false,
+   "hit": false,
+   "dist": 1176.9142186229935,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": false,
+   "hit": false,
+   "dist": 1166.606813866144,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1025.4204255604725,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1036.520654781992,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1037.9655932325948,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1052.2380148623618,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1113.0169044533106,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1120.9734698476684,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1149.5454139599226,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1181.8353323064396,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 898.0319951644155,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 856.2808771153076,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 508.1261531116638,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1088.9910372501708,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1080.338675135731,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1086.9172581040827,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1088.0146351315896,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 430.11051519091154,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 421.82525328960884,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 389.20494605814,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 332.973100388886,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1241.4661651243068,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1206.6577553220254,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 933.0986566100553,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 363.87620010889196,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 454.91920798147476,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": false,
+   "hit": false,
+   "dist": 483.2589190602799,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 537.673208952749,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 287.41869010089573,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 363.93804146163063,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 239.80063115730988,
+   "weapon": "super shotgun",
+   "seed": 35000
+  },
+  {
+   "vis": 1268,
+   "los": true,
+   "hit": true,
+   "dist": 327.7880736059948,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1379,
+   "los": true,
+   "hit": true,
+   "dist": 323.22723840749757,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 935,
+   "los": true,
+   "hit": true,
+   "dist": 408.72592319233814,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 865,
+   "los": true,
+   "hit": true,
+   "dist": 412.75035464481505,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 953,
+   "los": true,
+   "hit": false,
+   "dist": 400.10707278379743,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1221,
+   "los": true,
+   "hit": true,
+   "dist": 355.931490666984,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1130,
+   "los": true,
+   "hit": true,
+   "dist": 364.5710728918861,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1138,
+   "los": true,
+   "hit": true,
+   "dist": 361.80406722913807,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1082,
+   "los": true,
+   "hit": false,
+   "dist": 361.9691836932064,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1330,
+   "los": true,
+   "hit": true,
+   "dist": 344.6740027822962,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1191,
+   "los": true,
+   "hit": true,
+   "dist": 357.2592122508878,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1222,
+   "los": true,
+   "hit": true,
+   "dist": 358.71086771509647,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1072,
+   "los": true,
+   "hit": true,
+   "dist": 367.70818185271474,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1109,
+   "los": true,
+   "hit": false,
+   "dist": 368.3213265319791,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1209,
+   "los": true,
+   "hit": true,
+   "dist": 361.81358825919835,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1138,
+   "los": true,
+   "hit": true,
+   "dist": 376.0548320126532,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 1026,
+   "los": true,
+   "hit": true,
+   "dist": 373.3150888679722,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 40,
+   "los": true,
+   "hit": false,
+   "dist": 1000.3441394863322,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 144,
+   "los": true,
+   "hit": false,
+   "dist": 979.6501902504464,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 143,
+   "los": true,
+   "hit": false,
+   "dist": 966.9895387556614,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 180,
+   "los": true,
+   "hit": false,
+   "dist": 931.8912485033812,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 30,
+   "los": true,
+   "hit": false,
+   "dist": 943.7164260456921,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 10,
+   "los": true,
+   "hit": false,
+   "dist": 979.4757933354673,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 110,
+   "los": true,
+   "hit": false,
+   "dist": 1006.8341912006305,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1031.0567507903204,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1032.7945876935075,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 68,
+   "los": true,
+   "hit": false,
+   "dist": 1009.5141003827384,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 160,
+   "los": true,
+   "hit": false,
+   "dist": 969.4002887175611,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 87,
+   "los": true,
+   "hit": false,
+   "dist": 1229.6259364093482,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1180.3708707385417,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1119.7360705260862,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1057.2565032935631,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 992.4187256129768,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 931.5683875328646,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 16,
+   "los": true,
+   "hit": false,
+   "dist": 831.4328449155765,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 27,
+   "los": true,
+   "hit": false,
+   "dist": 785.2778336671474,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 80,
+   "los": true,
+   "hit": false,
+   "dist": 659.5463447714403,
+   "weapon": "chaingun",
+   "seed": 35000
+  },
+  {
+   "vis": 86,
+   "los": true,
+   "hit": false,
+   "dist": 1126.4413156354742,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 4490,
+   "los": false,
+   "hit": false,
+   "dist": 117.50015977862762,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 48811,
+   "los": true,
+   "hit": false,
+   "dist": 50.052557652049416,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 3357,
+   "los": true,
+   "hit": false,
+   "dist": 213.8082275006137,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 2954,
+   "los": true,
+   "hit": false,
+   "dist": 226.66737592831308,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 2437,
+   "los": true,
+   "hit": true,
+   "dist": 236.62024865233724,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 2620,
+   "los": true,
+   "hit": true,
+   "dist": 242.83815253882918,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 2372,
+   "los": true,
+   "hit": true,
+   "dist": 253.32887891696905,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 1689,
+   "los": true,
+   "hit": true,
+   "dist": 287.56559862914617,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 441,
+   "los": false,
+   "hit": true,
+   "dist": 351.55557596634316,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 1045,
+   "los": true,
+   "hit": true,
+   "dist": 370.1012771841687,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 759,
+   "los": true,
+   "hit": true,
+   "dist": 400.47051773359277,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 536,
+   "los": true,
+   "hit": true,
+   "dist": 543.9352928155525,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 419,
+   "los": true,
+   "hit": true,
+   "dist": 620.1411115432007,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 1156,
+   "los": true,
+   "hit": true,
+   "dist": 345.9649517180448,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 902,
+   "los": true,
+   "hit": true,
+   "dist": 392.09387708955364,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 2574,
+   "los": true,
+   "hit": true,
+   "dist": 246.39322535728658,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 2340,
+   "los": true,
+   "hit": true,
+   "dist": 254.8149714836967,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 200,
+   "los": true,
+   "hit": true,
+   "dist": 430.645054748279,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 771,
+   "los": true,
+   "hit": true,
+   "dist": 438.3829919679726,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 754,
+   "los": true,
+   "hit": true,
+   "dist": 458.73389009446066,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 690,
+   "los": true,
+   "hit": true,
+   "dist": 461.8540826901593,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 1478,
+   "los": true,
+   "hit": true,
+   "dist": 345.27920764937846,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 1072,
+   "los": true,
+   "hit": true,
+   "dist": 373.3661204885666,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 849,
+   "los": true,
+   "hit": true,
+   "dist": 413.9090670382648,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 576,
+   "los": true,
+   "hit": true,
+   "dist": 500.4105738345861,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 492,
+   "los": true,
+   "hit": true,
+   "dist": 528.572896395817,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 456,
+   "los": true,
+   "hit": true,
+   "dist": 571.2626902948579,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 393,
+   "los": true,
+   "hit": true,
+   "dist": 624.2479698624658,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 303,
+   "los": true,
+   "hit": true,
+   "dist": 640.7083914456961,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 493,
+   "los": true,
+   "hit": true,
+   "dist": 584.5221057245319,
+   "weapon": "chaingun",
+   "seed": 35001
+  },
+  {
+   "vis": 166,
+   "los": true,
+   "hit": false,
+   "dist": 929.3913687246453,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 175,
+   "los": true,
+   "hit": false,
+   "dist": 932.2123042968689,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 40,
+   "los": true,
+   "hit": false,
+   "dist": 934.6381517963418,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 757,
+   "los": true,
+   "hit": false,
+   "dist": 459.6808444817606,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 793,
+   "los": true,
+   "hit": true,
+   "dist": 439.6524418085359,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 267,
+   "los": true,
+   "hit": false,
+   "dist": 449.91831798287177,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 658,
+   "los": true,
+   "hit": false,
+   "dist": 500.7264580669456,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 548,
+   "los": true,
+   "hit": false,
+   "dist": 482.93521007253827,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 1151,
+   "los": true,
+   "hit": true,
+   "dist": 363.3994279912346,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 1235,
+   "los": true,
+   "hit": true,
+   "dist": 352.47089359562483,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 899,
+   "los": true,
+   "hit": false,
+   "dist": 360.95897084879977,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 805,
+   "los": true,
+   "hit": false,
+   "dist": 380.69657930416633,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 1128,
+   "los": true,
+   "hit": false,
+   "dist": 367.7092923362712,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 1377,
+   "los": true,
+   "hit": false,
+   "dist": 341.2386055987288,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 1059,
+   "los": true,
+   "hit": false,
+   "dist": 342.9958135760918,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 1201,
+   "los": true,
+   "hit": false,
+   "dist": 355.3490189600512,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 1254,
+   "los": true,
+   "hit": true,
+   "dist": 346.9605479904608,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 3566,
+   "los": true,
+   "hit": true,
+   "dist": 191.31112586891322,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 615,
+   "los": true,
+   "hit": false,
+   "dist": 470.6080339519897,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 663,
+   "los": true,
+   "hit": false,
+   "dist": 506.5389208046596,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 508,
+   "los": true,
+   "hit": true,
+   "dist": 521.8288307498536,
+   "weapon": "pistol",
+   "seed": 35002
+  },
+  {
+   "vis": 889,
+   "los": true,
+   "hit": true,
+   "dist": 419.6120300462562,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 936,
+   "los": true,
+   "hit": true,
+   "dist": 420.4071579709179,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 814,
+   "los": true,
+   "hit": true,
+   "dist": 437.86797586019196,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 760,
+   "los": true,
+   "hit": true,
+   "dist": 443.3177097756463,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 751,
+   "los": true,
+   "hit": true,
+   "dist": 446.7638976009149,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 693,
+   "los": true,
+   "hit": true,
+   "dist": 449.39393456558923,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 706,
+   "los": true,
+   "hit": true,
+   "dist": 458.7653690643423,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 660,
+   "los": true,
+   "hit": true,
+   "dist": 460.724145406016,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 694,
+   "los": true,
+   "hit": true,
+   "dist": 461.9835597082439,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 134,
+   "los": true,
+   "hit": true,
+   "dist": 1091.9139445121923,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 126,
+   "los": true,
+   "hit": true,
+   "dist": 1087.1106943935831,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 319,
+   "los": true,
+   "hit": true,
+   "dist": 686.4142705929777,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 182,
+   "los": true,
+   "hit": true,
+   "dist": 884.9411863727603,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 204,
+   "los": true,
+   "hit": true,
+   "dist": 883.3437622823894,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 215,
+   "los": true,
+   "hit": true,
+   "dist": 798.7314510328193,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 258,
+   "los": true,
+   "hit": true,
+   "dist": 758.536233279401,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1312,
+   "los": true,
+   "hit": true,
+   "dist": 347.6734157143732,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1134,
+   "los": true,
+   "hit": true,
+   "dist": 372.04089881400796,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1147,
+   "los": true,
+   "hit": true,
+   "dist": 359.63687249782674,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1051,
+   "los": true,
+   "hit": false,
+   "dist": 377.8783936965521,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 398,
+   "los": true,
+   "hit": true,
+   "dist": 545.3948737431772,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 111,
+   "los": true,
+   "hit": true,
+   "dist": 928.594710200645,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1089,
+   "los": true,
+   "hit": true,
+   "dist": 380.26449236432535,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1105,
+   "los": true,
+   "hit": true,
+   "dist": 377.0287343255548,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 150,
+   "los": true,
+   "hit": true,
+   "dist": 1041.3929340952564,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 771,
+   "los": true,
+   "hit": true,
+   "dist": 438.02025144542773,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 103,
+   "los": true,
+   "hit": false,
+   "dist": 1103.7916088042869,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 382,
+   "los": true,
+   "hit": true,
+   "dist": 663.0136821133174,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 263,
+   "los": true,
+   "hit": true,
+   "dist": 653.6053087207837,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 3490,
+   "los": true,
+   "hit": true,
+   "dist": 188.77504397923144,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 2855,
+   "los": true,
+   "hit": true,
+   "dist": 208.4422660610265,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 2353,
+   "los": true,
+   "hit": true,
+   "dist": 234.57883411237074,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1762,
+   "los": true,
+   "hit": true,
+   "dist": 264.6542964127021,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1805,
+   "los": true,
+   "hit": true,
+   "dist": 297.1421397127954,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 73,
+   "los": true,
+   "hit": false,
+   "dist": 1169.6728496278897,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 200,
+   "los": true,
+   "hit": true,
+   "dist": 845.305972623133,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 327,
+   "los": true,
+   "hit": true,
+   "dist": 677.3094172938127,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 290,
+   "los": true,
+   "hit": true,
+   "dist": 743.4210629210907,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 221,
+   "los": true,
+   "hit": true,
+   "dist": 796.2328981839053,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 225,
+   "los": true,
+   "hit": true,
+   "dist": 812.0559487423822,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 207,
+   "los": true,
+   "hit": true,
+   "dist": 812.1260873383916,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 235,
+   "los": true,
+   "hit": true,
+   "dist": 816.149413405576,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 211,
+   "los": true,
+   "hit": true,
+   "dist": 817.024116321141,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 59,
+   "los": true,
+   "hit": false,
+   "dist": 1235.7109621032218,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 134,
+   "los": true,
+   "hit": true,
+   "dist": 1071.5499928386776,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 116,
+   "los": true,
+   "hit": false,
+   "dist": 1071.5627416782481,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 97,
+   "los": true,
+   "hit": false,
+   "dist": 1075.092598156633,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 106,
+   "los": true,
+   "hit": false,
+   "dist": 1075.3709638189528,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 129,
+   "los": true,
+   "hit": true,
+   "dist": 1079.1844646480042,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 104,
+   "los": true,
+   "hit": false,
+   "dist": 1079.661319170832,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 97,
+   "los": true,
+   "hit": false,
+   "dist": 1083.9444737995757,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 84,
+   "los": true,
+   "hit": false,
+   "dist": 1084.2705595867187,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 142,
+   "los": true,
+   "hit": true,
+   "dist": 1088.1143075366276,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 98,
+   "los": true,
+   "hit": false,
+   "dist": 1087.9808342452318,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 121,
+   "los": true,
+   "hit": false,
+   "dist": 1077.8901665267113,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 73,
+   "los": true,
+   "hit": false,
+   "dist": 1079.2518647287613,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 88,
+   "los": true,
+   "hit": false,
+   "dist": 1079.9402108316842,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 71,
+   "los": true,
+   "hit": false,
+   "dist": 1080.4980719680054,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 137,
+   "los": true,
+   "hit": true,
+   "dist": 1085.084072258834,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 127,
+   "los": true,
+   "hit": true,
+   "dist": 1086.0331461251556,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 117,
+   "los": true,
+   "hit": false,
+   "dist": 1087.3506838821736,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 254,
+   "los": true,
+   "hit": true,
+   "dist": 728.6577502834172,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 289,
+   "los": true,
+   "hit": true,
+   "dist": 729.9905983897308,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 273,
+   "los": true,
+   "hit": true,
+   "dist": 732.8746625770309,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 268,
+   "los": true,
+   "hit": true,
+   "dist": 737.6267297461442,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 273,
+   "los": true,
+   "hit": true,
+   "dist": 738.266395352863,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 1209,
+   "los": true,
+   "hit": true,
+   "dist": 375.5478514868682,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 268,
+   "los": true,
+   "hit": true,
+   "dist": 785.1142425765796,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 340,
+   "los": true,
+   "hit": true,
+   "dist": 514.7488249458456,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 467,
+   "los": true,
+   "hit": true,
+   "dist": 534.5333787998501,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 281,
+   "los": true,
+   "hit": true,
+   "dist": 515.3958805685666,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 107,
+   "los": false,
+   "hit": true,
+   "dist": 635.2146608439805,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 124,
+   "los": true,
+   "hit": true,
+   "dist": 832.7944152025308,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 191,
+   "los": true,
+   "hit": true,
+   "dist": 902.8242325477025,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 47,
+   "los": true,
+   "hit": false,
+   "dist": 1165.0796698412128,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 63,
+   "los": true,
+   "hit": false,
+   "dist": 1163.4867307073685,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 47,
+   "los": true,
+   "hit": false,
+   "dist": 1163.6231113260726,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 48,
+   "los": true,
+   "hit": false,
+   "dist": 1165.4326645145245,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 47,
+   "los": true,
+   "hit": false,
+   "dist": 1516.5512628846204,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 49,
+   "los": true,
+   "hit": false,
+   "dist": 1546.1601751427074,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 24,
+   "los": true,
+   "hit": false,
+   "dist": 1542.4676686854832,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 14,
+   "los": true,
+   "hit": false,
+   "dist": 1542.9395196512091,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 112,
+   "los": true,
+   "hit": true,
+   "dist": 926.1713430722507,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 120,
+   "los": true,
+   "hit": true,
+   "dist": 927.236661447297,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 32,
+   "los": true,
+   "hit": false,
+   "dist": 1671.8324242523527,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 27,
+   "los": true,
+   "hit": false,
+   "dist": 1606.2924451826202,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 133,
+   "los": true,
+   "hit": true,
+   "dist": 993.7570169379109,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 161,
+   "los": true,
+   "hit": true,
+   "dist": 761.5681085035062,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 185,
+   "los": true,
+   "hit": true,
+   "dist": 716.7869429506543,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 208,
+   "los": true,
+   "hit": true,
+   "dist": 888.7220118652752,
+   "weapon": "chaingun",
+   "seed": 35002
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 229.19063169812364,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 4709,
+   "los": true,
+   "hit": true,
+   "dist": 178.7072882152514,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 353.88520743433025,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 354.2392198965825,
+   "weapon": "super shotgun",
+   "seed": 35002
+  },
+  {
+   "vis": 320,
+   "los": true,
+   "hit": false,
+   "dist": 701.9692410955557,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 1022,
+   "los": true,
+   "hit": false,
+   "dist": 401.3123859278017,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 1122,
+   "los": true,
+   "hit": true,
+   "dist": 376.67346675600186,
+   "weapon": "super shotgun",
+   "seed": 35003
+  },
+  {
+   "vis": 1423,
+   "los": true,
+   "hit": true,
+   "dist": 330.8303403736532,
+   "weapon": "super shotgun",
+   "seed": 35003
+  },
+  {
+   "vis": 147,
+   "los": true,
+   "hit": false,
+   "dist": 1075.2892201100944,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 147,
+   "los": true,
+   "hit": true,
+   "dist": 1065.2980505794828,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 131,
+   "los": true,
+   "hit": false,
+   "dist": 1052.6176098630747,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 92,
+   "los": true,
+   "hit": false,
+   "dist": 1036.6726857463423,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 172,
+   "los": true,
+   "hit": false,
+   "dist": 889.4444532878107,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 96,
+   "los": false,
+   "hit": false,
+   "dist": 638.3264289173164,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 332,
+   "los": true,
+   "hit": false,
+   "dist": 692.5684900856444,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 284,
+   "los": true,
+   "hit": false,
+   "dist": 782.338755749313,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 260,
+   "los": true,
+   "hit": true,
+   "dist": 783.5601829457182,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 151,
+   "los": true,
+   "hit": false,
+   "dist": 1031.5439229452904,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 660,
+   "los": true,
+   "hit": false,
+   "dist": 482.09753216380574,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 60,
+   "los": true,
+   "hit": false,
+   "dist": 1196.588810992854,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 228,
+   "los": true,
+   "hit": false,
+   "dist": 833.1704496007106,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 348,
+   "los": true,
+   "hit": false,
+   "dist": 674.1446230461506,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 4,
+   "los": true,
+   "hit": false,
+   "dist": 1051.5632516820874,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 38,
+   "los": true,
+   "hit": false,
+   "dist": 1052.0967386906043,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 61,
+   "los": true,
+   "hit": false,
+   "dist": 1052.6099228797805,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 78,
+   "los": true,
+   "hit": false,
+   "dist": 1055.9880558897219,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 70,
+   "los": true,
+   "hit": false,
+   "dist": 1059.814193339843,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 75,
+   "los": true,
+   "hit": false,
+   "dist": 1085.0067200330525,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 120,
+   "los": true,
+   "hit": false,
+   "dist": 1081.9764911867514,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 203,
+   "los": true,
+   "hit": false,
+   "dist": 823.5417864590229,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 383,
+   "los": true,
+   "hit": false,
+   "dist": 609.6454278696419,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 534,
+   "los": true,
+   "hit": true,
+   "dist": 548.8791841558893,
+   "weapon": "pistol",
+   "seed": 35003
+  },
+  {
+   "vis": 41,
+   "los": true,
+   "hit": false,
+   "dist": 1424.841993269976,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 2,
+   "los": true,
+   "hit": false,
+   "dist": 1383.480312373769,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 75,
+   "los": true,
+   "hit": false,
+   "dist": 1204.463187074092,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 4,
+   "los": true,
+   "hit": false,
+   "dist": 1160.1256371445536,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 107,
+   "los": true,
+   "hit": true,
+   "dist": 1093.292121137259,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 143,
+   "los": true,
+   "hit": true,
+   "dist": 1043.1926516935307,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 165,
+   "los": true,
+   "hit": true,
+   "dist": 987.8650952351197,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 128,
+   "los": true,
+   "hit": true,
+   "dist": 908.660854471371,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 206,
+   "los": true,
+   "hit": true,
+   "dist": 859.5178828137011,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 297,
+   "los": true,
+   "hit": true,
+   "dist": 654.3927238872888,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 30,
+   "los": true,
+   "hit": false,
+   "dist": 1408.3009044280493,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 77,
+   "los": true,
+   "hit": false,
+   "dist": 1380.1988824167101,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 81,
+   "los": true,
+   "hit": false,
+   "dist": 1279.661758717068,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 105,
+   "los": true,
+   "hit": false,
+   "dist": 1147.5641392010646,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 63,
+   "los": true,
+   "hit": false,
+   "dist": 1144.7345525474877,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 148,
+   "los": true,
+   "hit": false,
+   "dist": 1027.4961963600567,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 241,
+   "los": true,
+   "hit": false,
+   "dist": 712.0832767752079,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 197,
+   "los": true,
+   "hit": true,
+   "dist": 846.9408840371241,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 180,
+   "los": true,
+   "hit": true,
+   "dist": 889.0261783127391,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 167,
+   "los": true,
+   "hit": true,
+   "dist": 969.6224682224886,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 145,
+   "los": true,
+   "hit": true,
+   "dist": 1004.4884710645314,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 143,
+   "los": true,
+   "hit": true,
+   "dist": 1032.602632116819,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 120,
+   "los": true,
+   "hit": false,
+   "dist": 1136.874380066187,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 86,
+   "los": true,
+   "hit": false,
+   "dist": 1119.1599985195085,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 94,
+   "los": true,
+   "hit": false,
+   "dist": 1116.5996457419637,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 89,
+   "los": true,
+   "hit": false,
+   "dist": 1123.1953715973684,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 123,
+   "los": true,
+   "hit": true,
+   "dist": 1063.5077170764287,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 149,
+   "los": true,
+   "hit": true,
+   "dist": 1044.97875608819,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 751,
+   "los": true,
+   "hit": true,
+   "dist": 432.58751099746587,
+   "weapon": "chaingun",
+   "seed": 35003
+  },
+  {
+   "vis": 59,
+   "los": true,
+   "hit": false,
+   "dist": 816.238125218671,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 779.6039368033452,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 12,
+   "los": true,
+   "hit": false,
+   "dist": 739.1018471506883,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 132,
+   "los": true,
+   "hit": false,
+   "dist": 684.1945858301822,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 153,
+   "los": true,
+   "hit": false,
+   "dist": 651.5326078073624,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 88,
+   "los": true,
+   "hit": false,
+   "dist": 676.9157422031769,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 354,
+   "los": true,
+   "hit": false,
+   "dist": 665.4018241928222,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 365,
+   "los": true,
+   "hit": false,
+   "dist": 681.4556913315299,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 110,
+   "los": true,
+   "hit": false,
+   "dist": 1100.8220977288745,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 120,
+   "los": true,
+   "hit": true,
+   "dist": 1095.442406283495,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 121,
+   "los": true,
+   "hit": false,
+   "dist": 1148.5417081147532,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 156,
+   "los": true,
+   "hit": false,
+   "dist": 996.518008551927,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 82,
+   "los": true,
+   "hit": false,
+   "dist": 902.1600294527964,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 159,
+   "los": true,
+   "hit": true,
+   "dist": 912.8559507029687,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 184,
+   "los": true,
+   "hit": false,
+   "dist": 879.3986367641324,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 91,
+   "los": true,
+   "hit": false,
+   "dist": 719.6601544047783,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 196,
+   "los": true,
+   "hit": false,
+   "dist": 762.6400326364915,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 198,
+   "los": true,
+   "hit": true,
+   "dist": 769.830062159349,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 127,
+   "los": true,
+   "hit": false,
+   "dist": 911.1369141157223,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 182,
+   "los": true,
+   "hit": true,
+   "dist": 871.6542895541144,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 190,
+   "los": true,
+   "hit": false,
+   "dist": 816.2677601136339,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 133,
+   "los": true,
+   "hit": true,
+   "dist": 847.5001929029406,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 91,
+   "los": true,
+   "hit": false,
+   "dist": 886.7794076373954,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 140,
+   "los": true,
+   "hit": false,
+   "dist": 930.0167653567632,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 151,
+   "los": true,
+   "hit": false,
+   "dist": 957.1733223407846,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 136,
+   "los": true,
+   "hit": false,
+   "dist": 1010.8105274019687,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 109,
+   "los": true,
+   "hit": true,
+   "dist": 993.3761866642755,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 39,
+   "los": true,
+   "hit": false,
+   "dist": 917.6803505838293,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 49,
+   "los": true,
+   "hit": false,
+   "dist": 976.9837470665243,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 217,
+   "los": true,
+   "hit": false,
+   "dist": 847.636273194291,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 192,
+   "los": true,
+   "hit": true,
+   "dist": 875.1004231204722,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 100,
+   "los": true,
+   "hit": false,
+   "dist": 917.8726253429979,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 118,
+   "los": true,
+   "hit": false,
+   "dist": 922.9562193897295,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 195,
+   "los": true,
+   "hit": false,
+   "dist": 904.6918041079541,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 2,
+   "los": true,
+   "hit": false,
+   "dist": 933.2618622699615,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 933.7957798423724,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 27,
+   "los": true,
+   "hit": false,
+   "dist": 932.8744694023522,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 64,
+   "los": true,
+   "hit": false,
+   "dist": 1013.897931563868,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 79,
+   "los": true,
+   "hit": false,
+   "dist": 909.3855359107864,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 136,
+   "los": true,
+   "hit": true,
+   "dist": 845.3272604944382,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 121,
+   "los": true,
+   "hit": false,
+   "dist": 799.385610418747,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 183,
+   "los": true,
+   "hit": false,
+   "dist": 797.7687846937682,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 170,
+   "los": true,
+   "hit": false,
+   "dist": 797.5228640281744,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 94,
+   "los": true,
+   "hit": false,
+   "dist": 802.4363953173394,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 104,
+   "los": true,
+   "hit": true,
+   "dist": 802.994756948736,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 188,
+   "los": true,
+   "hit": false,
+   "dist": 882.9887305375411,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 36,
+   "los": false,
+   "hit": false,
+   "dist": 1058.3768606917909,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 18,
+   "los": false,
+   "hit": true,
+   "dist": 1019.7149085531523,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 80,
+   "los": false,
+   "hit": false,
+   "dist": 851.0988070775451,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 1175,
+   "los": true,
+   "hit": true,
+   "dist": 352.07206344433956,
+   "weapon": "super shotgun",
+   "seed": 35004
+  },
+  {
+   "vis": 717,
+   "los": true,
+   "hit": false,
+   "dist": 499.51438978068035,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 844,
+   "los": true,
+   "hit": true,
+   "dist": 443.35621196248843,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 428,
+   "los": true,
+   "hit": false,
+   "dist": 393.00576190341775,
+   "weapon": "pistol",
+   "seed": 35004
+  },
+  {
+   "vis": 39,
+   "los": true,
+   "hit": true,
+   "dist": 1118.305625272855,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 120,
+   "los": true,
+   "hit": false,
+   "dist": 1077.3499262385578,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 116,
+   "los": true,
+   "hit": true,
+   "dist": 1028.9769598286355,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 164,
+   "los": true,
+   "hit": false,
+   "dist": 975.4862979661294,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 145,
+   "los": true,
+   "hit": true,
+   "dist": 924.6187084188748,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 185,
+   "los": true,
+   "hit": false,
+   "dist": 863.926749363317,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 274,
+   "los": true,
+   "hit": false,
+   "dist": 750.3502458379675,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 395,
+   "los": true,
+   "hit": false,
+   "dist": 613.6474656287392,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 716,
+   "los": true,
+   "hit": false,
+   "dist": 459.1499971579869,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1136,
+   "los": true,
+   "hit": false,
+   "dist": 331.8455077691218,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1094,
+   "los": true,
+   "hit": true,
+   "dist": 388.2251405795974,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 988,
+   "los": true,
+   "hit": true,
+   "dist": 388.25204863078176,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1097,
+   "los": true,
+   "hit": true,
+   "dist": 376.2063642842222,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 869,
+   "los": true,
+   "hit": true,
+   "dist": 415.26270661486365,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 986,
+   "los": true,
+   "hit": true,
+   "dist": 393.9084887299186,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1207,
+   "los": true,
+   "hit": true,
+   "dist": 364.1249730906929,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1067,
+   "los": true,
+   "hit": true,
+   "dist": 378.80392443565216,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1312,
+   "los": true,
+   "hit": true,
+   "dist": 347.5878463505639,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1215,
+   "los": true,
+   "hit": true,
+   "dist": 330.3317778730752,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 964,
+   "los": true,
+   "hit": true,
+   "dist": 363.24610395435207,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 37,
+   "los": true,
+   "hit": false,
+   "dist": 1198.2912978885186,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 100,
+   "los": true,
+   "hit": false,
+   "dist": 1163.304474770252,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 106,
+   "los": true,
+   "hit": false,
+   "dist": 1115.0012263265305,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 127,
+   "los": true,
+   "hit": false,
+   "dist": 1062.043998348797,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 96,
+   "los": true,
+   "hit": false,
+   "dist": 999.4592481453342,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 77,
+   "los": true,
+   "hit": true,
+   "dist": 951.6228716495965,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 126,
+   "los": true,
+   "hit": true,
+   "dist": 947.6199991215833,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 88,
+   "los": true,
+   "hit": true,
+   "dist": 946.7136074387919,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 359,
+   "los": true,
+   "hit": false,
+   "dist": 659.2558827018669,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 865,
+   "los": true,
+   "hit": false,
+   "dist": 373.9494021917419,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1401,
+   "los": true,
+   "hit": true,
+   "dist": 340.0596437716656,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1104,
+   "los": true,
+   "hit": true,
+   "dist": 382.789637887691,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 937,
+   "los": true,
+   "hit": true,
+   "dist": 393.3048905881005,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1217,
+   "los": true,
+   "hit": true,
+   "dist": 355.79928023614957,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 921,
+   "los": true,
+   "hit": true,
+   "dist": 411.1263201970338,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 948,
+   "los": true,
+   "hit": true,
+   "dist": 401.26430892815114,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 955,
+   "los": true,
+   "hit": true,
+   "dist": 405.0750390348851,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 988,
+   "los": true,
+   "hit": true,
+   "dist": 396.2135594922019,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 886,
+   "los": true,
+   "hit": false,
+   "dist": 407.3835969317765,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 977,
+   "los": true,
+   "hit": true,
+   "dist": 420.33964505263384,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 355,
+   "los": true,
+   "hit": true,
+   "dist": 676.7279953732143,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 379,
+   "los": true,
+   "hit": true,
+   "dist": 629.0784649307512,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1226,
+   "los": true,
+   "hit": true,
+   "dist": 323.17460357308835,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1111,
+   "los": true,
+   "hit": true,
+   "dist": 374.9122647256181,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1439,
+   "los": true,
+   "hit": true,
+   "dist": 333.70104813882716,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1280,
+   "los": true,
+   "hit": true,
+   "dist": 351.58718102333285,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1306,
+   "los": true,
+   "hit": false,
+   "dist": 344.5219311912656,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1017,
+   "los": true,
+   "hit": true,
+   "dist": 401.10368296325356,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 953,
+   "los": true,
+   "hit": true,
+   "dist": 392.41940211029794,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1189,
+   "los": true,
+   "hit": true,
+   "dist": 365.2248438640311,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1065,
+   "los": true,
+   "hit": true,
+   "dist": 373.2788288938835,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 38,
+   "los": true,
+   "hit": false,
+   "dist": 1230.3979800452244,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 95,
+   "los": true,
+   "hit": false,
+   "dist": 1201.2923167503297,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 87,
+   "los": true,
+   "hit": false,
+   "dist": 1155.6946222271742,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 126,
+   "los": true,
+   "hit": false,
+   "dist": 1097.496427072066,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 94,
+   "los": true,
+   "hit": true,
+   "dist": 982.2570203581549,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 173,
+   "los": true,
+   "hit": false,
+   "dist": 869.6474580084246,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 3300,
+   "los": true,
+   "hit": true,
+   "dist": 218.58189161867304,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 3186,
+   "los": true,
+   "hit": true,
+   "dist": 213.10044808187288,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 2096,
+   "los": true,
+   "hit": true,
+   "dist": 253.23359538774386,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 2032,
+   "los": true,
+   "hit": true,
+   "dist": 254.0750291229475,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 900,
+   "los": true,
+   "hit": false,
+   "dist": 401.54591344962347,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 399,
+   "los": true,
+   "hit": false,
+   "dist": 437.94671721729054,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 588,
+   "los": true,
+   "hit": false,
+   "dist": 443.4831571041002,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 314,
+   "los": true,
+   "hit": true,
+   "dist": 695.9912270414052,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 213,
+   "los": true,
+   "hit": true,
+   "dist": 748.5755818562526,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 131,
+   "los": true,
+   "hit": true,
+   "dist": 778.8814306766945,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 3,
+   "los": false,
+   "hit": false,
+   "dist": 1235.3919013716868,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 97,
+   "los": true,
+   "hit": false,
+   "dist": 1068.3665640216027,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 81,
+   "los": true,
+   "hit": false,
+   "dist": 1059.4195076893916,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 112,
+   "los": true,
+   "hit": false,
+   "dist": 1053.314451031959,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 89,
+   "los": true,
+   "hit": true,
+   "dist": 1046.972001898237,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 112,
+   "los": true,
+   "hit": true,
+   "dist": 1046.941632464222,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 7938,
+   "los": true,
+   "hit": true,
+   "dist": 140.9413862104366,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 3459,
+   "los": true,
+   "hit": true,
+   "dist": 214.74668516016578,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 3443,
+   "los": true,
+   "hit": true,
+   "dist": 206.89824045880374,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 3281,
+   "los": true,
+   "hit": true,
+   "dist": 213.34452102428565,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 3688,
+   "los": true,
+   "hit": true,
+   "dist": 203.5317386438967,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1225,
+   "los": true,
+   "hit": true,
+   "dist": 246.10939732704995,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 459,
+   "los": false,
+   "hit": true,
+   "dist": 371.8539377492035,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 102,
+   "los": true,
+   "hit": true,
+   "dist": 1168.4933262121322,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 640,
+   "los": true,
+   "hit": true,
+   "dist": 434.5497241298917,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 884,
+   "los": true,
+   "hit": true,
+   "dist": 381.37552224569527,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1336,
+   "los": true,
+   "hit": true,
+   "dist": 293.22801890968634,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1045,
+   "los": false,
+   "hit": true,
+   "dist": 295.4398761674827,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 552,
+   "los": true,
+   "hit": true,
+   "dist": 508.16410706462784,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 645,
+   "los": true,
+   "hit": true,
+   "dist": 464.35516015728894,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 1964,
+   "los": true,
+   "hit": false,
+   "dist": 242.0810294972535,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 613,
+   "los": false,
+   "hit": false,
+   "dist": 233.78597416121076,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 2477,
+   "los": true,
+   "hit": false,
+   "dist": 238.55618026300255,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 2839,
+   "los": true,
+   "hit": false,
+   "dist": 225.78645987926592,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 2461,
+   "los": true,
+   "hit": false,
+   "dist": 223.79745300855367,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 290,
+   "los": true,
+   "hit": false,
+   "dist": 620.1380029426729,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 300,
+   "los": true,
+   "hit": false,
+   "dist": 734.447133583992,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 84,
+   "los": true,
+   "hit": false,
+   "dist": 703.5487700252343,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 176,
+   "los": true,
+   "hit": false,
+   "dist": 689.8823551532913,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 56,
+   "los": false,
+   "hit": false,
+   "dist": 663.1995805043248,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 31,
+   "los": false,
+   "hit": false,
+   "dist": 650.6987454748922,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 6,
+   "los": false,
+   "hit": false,
+   "dist": 638.1644717219003,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 2,
+   "los": false,
+   "hit": false,
+   "dist": 625.5924425058182,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 125,
+   "los": false,
+   "hit": false,
+   "dist": 612.5781032007345,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 213,
+   "los": true,
+   "hit": false,
+   "dist": 583.5730930435865,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 324,
+   "los": true,
+   "hit": false,
+   "dist": 638.976099555443,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 136,
+   "los": true,
+   "hit": false,
+   "dist": 1012.6549232760136,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 18,
+   "los": false,
+   "hit": false,
+   "dist": 1101.6892671160304,
+   "weapon": "chaingun",
+   "seed": 35004
+  },
+  {
+   "vis": 688,
+   "los": true,
+   "hit": false,
+   "dist": 442.56639593353816,
+   "weapon": "pistol",
+   "seed": 35005
+  },
+  {
+   "vis": 1667,
+   "los": true,
+   "hit": true,
+   "dist": 300.0344760298148,
+   "weapon": "super shotgun",
+   "seed": 35005
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1440.9348701654988,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1434.2066050529697,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1403.8978429122535,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1097.2662768719674,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 168,
+   "los": true,
+   "hit": false,
+   "dist": 844.7966089989376,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 92,
+   "los": true,
+   "hit": false,
+   "dist": 564.0627113058066,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 166,
+   "los": true,
+   "hit": false,
+   "dist": 500.7968357719447,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 1292,
+   "los": true,
+   "hit": true,
+   "dist": 320.2355815401684,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 1080,
+   "los": true,
+   "hit": true,
+   "dist": 354.6832184262391,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 1105,
+   "los": true,
+   "hit": true,
+   "dist": 373.7261747744124,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 508,
+   "los": false,
+   "hit": false,
+   "dist": 381.30396672095105,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 28,
+   "los": false,
+   "hit": false,
+   "dist": 385.4807068318945,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 993,
+   "los": true,
+   "hit": true,
+   "dist": 399.9556818000933,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 197,
+   "los": true,
+   "hit": true,
+   "dist": 837.5310415539079,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 437,
+   "los": true,
+   "hit": true,
+   "dist": 562.5303059002897,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 342,
+   "los": true,
+   "hit": true,
+   "dist": 576.8921313081374,
+   "weapon": "chaingun",
+   "seed": 35005
+  },
+  {
+   "vis": 3862,
+   "los": true,
+   "hit": false,
+   "dist": 198.70601273000463,
+   "weapon": "pistol",
+   "seed": 35006
+  },
+  {
+   "vis": 1032,
+   "los": true,
+   "hit": true,
+   "dist": 386.46657862536904,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1688,
+   "los": true,
+   "hit": true,
+   "dist": 254.03682060069275,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1751,
+   "los": true,
+   "hit": true,
+   "dist": 292.47792959642254,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1634,
+   "los": true,
+   "hit": true,
+   "dist": 295.3080664446691,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1332,
+   "los": true,
+   "hit": true,
+   "dist": 312.87644764922356,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1437,
+   "los": true,
+   "hit": true,
+   "dist": 314.7586745670238,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1267,
+   "los": true,
+   "hit": true,
+   "dist": 331.05109260691444,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1390,
+   "los": true,
+   "hit": true,
+   "dist": 332.8089878105605,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 946,
+   "los": true,
+   "hit": true,
+   "dist": 345.88922734406793,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1205,
+   "los": true,
+   "hit": true,
+   "dist": 348.1044339370929,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1250,
+   "los": true,
+   "hit": true,
+   "dist": 349.39547574965474,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 845,
+   "los": true,
+   "hit": true,
+   "dist": 406.9931488773762,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 700,
+   "los": true,
+   "hit": true,
+   "dist": 435.64863353890814,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 795,
+   "los": true,
+   "hit": true,
+   "dist": 456.27661676313636,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 569,
+   "los": true,
+   "hit": true,
+   "dist": 477.6894051586975,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1219,
+   "los": true,
+   "hit": true,
+   "dist": 382.69788251443117,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1320,
+   "los": true,
+   "hit": true,
+   "dist": 348.76650455605454,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 11,
+   "los": false,
+   "hit": false,
+   "dist": 358.3735274711934,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 987,
+   "los": true,
+   "hit": true,
+   "dist": 357.85724931548214,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1161,
+   "los": true,
+   "hit": true,
+   "dist": 339.28512010313193,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 525,
+   "los": true,
+   "hit": true,
+   "dist": 531.2333449569619,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 536,
+   "los": true,
+   "hit": true,
+   "dist": 531.8672534576491,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 504,
+   "los": true,
+   "hit": true,
+   "dist": 532.259180294807,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 793,
+   "los": true,
+   "hit": true,
+   "dist": 415.74599186883944,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 805,
+   "los": true,
+   "hit": true,
+   "dist": 397.24495767322134,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 937,
+   "los": true,
+   "hit": true,
+   "dist": 405.33233791556165,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1061,
+   "los": true,
+   "hit": true,
+   "dist": 382.8850533938754,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1128,
+   "los": true,
+   "hit": true,
+   "dist": 372.76969321042867,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1205,
+   "los": true,
+   "hit": true,
+   "dist": 362.3352245486455,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1133,
+   "los": true,
+   "hit": true,
+   "dist": 367.61786501675925,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1198,
+   "los": true,
+   "hit": true,
+   "dist": 387.91255160877205,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1430,
+   "los": true,
+   "hit": true,
+   "dist": 327.4527987252584,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1865,
+   "los": true,
+   "hit": true,
+   "dist": 282.9796222940074,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1144,
+   "los": true,
+   "hit": true,
+   "dist": 364.1187747861557,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1107,
+   "los": true,
+   "hit": true,
+   "dist": 376.04422569469267,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1204,
+   "los": true,
+   "hit": true,
+   "dist": 356.1964120948236,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1412,
+   "los": true,
+   "hit": true,
+   "dist": 331.6239231207949,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 755,
+   "los": true,
+   "hit": true,
+   "dist": 391.243970270565,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1035,
+   "los": true,
+   "hit": true,
+   "dist": 382.2849159516589,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 271,
+   "los": true,
+   "hit": true,
+   "dist": 379.4976412202739,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1000,
+   "los": true,
+   "hit": true,
+   "dist": 389.8198868470705,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 489,
+   "los": true,
+   "hit": true,
+   "dist": 500.77876371594147,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 628,
+   "los": true,
+   "hit": true,
+   "dist": 482.1642201270514,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1170,
+   "los": true,
+   "hit": true,
+   "dist": 346.83516065792327,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1253,
+   "los": true,
+   "hit": true,
+   "dist": 350.47774440617906,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 740,
+   "los": true,
+   "hit": true,
+   "dist": 395.5439978454955,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1305,
+   "los": true,
+   "hit": true,
+   "dist": 347.0426458746164,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1359,
+   "los": true,
+   "hit": true,
+   "dist": 343.0397896367129,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1203,
+   "los": true,
+   "hit": true,
+   "dist": 361.2818080422202,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1034,
+   "los": true,
+   "hit": true,
+   "dist": 378.20221937333355,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1058,
+   "los": true,
+   "hit": true,
+   "dist": 382.2596491367288,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1158,
+   "los": true,
+   "hit": true,
+   "dist": 351.452101142943,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 786,
+   "los": true,
+   "hit": true,
+   "dist": 378.40700336951596,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1104,
+   "los": true,
+   "hit": true,
+   "dist": 373.7338102175263,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1199,
+   "los": true,
+   "hit": true,
+   "dist": 361.1556697347635,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 878,
+   "los": true,
+   "hit": true,
+   "dist": 366.78246019426,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 923,
+   "los": true,
+   "hit": true,
+   "dist": 375.89413287546216,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 144,
+   "los": true,
+   "hit": false,
+   "dist": 1054.7944110679791,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 6,
+   "los": true,
+   "hit": false,
+   "dist": 1108.1234102006201,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 172,
+   "los": true,
+   "hit": true,
+   "dist": 961.0076748588758,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 111,
+   "los": true,
+   "hit": true,
+   "dist": 968.0435132718261,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 167,
+   "los": true,
+   "hit": true,
+   "dist": 972.3454574057622,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 154,
+   "los": true,
+   "hit": false,
+   "dist": 986.4130495450826,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 82,
+   "los": true,
+   "hit": false,
+   "dist": 1014.4425677045407,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 44,
+   "los": true,
+   "hit": false,
+   "dist": 1012.4783770243977,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 77,
+   "los": true,
+   "hit": true,
+   "dist": 1199.6238841768136,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 26,
+   "los": true,
+   "hit": false,
+   "dist": 1066.845099521312,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 62,
+   "los": true,
+   "hit": false,
+   "dist": 1143.9286946544728,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1,
+   "los": true,
+   "hit": false,
+   "dist": 1123.5234047086058,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1,
+   "los": true,
+   "hit": false,
+   "dist": 1098.3006780985475,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 50,
+   "los": true,
+   "hit": true,
+   "dist": 1011.8186211581284,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 18,
+   "los": true,
+   "hit": false,
+   "dist": 1307.3741721547517,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 39,
+   "los": true,
+   "hit": false,
+   "dist": 1309.760546417869,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 32,
+   "los": true,
+   "hit": false,
+   "dist": 1286.1280429966835,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 66,
+   "los": true,
+   "hit": false,
+   "dist": 1244.9992833207152,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 179,
+   "los": true,
+   "hit": true,
+   "dist": 830.5277305268221,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 188,
+   "los": true,
+   "hit": true,
+   "dist": 772.2949434381504,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 235,
+   "los": true,
+   "hit": true,
+   "dist": 725.4891809301787,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 2429,
+   "los": true,
+   "hit": true,
+   "dist": 251.10066259104067,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 4076,
+   "los": true,
+   "hit": true,
+   "dist": 197.439596311743,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1285,
+   "los": true,
+   "hit": true,
+   "dist": 295.7683541029857,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1686,
+   "los": true,
+   "hit": true,
+   "dist": 301.6227547641367,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1559,
+   "los": true,
+   "hit": true,
+   "dist": 305.340938537483,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1466,
+   "los": true,
+   "hit": false,
+   "dist": 308.39360151407334,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1338,
+   "los": true,
+   "hit": true,
+   "dist": 323.7496750214081,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1402,
+   "los": true,
+   "hit": true,
+   "dist": 325.4905723890739,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1004,
+   "los": true,
+   "hit": true,
+   "dist": 338.2794499210577,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1320,
+   "los": true,
+   "hit": true,
+   "dist": 340.5252075108129,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1289,
+   "los": true,
+   "hit": true,
+   "dist": 341.8830919068637,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 137,
+   "los": true,
+   "hit": false,
+   "dist": 898.7673917252965,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 113,
+   "los": true,
+   "hit": false,
+   "dist": 841.5742653256608,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 346,
+   "los": true,
+   "hit": false,
+   "dist": 542.6805390741836,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 349,
+   "los": true,
+   "hit": false,
+   "dist": 526.0460167146772,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 121,
+   "los": false,
+   "hit": false,
+   "dist": 599.1255580942111,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 225,
+   "los": true,
+   "hit": false,
+   "dist": 488.4177160967586,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 53,
+   "los": false,
+   "hit": false,
+   "dist": 414.77423860396374,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 25,
+   "los": true,
+   "hit": false,
+   "dist": 1442.8081151231856,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1410.3703304868643,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 40,
+   "los": true,
+   "hit": false,
+   "dist": 1361.7563224499515,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 70,
+   "los": true,
+   "hit": false,
+   "dist": 1301.7379893527686,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 31,
+   "los": false,
+   "hit": false,
+   "dist": 1235.263429297797,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 17,
+   "los": false,
+   "hit": false,
+   "dist": 1175.2515882635057,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1131.983518138568,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 2422,
+   "los": true,
+   "hit": false,
+   "dist": 251.15319351077397,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1323,
+   "los": true,
+   "hit": false,
+   "dist": 343.4425219356131,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1056,
+   "los": true,
+   "hit": false,
+   "dist": 351.1603780105759,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1945,
+   "los": true,
+   "hit": false,
+   "dist": 238.29818124182881,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 4279,
+   "los": true,
+   "hit": true,
+   "dist": 188.54098431618587,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 4560,
+   "los": true,
+   "hit": true,
+   "dist": 176.94021617058607,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 472,
+   "los": true,
+   "hit": true,
+   "dist": 478.51320126570835,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 744,
+   "los": true,
+   "hit": true,
+   "dist": 471.996537747057,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 839,
+   "los": true,
+   "hit": false,
+   "dist": 454.0950671981534,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 763,
+   "los": true,
+   "hit": false,
+   "dist": 420.45061239514047,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1035,
+   "los": true,
+   "hit": true,
+   "dist": 383.9891331293948,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 910,
+   "los": true,
+   "hit": true,
+   "dist": 370.23373642612546,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 359,
+   "los": true,
+   "hit": true,
+   "dist": 651.7006137753351,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 373,
+   "los": true,
+   "hit": true,
+   "dist": 626.1725377559758,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 206,
+   "los": true,
+   "hit": false,
+   "dist": 566.1322803905853,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 363,
+   "los": false,
+   "hit": true,
+   "dist": 456.6956344964185,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 568,
+   "los": true,
+   "hit": true,
+   "dist": 515.7425659334764,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 263,
+   "los": true,
+   "hit": true,
+   "dist": 647.0634784516421,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 310,
+   "los": true,
+   "hit": true,
+   "dist": 685.6854479175518,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 181,
+   "los": true,
+   "hit": false,
+   "dist": 707.5338632945069,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 81,
+   "los": true,
+   "hit": true,
+   "dist": 1304.8034523062677,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 630,
+   "los": true,
+   "hit": true,
+   "dist": 485.508819391553,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 976,
+   "los": true,
+   "hit": true,
+   "dist": 402.39126243757465,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1136,
+   "los": true,
+   "hit": true,
+   "dist": 382.6813582582743,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 598,
+   "los": true,
+   "hit": true,
+   "dist": 457.0543284286482,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 480,
+   "los": true,
+   "hit": true,
+   "dist": 513.2813415420582,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 359,
+   "los": true,
+   "hit": true,
+   "dist": 654.6981326659396,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 248,
+   "los": true,
+   "hit": true,
+   "dist": 705.8868730475671,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 254,
+   "los": true,
+   "hit": true,
+   "dist": 670.655988598801,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 518,
+   "los": true,
+   "hit": true,
+   "dist": 492.3871394764745,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 365,
+   "los": true,
+   "hit": true,
+   "dist": 533.3732535440598,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 31,
+   "los": false,
+   "hit": false,
+   "dist": 542.3388371200441,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 49,
+   "los": true,
+   "hit": true,
+   "dist": 1304.3560647770892,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 63,
+   "los": true,
+   "hit": true,
+   "dist": 1295.3548946539559,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 85,
+   "los": true,
+   "hit": true,
+   "dist": 1274.1941277132848,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1192,
+   "los": true,
+   "hit": true,
+   "dist": 368.3022900508187,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 1418,
+   "los": true,
+   "hit": true,
+   "dist": 331.6227173222813,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 3294,
+   "los": true,
+   "hit": true,
+   "dist": 194.89615900021326,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 2999,
+   "los": true,
+   "hit": true,
+   "dist": 227.61717033795378,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 13,
+   "los": true,
+   "hit": true,
+   "dist": 619.5509059408233,
+   "weapon": "chaingun",
+   "seed": 35006
+  },
+  {
+   "vis": 3363,
+   "los": true,
+   "hit": false,
+   "dist": 213.87569640393409,
+   "weapon": "pistol",
+   "seed": 35007
+  },
+  {
+   "vis": 3428,
+   "los": true,
+   "hit": true,
+   "dist": 211.20161159440016,
+   "weapon": "pistol",
+   "seed": 35007
+  },
+  {
+   "vis": 2464,
+   "los": true,
+   "hit": false,
+   "dist": 215.85837029218322,
+   "weapon": "pistol",
+   "seed": 35007
+  },
+  {
+   "vis": 2786,
+   "los": true,
+   "hit": false,
+   "dist": 215.93768271944597,
+   "weapon": "pistol",
+   "seed": 35007
+  },
+  {
+   "vis": 2817,
+   "los": true,
+   "hit": true,
+   "dist": 212.83055802928365,
+   "weapon": "pistol",
+   "seed": 35007
+  },
+  {
+   "vis": 2377,
+   "los": true,
+   "hit": false,
+   "dist": 207.3992804502186,
+   "weapon": "pistol",
+   "seed": 35007
+  },
+  {
+   "vis": 3776,
+   "los": true,
+   "hit": false,
+   "dist": 200.53258459435048,
+   "weapon": "pistol",
+   "seed": 35007
+  },
+  {
+   "vis": 4210,
+   "los": true,
+   "hit": true,
+   "dist": 192.80496113947692,
+   "weapon": "pistol",
+   "seed": 35007
+  },
+  {
+   "vis": 870,
+   "los": true,
+   "hit": true,
+   "dist": 413.0445076211994,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1171,
+   "los": true,
+   "hit": true,
+   "dist": 388.23214623142337,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1211,
+   "los": true,
+   "hit": true,
+   "dist": 363.69531150551416,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1036,
+   "los": true,
+   "hit": true,
+   "dist": 368.15315224423625,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1142,
+   "los": true,
+   "hit": true,
+   "dist": 353.95946940433726,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 915,
+   "los": true,
+   "hit": true,
+   "dist": 393.6807372357576,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 570,
+   "los": true,
+   "hit": true,
+   "dist": 538.9508529582818,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 543,
+   "los": true,
+   "hit": true,
+   "dist": 504.3150382896169,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 180,
+   "los": true,
+   "hit": false,
+   "dist": 925.9828451234584,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 174,
+   "los": true,
+   "hit": false,
+   "dist": 705.2868171150408,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 916,
+   "los": true,
+   "hit": false,
+   "dist": 424.3302403315923,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 782,
+   "los": true,
+   "hit": false,
+   "dist": 468.17648805581433,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 475,
+   "los": true,
+   "hit": false,
+   "dist": 517.6379973691421,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 437,
+   "los": true,
+   "hit": false,
+   "dist": 554.171777562299,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 396,
+   "los": true,
+   "hit": false,
+   "dist": 578.3556297722079,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 603,
+   "los": true,
+   "hit": false,
+   "dist": 485.60025126321864,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 787,
+   "los": true,
+   "hit": false,
+   "dist": 425.1503541141405,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 693,
+   "los": true,
+   "hit": false,
+   "dist": 439.6524311286694,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 35,
+   "los": false,
+   "hit": false,
+   "dist": 488.48192219480865,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1186,
+   "los": true,
+   "hit": true,
+   "dist": 331.29488002060265,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 867,
+   "los": true,
+   "hit": true,
+   "dist": 384.92953586593194,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1050,
+   "los": true,
+   "hit": true,
+   "dist": 359.14560706809146,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 589,
+   "los": true,
+   "hit": true,
+   "dist": 383.2154930724367,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 881,
+   "los": true,
+   "hit": true,
+   "dist": 395.44790958859755,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 983,
+   "los": true,
+   "hit": true,
+   "dist": 360.49926690039496,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 326,
+   "los": false,
+   "hit": false,
+   "dist": 356.30914979703476,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 200,
+   "los": false,
+   "hit": false,
+   "dist": 367.33152614835444,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 760,
+   "los": true,
+   "hit": true,
+   "dist": 374.41182592077445,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 973,
+   "los": true,
+   "hit": true,
+   "dist": 364.10141801969525,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 591,
+   "los": true,
+   "hit": false,
+   "dist": 369.2094362114093,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1014,
+   "los": true,
+   "hit": true,
+   "dist": 390.32897164227217,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1361,
+   "los": true,
+   "hit": true,
+   "dist": 335.3705473191735,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1329,
+   "los": true,
+   "hit": true,
+   "dist": 350.01659187891937,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 963,
+   "los": true,
+   "hit": true,
+   "dist": 353.682996016204,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 807,
+   "los": true,
+   "hit": false,
+   "dist": 343.2967226779661,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 4,
+   "los": false,
+   "hit": false,
+   "dist": 713.2023639411548,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 222,
+   "los": true,
+   "hit": false,
+   "dist": 671.2688196368389,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 139,
+   "los": true,
+   "hit": false,
+   "dist": 692.0568199942023,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 396,
+   "los": true,
+   "hit": false,
+   "dist": 607.2335966849356,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 281,
+   "los": true,
+   "hit": false,
+   "dist": 581.2408076749496,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 471,
+   "los": true,
+   "hit": true,
+   "dist": 558.9491361599853,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 2223,
+   "los": true,
+   "hit": true,
+   "dist": 211.26488581186612,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1442,
+   "los": false,
+   "hit": true,
+   "dist": 190.00215571083882,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 4029,
+   "los": true,
+   "hit": true,
+   "dist": 178.9745550287086,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 2388,
+   "los": false,
+   "hit": true,
+   "dist": 164.216595711947,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 523,
+   "los": true,
+   "hit": true,
+   "dist": 538.5682109545097,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 581,
+   "los": true,
+   "hit": true,
+   "dist": 511.2223054883435,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 848,
+   "los": true,
+   "hit": true,
+   "dist": 428.86454523575804,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1032,
+   "los": true,
+   "hit": true,
+   "dist": 381.0061027024651,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1129,
+   "los": true,
+   "hit": true,
+   "dist": 369.0650812209239,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 943,
+   "los": true,
+   "hit": true,
+   "dist": 394.0241151749673,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 843,
+   "los": true,
+   "hit": true,
+   "dist": 418.7999358989908,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1032,
+   "los": true,
+   "hit": true,
+   "dist": 379.9212309148861,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 90,
+   "los": true,
+   "hit": false,
+   "dist": 691.1348208531798,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 21,
+   "los": true,
+   "hit": false,
+   "dist": 651.7801913965541,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 41,
+   "los": true,
+   "hit": false,
+   "dist": 610.7446322615359,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 190,
+   "los": true,
+   "hit": false,
+   "dist": 568.6449817748457,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 684,
+   "los": true,
+   "hit": false,
+   "dist": 478.3378519274103,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 792,
+   "los": true,
+   "hit": false,
+   "dist": 435.4068380162737,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 982,
+   "los": true,
+   "hit": false,
+   "dist": 394.1851454585894,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 603,
+   "los": true,
+   "hit": true,
+   "dist": 426.60971677249483,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1058,
+   "los": true,
+   "hit": true,
+   "dist": 382.16582200123986,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 452,
+   "los": true,
+   "hit": true,
+   "dist": 558.6663113118112,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 627,
+   "los": true,
+   "hit": true,
+   "dist": 522.5336099884375,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 598,
+   "los": true,
+   "hit": true,
+   "dist": 519.0739236346185,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 568,
+   "los": true,
+   "hit": true,
+   "dist": 530.5640844695461,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 487,
+   "los": true,
+   "hit": true,
+   "dist": 502.0070888820681,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 882,
+   "los": true,
+   "hit": true,
+   "dist": 439.7471744470201,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 342,
+   "los": true,
+   "hit": true,
+   "dist": 699.1027070983868,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1016,
+   "los": true,
+   "hit": true,
+   "dist": 362.9772708334528,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1164,
+   "los": true,
+   "hit": true,
+   "dist": 337.4732028220778,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1010,
+   "los": true,
+   "hit": true,
+   "dist": 397.4507771710016,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1138,
+   "los": true,
+   "hit": true,
+   "dist": 337.9135261925127,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1509,
+   "los": true,
+   "hit": true,
+   "dist": 319.940089282025,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1243,
+   "los": true,
+   "hit": true,
+   "dist": 350.0114086483169,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1229,
+   "los": true,
+   "hit": true,
+   "dist": 353.50126062038464,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1412,
+   "los": true,
+   "hit": true,
+   "dist": 337.93974136818014,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1189,
+   "los": true,
+   "hit": true,
+   "dist": 326.65504105142526,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 2577,
+   "los": false,
+   "hit": false,
+   "dist": 146.73451231914314,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 5685,
+   "los": true,
+   "hit": false,
+   "dist": 135.1944330565015,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 5974,
+   "los": true,
+   "hit": true,
+   "dist": 149.46216080871633,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 3396,
+   "los": true,
+   "hit": true,
+   "dist": 193.65992000737293,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1191,
+   "los": true,
+   "hit": true,
+   "dist": 329.2650583255808,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 931,
+   "los": true,
+   "hit": true,
+   "dist": 392.0958101654125,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 949,
+   "los": true,
+   "hit": true,
+   "dist": 409.9535570015305,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 709,
+   "los": true,
+   "hit": true,
+   "dist": 411.56760224691783,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 2327,
+   "los": true,
+   "hit": true,
+   "dist": 273.7131171665603,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 6751,
+   "los": true,
+   "hit": true,
+   "dist": 156.66757504073246,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 6736,
+   "los": true,
+   "hit": true,
+   "dist": 132.59964550970454,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1303,
+   "los": true,
+   "hit": true,
+   "dist": 321.1488242448103,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 6228,
+   "los": true,
+   "hit": true,
+   "dist": 162.3349664468514,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 797,
+   "los": true,
+   "hit": true,
+   "dist": 423.9944209648113,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 901,
+   "los": true,
+   "hit": true,
+   "dist": 391.161501240701,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1062,
+   "los": true,
+   "hit": true,
+   "dist": 376.43469122027483,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1007,
+   "los": true,
+   "hit": true,
+   "dist": 374.96601560013926,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1046,
+   "los": true,
+   "hit": true,
+   "dist": 378.80654316715805,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 987,
+   "los": true,
+   "hit": true,
+   "dist": 362.14053948257043,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 855,
+   "los": true,
+   "hit": true,
+   "dist": 423.27445423410563,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1071,
+   "los": true,
+   "hit": true,
+   "dist": 357.9632818371025,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1032,
+   "los": true,
+   "hit": true,
+   "dist": 387.27874397545185,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 918,
+   "los": true,
+   "hit": true,
+   "dist": 403.91196085229734,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1346,
+   "los": true,
+   "hit": false,
+   "dist": 336.0622002403655,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1258,
+   "los": true,
+   "hit": false,
+   "dist": 333.29970586785436,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 947,
+   "los": true,
+   "hit": false,
+   "dist": 348.15794697293956,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1204,
+   "los": true,
+   "hit": false,
+   "dist": 358.417596499283,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1324,
+   "los": true,
+   "hit": true,
+   "dist": 343.9888951060997,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1153,
+   "los": true,
+   "hit": true,
+   "dist": 354.03615634921766,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 824,
+   "los": true,
+   "hit": true,
+   "dist": 394.020368585634,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1227,
+   "los": true,
+   "hit": true,
+   "dist": 323.7085838358897,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1185,
+   "los": true,
+   "hit": true,
+   "dist": 331.4442017071061,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1219,
+   "los": true,
+   "hit": false,
+   "dist": 352.03026245269575,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1168,
+   "los": true,
+   "hit": true,
+   "dist": 360.3900729273253,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 729,
+   "los": true,
+   "hit": true,
+   "dist": 413.552098245771,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 968,
+   "los": true,
+   "hit": true,
+   "dist": 391.24696077982844,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 34,
+   "los": true,
+   "hit": false,
+   "dist": 1191.762132040346,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 117,
+   "los": true,
+   "hit": false,
+   "dist": 1065.8398340591516,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 194,
+   "los": true,
+   "hit": false,
+   "dist": 870.5204694649772,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1303,
+   "los": true,
+   "hit": false,
+   "dist": 334.08733287392374,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 177,
+   "los": false,
+   "hit": false,
+   "dist": 477.8116646948126,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 281,
+   "los": true,
+   "hit": false,
+   "dist": 464.40096909113555,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1481,
+   "los": true,
+   "hit": true,
+   "dist": 299.64063784210595,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1103,
+   "los": true,
+   "hit": true,
+   "dist": 327.55432510131027,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 17,
+   "los": false,
+   "hit": true,
+   "dist": 359.9966851431497,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 510,
+   "los": false,
+   "hit": true,
+   "dist": 347.0836128041923,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 462,
+   "los": true,
+   "hit": false,
+   "dist": 335.6344475232619,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1138,
+   "los": true,
+   "hit": true,
+   "dist": 349.6441072255153,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1191,
+   "los": true,
+   "hit": true,
+   "dist": 356.7334228528308,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 1326,
+   "los": true,
+   "hit": true,
+   "dist": 342.3887080513994,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 286,
+   "los": true,
+   "hit": true,
+   "dist": 738.043374391819,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 243,
+   "los": true,
+   "hit": true,
+   "dist": 735.0014446893784,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 318,
+   "los": true,
+   "hit": true,
+   "dist": 709.5722663097315,
+   "weapon": "chaingun",
+   "seed": 35007
+  },
+  {
+   "vis": 943,
+   "los": true,
+   "hit": false,
+   "dist": 401.71245685913783,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 1329,
+   "los": true,
+   "hit": true,
+   "dist": 346.7064991196502,
+   "weapon": "super shotgun",
+   "seed": 35008
+  },
+  {
+   "vis": 1076,
+   "los": true,
+   "hit": true,
+   "dist": 372.29293112689055,
+   "weapon": "super shotgun",
+   "seed": 35008
+  },
+  {
+   "vis": 1090,
+   "los": true,
+   "hit": true,
+   "dist": 349.91843944977694,
+   "weapon": "super shotgun",
+   "seed": 35008
+  },
+  {
+   "vis": 994,
+   "los": true,
+   "hit": true,
+   "dist": 359.4330236910249,
+   "weapon": "super shotgun",
+   "seed": 35008
+  },
+  {
+   "vis": 1621,
+   "los": true,
+   "hit": true,
+   "dist": 307.4668801056928,
+   "weapon": "super shotgun",
+   "seed": 35008
+  },
+  {
+   "vis": 3041,
+   "los": true,
+   "hit": false,
+   "dist": 223.33065306140048,
+   "weapon": "super shotgun",
+   "seed": 35008
+  },
+  {
+   "vis": 12859,
+   "los": true,
+   "hit": false,
+   "dist": 104.56331241307436,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 107,
+   "los": true,
+   "hit": false,
+   "dist": 1118.730885233935,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 111,
+   "los": true,
+   "hit": true,
+   "dist": 1133.5486204524343,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 7,
+   "los": true,
+   "hit": false,
+   "dist": 1126.0640473002288,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1119.0982251718026,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 1137.7332499224635,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 4,
+   "los": true,
+   "hit": false,
+   "dist": 1157.2342510331366,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 81,
+   "los": true,
+   "hit": false,
+   "dist": 953.787332725382,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 57,
+   "los": true,
+   "hit": true,
+   "dist": 985.110633529934,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 61,
+   "los": true,
+   "hit": false,
+   "dist": 751.5566746235917,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 222,
+   "los": true,
+   "hit": false,
+   "dist": 846.3035063364258,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 202,
+   "los": true,
+   "hit": true,
+   "dist": 914.3263139957878,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 184,
+   "los": true,
+   "hit": false,
+   "dist": 968.5657255649902,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 162,
+   "los": true,
+   "hit": false,
+   "dist": 992.7794583179634,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 188,
+   "los": true,
+   "hit": false,
+   "dist": 941.2028474197017,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 93,
+   "los": false,
+   "hit": true,
+   "dist": 941.9947515360252,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 122,
+   "los": true,
+   "hit": false,
+   "dist": 1082.5987338814248,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 121,
+   "los": true,
+   "hit": true,
+   "dist": 1056.4427517938352,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 33,
+   "los": true,
+   "hit": false,
+   "dist": 1092.5014764702648,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 79,
+   "los": true,
+   "hit": true,
+   "dist": 1056.7852698681932,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 171,
+   "los": true,
+   "hit": false,
+   "dist": 979.8675515764362,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 144,
+   "los": true,
+   "hit": true,
+   "dist": 934.6415347738887,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 218,
+   "los": true,
+   "hit": false,
+   "dist": 729.015002943612,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 160,
+   "los": true,
+   "hit": false,
+   "dist": 985.5072411890166,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 109,
+   "los": true,
+   "hit": true,
+   "dist": 1001.6725389906462,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 208,
+   "los": true,
+   "hit": false,
+   "dist": 891.0920578875598,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 1,
+   "los": true,
+   "hit": false,
+   "dist": 1084.3742430419002,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 1140.1421890302072,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 23,
+   "los": true,
+   "hit": false,
+   "dist": 1088.399388821775,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 113,
+   "los": true,
+   "hit": false,
+   "dist": 1222.4049447738732,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 131,
+   "los": true,
+   "hit": false,
+   "dist": 920.9804889224833,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 207,
+   "los": true,
+   "hit": false,
+   "dist": 746.8331231951109,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 208,
+   "los": true,
+   "hit": true,
+   "dist": 804.8320778753493,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 164,
+   "los": true,
+   "hit": false,
+   "dist": 821.0234096446576,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 126,
+   "los": true,
+   "hit": false,
+   "dist": 822.6022144732028,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 135,
+   "los": true,
+   "hit": false,
+   "dist": 825.8638414088854,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 2,
+   "los": true,
+   "hit": false,
+   "dist": 965.6527035069745,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 219,
+   "los": true,
+   "hit": false,
+   "dist": 841.9422722895388,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 256,
+   "los": true,
+   "hit": true,
+   "dist": 809.0758815343908,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 248,
+   "los": true,
+   "hit": false,
+   "dist": 812.3278820835076,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 204,
+   "los": true,
+   "hit": false,
+   "dist": 826.3288080773913,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 197,
+   "los": true,
+   "hit": true,
+   "dist": 838.6563386405365,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 94,
+   "los": true,
+   "hit": false,
+   "dist": 869.030698358963,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 110,
+   "los": true,
+   "hit": false,
+   "dist": 882.5918029186698,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 192,
+   "los": true,
+   "hit": false,
+   "dist": 816.2385610563855,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 198,
+   "los": true,
+   "hit": true,
+   "dist": 806.6203195611141,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 94,
+   "los": true,
+   "hit": false,
+   "dist": 820.3590796041229,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 145,
+   "los": true,
+   "hit": false,
+   "dist": 815.2179240441513,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 186,
+   "los": true,
+   "hit": false,
+   "dist": 803.4674743256743,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 272,
+   "los": true,
+   "hit": false,
+   "dist": 760.3723530956391,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 269,
+   "los": true,
+   "hit": true,
+   "dist": 777.4652083894325,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 207,
+   "los": true,
+   "hit": false,
+   "dist": 804.1266008452084,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 208,
+   "los": true,
+   "hit": true,
+   "dist": 797.5537638238753,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 505,
+   "los": true,
+   "hit": false,
+   "dist": 494.7079089257426,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 595,
+   "los": true,
+   "hit": true,
+   "dist": 446.2937821291143,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 324,
+   "los": true,
+   "hit": false,
+   "dist": 392.58620520949466,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 1018,
+   "los": true,
+   "hit": false,
+   "dist": 389.2480219610066,
+   "weapon": "pistol",
+   "seed": 35008
+  },
+  {
+   "vis": 1406,
+   "los": true,
+   "hit": true,
+   "dist": 337.90986345371755,
+   "weapon": "super shotgun",
+   "seed": 35008
+  },
+  {
+   "vis": 3938,
+   "los": true,
+   "hit": false,
+   "dist": 199.02766010120652,
+   "weapon": "pistol",
+   "seed": 35009
+  },
+  {
+   "vis": 767,
+   "los": true,
+   "hit": true,
+   "dist": 392.3311767533598,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 744,
+   "los": true,
+   "hit": true,
+   "dist": 431.52721148501956,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 473,
+   "los": true,
+   "hit": true,
+   "dist": 504.0899152784815,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 354,
+   "los": true,
+   "hit": true,
+   "dist": 505.0087448721862,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 699,
+   "los": true,
+   "hit": true,
+   "dist": 453.91712765467196,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1263,
+   "los": true,
+   "hit": true,
+   "dist": 328.3342555706533,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1221,
+   "los": true,
+   "hit": true,
+   "dist": 325.03594977704824,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 832,
+   "los": true,
+   "hit": true,
+   "dist": 455.40467577245084,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 679,
+   "los": true,
+   "hit": true,
+   "dist": 494.5108094347389,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 588,
+   "los": true,
+   "hit": true,
+   "dist": 536.4764609559608,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 778,
+   "los": true,
+   "hit": true,
+   "dist": 474.47751918239106,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1504,
+   "los": true,
+   "hit": false,
+   "dist": 331.63026104388297,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1047,
+   "los": true,
+   "hit": true,
+   "dist": 365.6864944464661,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1053,
+   "los": true,
+   "hit": true,
+   "dist": 350.6771232434687,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1095,
+   "los": true,
+   "hit": true,
+   "dist": 341.71825932839624,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1362,
+   "los": true,
+   "hit": true,
+   "dist": 334.93843412854966,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1341,
+   "los": true,
+   "hit": true,
+   "dist": 338.12381305147255,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1220,
+   "los": true,
+   "hit": true,
+   "dist": 355.90172637728494,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1275,
+   "los": true,
+   "hit": true,
+   "dist": 353.67134551971833,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1304,
+   "los": true,
+   "hit": false,
+   "dist": 350.9984592363295,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1252,
+   "los": true,
+   "hit": false,
+   "dist": 348.0870379659345,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1268,
+   "los": true,
+   "hit": true,
+   "dist": 345.25597944225575,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1424,
+   "los": true,
+   "hit": true,
+   "dist": 331.58658427172827,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1147,
+   "los": true,
+   "hit": true,
+   "dist": 344.68340567691047,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1095,
+   "los": true,
+   "hit": true,
+   "dist": 342.20614202448195,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 2166,
+   "los": true,
+   "hit": true,
+   "dist": 286.96921540075215,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 955,
+   "los": true,
+   "hit": true,
+   "dist": 377.33263602663516,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 888,
+   "los": true,
+   "hit": true,
+   "dist": 417.00653737472595,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 430,
+   "los": true,
+   "hit": true,
+   "dist": 594.1024859647644,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 132,
+   "los": false,
+   "hit": false,
+   "dist": 634.2681346293277,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 314,
+   "los": true,
+   "hit": true,
+   "dist": 718.0938141776694,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 340,
+   "los": true,
+   "hit": true,
+   "dist": 695.4975551185162,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 303,
+   "los": true,
+   "hit": true,
+   "dist": 724.7062863449262,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 313,
+   "los": true,
+   "hit": true,
+   "dist": 729.3763655210777,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 192,
+   "los": true,
+   "hit": true,
+   "dist": 880.61529385903,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 186,
+   "los": true,
+   "hit": true,
+   "dist": 872.386610484208,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 196,
+   "los": true,
+   "hit": true,
+   "dist": 867.6871359022625,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 112,
+   "los": true,
+   "hit": true,
+   "dist": 906.9620489006811,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 139,
+   "los": true,
+   "hit": true,
+   "dist": 908.3325751405627,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1,
+   "los": true,
+   "hit": false,
+   "dist": 1274.5853489868289,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 4,
+   "los": true,
+   "hit": false,
+   "dist": 1265.820265159507,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 732,
+   "los": true,
+   "hit": true,
+   "dist": 427.48137806938524,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 393,
+   "los": true,
+   "hit": true,
+   "dist": 617.962020193474,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 885,
+   "los": true,
+   "hit": true,
+   "dist": 428.86673148946903,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 955,
+   "los": true,
+   "hit": true,
+   "dist": 413.4025130604186,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 253,
+   "los": true,
+   "hit": true,
+   "dist": 735.8636539610771,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 334,
+   "los": true,
+   "hit": true,
+   "dist": 622.5414795624515,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 506,
+   "los": true,
+   "hit": true,
+   "dist": 595.293759575305,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 371,
+   "los": true,
+   "hit": true,
+   "dist": 635.7969245697268,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 195,
+   "los": true,
+   "hit": true,
+   "dist": 726.770451510731,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 328,
+   "los": true,
+   "hit": true,
+   "dist": 715.0397289157236,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 362,
+   "los": true,
+   "hit": false,
+   "dist": 692.6965856344183,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 531,
+   "los": true,
+   "hit": true,
+   "dist": 555.874436038838,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 420,
+   "los": true,
+   "hit": true,
+   "dist": 613.7154803224612,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 123,
+   "los": true,
+   "hit": true,
+   "dist": 777.4034014254801,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 271,
+   "los": true,
+   "hit": true,
+   "dist": 643.8483161800897,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1597,
+   "los": true,
+   "hit": true,
+   "dist": 288.45832229027485,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 3075,
+   "los": true,
+   "hit": true,
+   "dist": 223.29892744481336,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 5287,
+   "los": true,
+   "hit": true,
+   "dist": 170.84996736246478,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 5859,
+   "los": true,
+   "hit": false,
+   "dist": 153.02170562190506,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 4104,
+   "los": true,
+   "hit": true,
+   "dist": 195.42782050558762,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 2005,
+   "los": true,
+   "hit": true,
+   "dist": 279.37350794507097,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 759,
+   "los": true,
+   "hit": true,
+   "dist": 455.66522997843214,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 407,
+   "los": true,
+   "hit": true,
+   "dist": 597.1539294181168,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 289,
+   "los": true,
+   "hit": true,
+   "dist": 730.372937431618,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 271,
+   "los": true,
+   "hit": true,
+   "dist": 731.8697505139259,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 274,
+   "los": true,
+   "hit": true,
+   "dist": 732.9269409453967,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 45,
+   "los": true,
+   "hit": false,
+   "dist": 1142.6387332474023,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 37,
+   "los": true,
+   "hit": false,
+   "dist": 1161.7465594719993,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 60,
+   "los": true,
+   "hit": false,
+   "dist": 1185.983855819781,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 43,
+   "los": true,
+   "hit": false,
+   "dist": 1214.2453341221185,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 47,
+   "los": true,
+   "hit": false,
+   "dist": 1303.746153290302,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 33,
+   "los": true,
+   "hit": false,
+   "dist": 1390.0561677773567,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 30,
+   "los": true,
+   "hit": false,
+   "dist": 1432.2939024620323,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 24,
+   "los": true,
+   "hit": false,
+   "dist": 1478.1093321710437,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 22,
+   "los": true,
+   "hit": false,
+   "dist": 1553.2380966321332,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 286,
+   "los": true,
+   "hit": true,
+   "dist": 626.6809631655863,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 369,
+   "los": true,
+   "hit": true,
+   "dist": 590.0123779093118,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 515,
+   "los": true,
+   "hit": false,
+   "dist": 549.1635770363508,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 646,
+   "los": true,
+   "hit": false,
+   "dist": 499.5010671738336,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 31,
+   "los": true,
+   "hit": false,
+   "dist": 1271.080223777676,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 1316,
+   "los": true,
+   "hit": true,
+   "dist": 350.19273485459104,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 406,
+   "los": true,
+   "hit": true,
+   "dist": 621.2764434798554,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 298,
+   "los": true,
+   "hit": true,
+   "dist": 722.6043803631278,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 69,
+   "los": false,
+   "hit": true,
+   "dist": 649.4098073466673,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 368,
+   "los": true,
+   "hit": true,
+   "dist": 651.46878733994,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 163,
+   "los": true,
+   "hit": true,
+   "dist": 958.7229390836748,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 154,
+   "los": true,
+   "hit": true,
+   "dist": 1024.0643798231108,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 125,
+   "los": true,
+   "hit": false,
+   "dist": 1047.56868740278,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 165,
+   "los": true,
+   "hit": true,
+   "dist": 951.8147063570021,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 159,
+   "los": true,
+   "hit": true,
+   "dist": 952.9685999047279,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 129,
+   "los": true,
+   "hit": true,
+   "dist": 941.622834296825,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 76,
+   "los": true,
+   "hit": true,
+   "dist": 1060.9713999284302,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 84,
+   "los": true,
+   "hit": true,
+   "dist": 1092.4191904646486,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 215,
+   "los": true,
+   "hit": true,
+   "dist": 884.6094011000708,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 167,
+   "los": true,
+   "hit": true,
+   "dist": 882.0729501378879,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 274,
+   "los": true,
+   "hit": true,
+   "dist": 778.2458999277333,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 273,
+   "los": true,
+   "hit": true,
+   "dist": 748.4323736049582,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 609.1114205068307,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 577.9065848611544,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 602.3872581794028,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 942,
+   "los": true,
+   "hit": false,
+   "dist": 403.6318230623693,
+   "weapon": "chaingun",
+   "seed": 35009
+  },
+  {
+   "vis": 526,
+   "los": true,
+   "hit": true,
+   "dist": 385.86529541847744,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 842,
+   "los": true,
+   "hit": false,
+   "dist": 320.7115077145915,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 1220,
+   "los": true,
+   "hit": false,
+   "dist": 306.7133391308469,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 1419,
+   "los": true,
+   "hit": true,
+   "dist": 331.6569788571412,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 803,
+   "los": true,
+   "hit": true,
+   "dist": 396.0621786616807,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 895,
+   "los": true,
+   "hit": false,
+   "dist": 357.6488741669064,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 967,
+   "los": true,
+   "hit": false,
+   "dist": 345.6851207423888,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 896,
+   "los": true,
+   "hit": false,
+   "dist": 362.47277114522706,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 836,
+   "los": true,
+   "hit": false,
+   "dist": 376.3780357690039,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 861,
+   "los": true,
+   "hit": false,
+   "dist": 375.39883553837905,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 680,
+   "los": true,
+   "hit": false,
+   "dist": 434.944519816761,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 765,
+   "los": true,
+   "hit": true,
+   "dist": 368.5378118898435,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": true,
+   "dist": 371.491631547379,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 0,
+   "los": true,
+   "hit": false,
+   "dist": 368.9834095241256,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 226,
+   "los": true,
+   "hit": true,
+   "dist": 382.71957986818717,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 887,
+   "los": true,
+   "hit": true,
+   "dist": 379.04758582948307,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 1119,
+   "los": true,
+   "hit": true,
+   "dist": 346.7933707822896,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 1078,
+   "los": true,
+   "hit": true,
+   "dist": 299.28551091265086,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 1299,
+   "los": true,
+   "hit": true,
+   "dist": 315.5645126190167,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 631,
+   "los": true,
+   "hit": true,
+   "dist": 410.6866471820777,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 3799,
+   "los": true,
+   "hit": true,
+   "dist": 201.27708487872806,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 948,
+   "los": true,
+   "hit": true,
+   "dist": 362.4738471753877,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 1032,
+   "los": true,
+   "hit": true,
+   "dist": 381.96349428745015,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 4,
+   "los": true,
+   "hit": false,
+   "dist": 849.5349434611742,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 1161,
+   "los": true,
+   "hit": true,
+   "dist": 360.80511762011884,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 733,
+   "los": true,
+   "hit": true,
+   "dist": 468.63356797868,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 4211,
+   "los": true,
+   "hit": true,
+   "dist": 206.17323006292688,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 5331,
+   "los": true,
+   "hit": true,
+   "dist": 182.94621450051517,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 807,
+   "los": true,
+   "hit": true,
+   "dist": 344.61992156960633,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 1224,
+   "los": true,
+   "hit": false,
+   "dist": 358.4726830170005,
+   "weapon": "super shotgun",
+   "seed": 35009
+  },
+  {
+   "vis": 863,
+   "los": true,
+   "hit": false,
+   "dist": 359.6377127851238,
+   "weapon": "super shotgun",
+   "seed": 35009
+  }
+ ]
+}
