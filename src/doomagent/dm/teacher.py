@@ -1,22 +1,36 @@
+"""The cheater teacher for cig MAP02 (spec v2 §4): reflexes, not knowledge.
+
+It knows the map: its geometry (A* on the sector lines) and where weapons, ammo, medikits and armor lie
+(read from objects on the first step of a match only). Bots and flying projectiles it knows only from labels,
+i.e. what is on screen; then it remembers where it saw a bot. Every step it returns one value per head
+(move, turn, fire, weapon): it aims with exact turns and a lead for the weapon in hand, fires when aimed and
+safe, strafes and dodges at the same time, and takes the best weapon for the distance.
+"""
 import math
 from collections import deque
-
 from dataclasses import dataclass
 
-from doomagent.dm.config import (BARREL, BOT, DM, DMCfg, FINE_LEFT, FINE_RIGHT, FORWARD, FORWARD_LEFT,
-                                 FORWARD_RIGHT, ITEM_KIND, MODES, ROCKET_SPEED, SHOOT, STRAFE_LEFT,
-                                 STRAFE_RIGHT, TIC_RATE, TURN_LEFT, TURN_RIGHT)
+from doomagent.dm.actions import (BACK_LEFT, BACK_RIGHT, FORWARD, FORWARD_LEFT, FORWARD_RIGHT, STAY, STRAFE_LEFT,
+                                  STRAFE_RIGHT, TURN_DEG)
+from doomagent.dm.aim import dodge_move, half_width_deg, lead_point, pick_turn, target_angle
+from doomagent.dm.config import AMMO_ITEMS, BOT, DM, DMCfg, ITEM_KIND, MODES, PROJECTILES, TIC_RATE, WEAPON_ITEMS
 from doomagent.dm.nav import lookahead, nav_for
+from doomagent.dm.weapons import WEAPONS, best_weapon, usable
 
 ARRIVE_R = 64.0       # a goal counts as reached this close
-PICKUP_R = 24.0       # a known item this close is forgotten: picked up or gone
-LOOKAHEAD = 64.0      # steer towards the path point this far ahead
+PICKUP_R = 32.0       # an item spot this close is taken: it is skipped for ITEM_BACK
+ITEM_BACK = 30 * TIC_RATE
 REPLAN_STEPS = 8
 STUCK_STEPS = 8       # moving less than STUCK_MOVE over this many navigation steps is stuck
 STUCK_MOVE = 16.0
-BARREL_MARGIN = 32.0  # a barrel in the line of fire closer than safe_dist + this blocks the shot
-DODGE_ROOM = 48.0     # a dodge turns back before a wall this close on its side
-LEFT_ACTIONS = {TURN_LEFT, FINE_LEFT, FORWARD_LEFT}
+NAV_TOL = 3.0         # degrees: no turn while walking if the path point is this close to straight ahead
+WALK_MAX = 45.0       # degrees: turn in place first when the path point is farther off
+SWITCH_STEPS = 3      # a weapon change takes about 3 steps; no new press before
+SIDE_ROOM = 48.0      # a strafe turns back before a wall this close on its side
+RANGE_MARGIN = 32.0   # back off this far beyond a weapon's minimum range
+NAV_RANGE = 512.0     # the distance the weapon in hand is chosen for when nobody is in sight
+SIDE = {(0, 1): STRAFE_LEFT, (0, -1): STRAFE_RIGHT, (1, 1): FORWARD_LEFT, (1, -1): FORWARD_RIGHT,
+        (-1, 1): BACK_LEFT, (-1, -1): BACK_RIGHT}
 
 
 @dataclass(frozen=True)
@@ -32,11 +46,6 @@ class Enemy:
         return (self.left + self.right) / 2.0
 
 
-def is_aimed(e, margin):
-    m = margin * (e.right - e.left)
-    return e.left + m <= 0.0 <= e.right - m
-
-
 def pick_target(enemies, lock_id=None, keep=1.25):
     # nearest bot, but keep the locked one unless another is clearly closer
     nearest = min(enemies, key=lambda e: e.dist)
@@ -46,19 +55,9 @@ def pick_target(enemies, lock_id=None, keep=1.25):
     return nearest
 
 
-def wrap(deg):
-    return (deg + 180.0) % 360.0 - 180.0
-
-
 def bearing(px, py, angle, x, y):
-    # degrees from the view direction to (x, y), + is left
-    return wrap(math.degrees(math.atan2(y - py, x - px)) - angle)
-
-
-def x_ndc(px, py, angle, x, y):
-    # screen position of a world point at 90 degrees of horizontal view: -1 left edge, 1 right edge
-    rel = max(-89.0, min(89.0, bearing(px, py, angle, x, y)))
-    return -math.tan(math.radians(rel))
+    # degrees from the view direction to (x, y), + is left (kept for scripts of version 1.1)
+    return target_angle(px, py, angle, x, y)
 
 
 def visible_bots(labels, px, py, screen_w):
@@ -74,54 +73,26 @@ def visible_bots(labels, px, py, screen_w):
     return out
 
 
-def lead_shift(track, px, py, angle, tx, ty):
-    # screen shift from the target to where a rocket meets it: velocity from the track's ends
-    if len(track) < 2 or track[-1][0] == track[0][0]:
-        return 0.0
-    dt = track[-1][0] - track[0][0]
-    vx, vy = (track[-1][1] - track[0][1]) / dt, (track[-1][2] - track[0][2]) / dt
-    t = math.hypot(tx - px, ty - py) / ROCKET_SPEED
-    lx, ly = tx + vx * t, ty + vy * t
-    t = math.hypot(lx - px, ly - py) / ROCKET_SPEED  # one refinement on the lead point's range
-    lx, ly = tx + vx * t, ty + vy * t
-    return x_ndc(px, py, angle, lx, ly) - x_ndc(px, py, angle, tx, ty)
-
-
-def turn_towards(offset, fallback, fine_zone):
-    fine = abs(offset) <= fine_zone
-    if offset < 0:
-        return FINE_LEFT if fine else TURN_LEFT
-    if offset > 0:
-        return FINE_RIGHT if fine else TURN_RIGHT
-    return fallback
-
-
-def steer(rel):
-    if abs(rel) > 45.0:
-        return TURN_LEFT if rel > 0 else TURN_RIGHT
-    if abs(rel) > 7.0:
-        return FORWARD_LEFT if rel > 0 else FORWARD_RIGHT
-    return FORWARD
-
-
 class DMTeacher:
-    # scripted player on privileged data, honest about what it knows: items and bots only from
-    # labels seen in this match, chase only to where a bot was seen; objects_info is never read
     def __init__(self, cfg: DMCfg = DM, keep_trace=False):
         self.cfg, self.keep_trace = cfg, keep_trace
         self.nav, self.ring = None, []
         self.reset()
 
     def reset(self):
-        self.known, self.modes = [], []
+        # a new match: the map's items are read again on the first step
+        self.spots, self.known, self.used, self.modes = None, [], {}, []
         self.mode, self.goal = 'patrol', None
         self._new_life(None)
 
     def _new_life(self, me):
-        self.tracks, self.lock, self.target, self.lead, self.last_seen = {}, None, None, None, None
+        self.tracks, self.shots, self.lock, self.target, self.aim, self.last_seen = {}, {}, None, None, None, None
+        self.lead = None  # version 1.1 viewers read it
         self.path, self._path_goal, self._path_age = [], None, 0
-        self.scan, self.unstick, self.unstick_side = TURN_RIGHT, 0, STRAFE_LEFT
-        self.dodge_side, self.dodge_n = STRAFE_LEFT, 0
+        self.unstick, self.unstick_side = 0, STRAFE_LEFT
+        self.side, self.side_n = 1, 0
+        self.fired_last, self.since_switch = False, SWITCH_STEPS
+        self.skip = set()  # item spots without a path, this life
         self.moves = deque(maxlen=STUCK_STEPS + 1)
         self.ring_i = 0
         if me is not None and self.ring:
@@ -139,66 +110,75 @@ class DMTeacher:
             self.nav = nav_for(priv.sectors)
             self.ring = self.nav.patrol_ring()
             self._new_life(me)
+        if self.spots is None:  # the map's items: read once per match, never later
+            self.spots = [(ITEM_KIND[o.name], o.name, o.x, o.y) for o in priv.objects if o.name in ITEM_KIND]
+            self.known = [(k, x, y) for k, _, x, y in self.spots]
         if obs.first:
             self._new_life(me)
-        self._update_items(priv.labels, me)
+        for _, _, x, y in self.spots:
+            if math.hypot(x - me[0], y - me[1]) < PICKUP_R:
+                self.used[(x, y)] = priv.tic
         bots = visible_bots(priv.labels, priv.px, priv.py, c.width)
         seen = {e.id for e in bots}
         self.tracks = {k: v for k, v in self.tracks.items() if k in seen}
+        threats, shots = [], {}
         for lb in priv.labels:
-            if int(lb.object_id) in seen:
-                self.tracks.setdefault(int(lb.object_id), deque(maxlen=4)).append(
-                    (priv.tic, lb.object_position_x, lb.object_position_y))
+            i, x, y = int(lb.object_id), lb.object_position_x, lb.object_position_y
+            if i in seen:
+                self.tracks.setdefault(i, deque(maxlen=4)).append((priv.tic, x, y))
+            elif lb.object_name in PROJECTILES:
+                shots[i] = (priv.tic, x, y)
+                if i in self.shots and priv.tic > self.shots[i][0]:
+                    t0, x0, y0 = self.shots[i]
+                    threats.append((x, y, (x - x0) / (priv.tic - t0), (y - y0) / (priv.tic - t0)))
+        self.shots = shots
         if bots:
             near = min(bots, key=lambda e: e.dist)
             _, x, y = self.tracks[near.id][-1]
             self.last_seen = (x, y, priv.tic)
-        action = self._decide(priv, me, bots)
+        move, turn, fire, weapon = self._decide(priv, me, bots)
+        if c.dodge:
+            d = dodge_move(threats, priv.px, priv.py, priv.angle)
+            if d is not None:
+                move = d
+        self.fired_last = bool(fire)
+        self.since_switch = 0 if weapon else self.since_switch + 1
         if self.keep_trace:
             self.modes.append(MODES.index(self.mode))
-        return action
+        return move, turn, fire, weapon
 
-    def _update_items(self, labels, me):
-        for lb in labels:
-            kind = ITEM_KIND.get(lb.object_name)
-            if kind and not any(math.hypot(x - lb.object_position_x, y - lb.object_position_y) < 16
-                                for _, x, y in self.known):
-                self.known.append((kind, lb.object_position_x, lb.object_position_y))
-        self.known = [k for k in self.known if math.hypot(k[1] - me[0], k[2] - me[1]) >= PICKUP_R]
+    # -------------------------------------------------------------- decisions
 
-    def _needed_item(self, priv, me):
-        c = self.cfg
-        for kind, low, value in (('health', c.low_health, priv.health), ('ammo', c.low_ammo, priv.ammo)):
-            if value < low:
-                cands = [k for k in self.known if k[0] == kind]
-                if cands:
-                    return min(cands, key=lambda k: math.hypot(k[1] - me[0], k[2] - me[1]))
-        return None
+    def _switch(self, priv, best):
+        return int(priv.weapon != best and self.since_switch >= SWITCH_STEPS)
 
     def _decide(self, priv, me, bots):
         c = self.cfg
-        if priv.ammo > 0 and bots:
-            self.mode = 'combat'
-            return self._combat(priv, me, bots)
-        self.target, self.lead = None, None
+        if bots:
+            near = min(bots, key=lambda e: e.dist)
+            if any(s != 1 for s in usable(priv.owned, priv.slot_ammo)) or near.dist < WEAPONS[1].hi:
+                self.mode = 'combat'
+                return self._combat(priv, me, bots)
+        self.target, self.aim = None, None
+        weapon = self._switch(priv, best_weapon(priv.owned, priv.slot_ammo, NAV_RANGE))
         if self.last_seen is not None:
             x, y, tic = self.last_seen
             if priv.tic - tic > c.chase_s * TIC_RATE or math.hypot(x - me[0], y - me[1]) < ARRIVE_R:
                 self.last_seen = None
-        if priv.ammo > 0 and self.last_seen is not None:
+        for mode, spot in (('gear', self._gear_spot(priv, me)), ('items', self._item_spot(priv, me))):
+            while spot is not None:
+                self.mode, self.goal = mode, spot
+                a = self._navigate(priv, me)
+                if a is not None:
+                    return a + (0, weapon)
+                self.skip.add(spot)  # no path to it: try the next one
+                spot = self._gear_spot(priv, me) if mode == 'gear' else self._item_spot(priv, me)
+        if self.last_seen is not None:
             self.mode, self.goal = 'chase', self.last_seen[:2]
             a = self._navigate(priv, me)
             if a is not None:
-                return a
+                return a + (0, weapon)
             self.last_seen = None
-        item = self._needed_item(priv, me)
-        while item is not None:
-            self.mode, self.goal = 'items', item[1:]
-            a = self._navigate(priv, me)
-            if a is not None:
-                return a
-            self.known.remove(item)  # no path to it: forget it, try the next one
-            item = self._needed_item(priv, me)
         self.mode = 'patrol'
         goal = self.ring[self.ring_i]
         if math.hypot(goal[0] - me[0], goal[1] - me[1]) < ARRIVE_R:
@@ -206,67 +186,73 @@ class DMTeacher:
             goal = self.ring[self.ring_i]
         self.goal = goal
         a = self._navigate(priv, me)
-        return TURN_RIGHT if a is None else a
+        return (a if a is not None else (STAY, TURN_DEG.index(20.0))) + (0, weapon)
+
+    def _nearest(self, me, tic, names):
+        cands = [(x, y) for _, n, x, y in self.spots if n in names and (x, y) not in self.skip
+                 and tic - self.used.get((x, y), -ITEM_BACK) >= ITEM_BACK]
+        return min(cands, key=lambda p: math.hypot(p[0] - me[0], p[1] - me[1])) if cands else None
+
+    def _gear_spot(self, priv, me):
+        # with only weak weapons in hand (rank below gear_rank): the nearest stronger weapon not owned yet
+        c = self.cfg
+        if max(WEAPONS[s].rank for s in usable(priv.owned, priv.slot_ammo)) >= c.gear_rank:
+            return None
+        names = {n for n, s in WEAPON_ITEMS.items()
+                 if WEAPONS[s].rank >= c.gear_rank and not (s < len(priv.owned) and priv.owned[s])}
+        return self._nearest(me, priv.tic, names)
+
+    def _item_spot(self, priv, me):
+        # a medikit when hurt; ammo for an owned strong weapon that ran dry
+        c = self.cfg
+        if priv.health < c.low_health:
+            spot = self._nearest(me, priv.tic, {n for n, k in ITEM_KIND.items() if k == 'health'})
+            if spot is not None:
+                return spot
+        dry = [s for s, w in WEAPONS.items() if w.rank >= c.gear_rank and s < len(priv.owned) and priv.owned[s]
+               and priv.slot_ammo[s] < max(w.cost, c.low_ammo)]
+        if dry:
+            return self._nearest(me, priv.tic, {n for n, s in AMMO_ITEMS.items() if s in dry or s == 0})
+        return None
 
     def _combat(self, priv, me, bots):
         c = self.cfg
         t = pick_target(bots, self.lock)
         self.lock, self.target = t.id, t
-        _, tx, ty = self.tracks[t.id][-1]
-        self.lead = lead_shift(self.tracks[t.id], priv.px, priv.py, priv.angle, tx, ty)
-        slack = c.aim_slack / max(t.dist, 1.0)  # a sideways miss in map units, as a share of the half screen
-        aim = Enemy(t.id, t.left + self.lead - slack, t.right + self.lead + slack, t.dist, t.width_px)
-        ray = self.nav.shot_dist if c.shot_check == 'rocket' else self.nav.wall_dist
-        safe = (t.dist >= c.safe_dist
-                and ray(priv.px, priv.py, priv.angle) >= c.safe_dist
-                and not self._barrel_in_line(priv, me))
-        aimed = is_aimed(aim, c.aim_margin)
-        if aimed and priv.attack_ready and safe and t.width_px >= c.min_target_w:
-            return SHOOT
-        if t.dist < c.safe_dist:
-            return self._side_step(priv)
-        if c.dodge and (aimed or abs(aim.offset) <= c.fine_zone) and not priv.attack_ready:
-            return self._dodge(priv)
-        a = turn_towards(aim.offset, self.scan, c.fine_zone)
-        if a != SHOOT:
-            self.scan = TURN_LEFT if a in LEFT_ACTIONS else TURN_RIGHT
-        return a
+        weapon = self._switch(priv, best_weapon(priv.owned, priv.slot_ammo, t.dist))
+        w = WEAPONS.get(priv.weapon, WEAPONS[2])
+        self.aim = lead_point(self.tracks[t.id], priv.px, priv.py, w.speed)
+        rel = target_angle(priv.px, priv.py, priv.angle, *self.aim)
+        tol = c.aim_tol * half_width_deg(t.dist)
+        turn = pick_turn(rel, tol)
+        safe = t.dist >= w.lo and (w.splash == 0.0 or
+                                   self.nav.shot_dist(priv.px, priv.py, priv.angle) >= c.safe_dist)
+        # the rocket launcher fires on a new press only; the other weapons repeat while the key is held
+        ready = priv.attack_ready or (self.fired_last and priv.weapon != 5)
+        fresh = not (self.fired_last and priv.weapon == 5)
+        fire = int(abs(rel) <= tol and safe and ready and fresh and weapon == 0 and priv.weapon_ammo >= w.cost)
+        fwd = 0
+        if t.dist < w.lo + RANGE_MARGIN or (w.splash and t.dist < c.safe_dist + RANGE_MARGIN):
+            fwd = -1
+        elif t.dist > w.hi:
+            fwd = 1
+        return SIDE[(fwd, self._strafe_side(priv))], turn, fire, weapon
 
-    def _side_step(self, priv):
-        # towards the side with more room
-        left = self.nav.wall_dist(priv.px, priv.py, priv.angle + 90.0)
-        right = self.nav.wall_dist(priv.px, priv.py, priv.angle - 90.0)
-        return STRAFE_LEFT if left >= right else STRAFE_RIGHT
-
-    def _dodge(self, priv):
-        # while the launcher reloads: strafe one way for dodge_steps, then the other; a wall closer
-        # than a few steps on that side flips it early
-        self.dodge_n += 1
-        side_angle = 90.0 if self.dodge_side == STRAFE_LEFT else -90.0
-        if self.dodge_n > self.cfg.dodge_steps or \
-                self.nav.wall_dist(priv.px, priv.py, priv.angle + side_angle) < DODGE_ROOM:
-            self.dodge_side = STRAFE_RIGHT if self.dodge_side == STRAFE_LEFT else STRAFE_LEFT
-            self.dodge_n = 1
-        return self.dodge_side
-
-    def _barrel_in_line(self, priv, me):
-        w = self.cfg.width
-        for lb in priv.labels:
-            if lb.object_name != BARREL:
-                continue
-            if 2.0 * lb.x / w - 1.0 <= 0.0 <= 2.0 * (lb.x + lb.width) / w - 1.0:
-                d = math.hypot(lb.object_position_x - me[0], lb.object_position_y - me[1])
-                if d < self.cfg.safe_dist + BARREL_MARGIN:
-                    return True
-        return False
+    def _strafe_side(self, priv):
+        # +1 left, -1 right: strafe_period steps one way, then the other; a wall close on that side flips it
+        self.side_n += 1
+        room = self.nav.wall_dist(priv.px, priv.py, priv.angle + 90.0 * self.side)
+        if self.side_n > self.cfg.strafe_period or room < SIDE_ROOM:
+            self.side, self.side_n = -self.side, 1
+        return self.side
 
     def _navigate(self, priv, me):
-        # one step along the A* path to self.goal; None when there is no path
+        # (move, turn) one step along the A* path to self.goal; None when there is no path
         if self.unstick > 0:
             self.unstick -= 1
-            return self.unstick_side
+            return self.unstick_side, 0
         off_path = (not self.path or
-                    min(math.hypot(x - me[0], y - me[1]) for x, y in self.path) > LOOKAHEAD)
+                    min(math.hypot(x - me[0], y - me[1]) for x, y in self.path) > ARRIVE_R)
         if self.goal != self._path_goal or self._path_age >= REPLAN_STEPS or off_path:
             self.path, self._path_goal, self._path_age = self.nav.path(me, self.goal), self.goal, 0
         self._path_age += 1
@@ -279,6 +265,7 @@ class DMTeacher:
             self.unstick = 1
             self.unstick_side = STRAFE_RIGHT if self.unstick_side == STRAFE_LEFT else STRAFE_LEFT
             self._path_age = REPLAN_STEPS
-            return self.unstick_side
-        wp = lookahead(self.path, me[0], me[1], LOOKAHEAD)
-        return steer(bearing(priv.px, priv.py, priv.angle, wp[0], wp[1]))
+            return self.unstick_side, 0
+        x, y = lookahead(self.path, me[0], me[1])
+        rel = target_angle(priv.px, priv.py, priv.angle, x, y)
+        return (FORWARD if abs(rel) < WALK_MAX else STAY), pick_turn(rel, NAV_TOL)
