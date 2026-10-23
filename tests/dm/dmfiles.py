@@ -1,6 +1,6 @@
 import numpy as np
 
-from doomagent.dm.actions import make_vec
+from doomagent.dm.actions import VEC_DIM, make_vec
 from doomagent.dm.config import DM
 from doomagent.dm.env import DMObs, DMPrivileged
 from doomagent.env import Label
@@ -61,7 +61,7 @@ class FakeMatchEnv:
 
 
 class StubTeacher:
-    # always the same label; stands in for DMTeacher in recorder tests
+    # always the same label (an action tuple); stands in for DMTeacher in recorder tests
     def __init__(self, action):
         self.action, self.mode = action, 'patrol'
 
@@ -87,8 +87,9 @@ def make_match(d, seed, T=40, first_at=(0,), variant='base'):
                                            for t in range(T)]))
     first = np.zeros(T, bool)
     first[list(first_at)] = True
-    np.savez(pre + '.npz', actions=np.arange(T) % 10, executed=np.arange(T) % 10,
-             vec=np.zeros((T, 2), np.float32), first=first, rewards=np.zeros(T, np.float32),
+    acts = np.stack([np.arange(T) % 9, np.arange(T) % 15, np.arange(T) % 2, np.zeros(T, int)], 1).astype(np.int64)
+    np.savez(pre + '.npz', actions=acts, executed=acts.copy(), weapon=np.full(T, 2, np.int8),
+             vec=np.zeros((T, VEC_DIM), np.float32), first=first, rewards=np.zeros(T, np.float32),
              modes=np.zeros(T, np.int8), pose=np.zeros((T, 3), np.float32),
              stats=np.zeros((T, 4), np.float32), counters=np.zeros((T, 3), np.float32),
              bot_visible=np.zeros(T, bool), seed=seed, variant=variant, scenario='deathmatch')

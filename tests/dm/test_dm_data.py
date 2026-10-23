@@ -6,7 +6,8 @@ import torch
 
 from dmfiles import make_match
 from doomagent.dm.augment import frame_augment
-from doomagent.dm.config import DM, FORWARD, STRAFE_LEFT, STRAFE_RIGHT, TURN_LEFT, TURN_RIGHT
+from doomagent.dm.actions import BACK_LEFT, BACK_RIGHT, FORWARD, STRAFE_LEFT, STRAFE_RIGHT, TURN_DEG, VEC_DIM
+from doomagent.dm.config import DM
 from doomagent.dm.data import (MatchSegments, MatchSteps, life_starts, match_files, mirror_batch,
                                split_holdout, stack_at, windows)
 
@@ -58,13 +59,21 @@ def test_padding_is_neither_valid_nor_loss(tmp_path):
     assert not it['valid'][20:].any() and not it['loss'][20:].any()
 
 
-def test_mirror_batch():
-    b = dict(frames=torch.arange(6.0).view(1, 1, 1, 6).expand(2, 4, 1, 6).clone(),
-             action=torch.tensor([TURN_LEFT, STRAFE_RIGHT]))
+def test_mirror_batch_heads():
+    act = torch.tensor([[BACK_LEFT, TURN_DEG.index(-20.0), 1, 0], [STRAFE_RIGHT, TURN_DEG.index(3.0), 0, 1]])
+    b = dict(frames=torch.arange(6.0).view(1, 1, 1, 6).expand(2, 4, 1, 6).clone(), action=act)
     m = mirror_batch(b)
     assert m['frames'][0, 0, 0].tolist() == [5, 4, 3, 2, 1, 0]
-    assert m['action'].tolist() == [TURN_RIGHT, STRAFE_LEFT]
-    assert mirror_batch(dict(b, action=b['action'].view(1, 2)))['action'].shape == (1, 2)
+    assert m['action'].tolist() == [[BACK_RIGHT, TURN_DEG.index(20.0), 1, 0], [STRAFE_LEFT, TURN_DEG.index(-3.0), 0, 1]]
+    assert mirror_batch(dict(b, action=act.view(1, 2, 4)))['action'].shape == (1, 2, 4)
+
+
+def test_items_carry_four_heads(tmp_path):
+    make_match(tmp_path, 1, T=20)
+    files = match_files([str(tmp_path)])
+    assert MatchSteps(files)[3]['action'].tolist() == [3, 3, 1, 0]
+    seg = MatchSegments(files)[0]
+    assert seg['action'].shape == (32, 4) and seg['vec'].shape == (32, VEC_DIM)
 
 
 def test_holdout_from_the_first_dir_only(tmp_path):
@@ -94,7 +103,7 @@ def test_dataset_stack_equals_env_stack():
         stacks.append(o.frames)
         if t == 20:
             env.game.send_game_command('kill')
-        o, _, done = env.step(FORWARD)
+        o, _, done = env.step((FORWARD, 0, 0, 0))
         t += 1
     env.close()
     frames, first = np.stack(frames), np.array(first)

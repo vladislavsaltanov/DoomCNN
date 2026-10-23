@@ -5,9 +5,10 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from doomagent.dm.config import DM, MIRROR
+from doomagent.dm.actions import MOVE_MIRROR, TURN_MIRROR
+from doomagent.dm.config import DM
 
-MIRROR_T = torch.tensor(MIRROR)
+MOVE_T, TURN_T = torch.tensor(MOVE_MIRROR), torch.tensor(TURN_MIRROR)
 
 
 def life_starts(first):
@@ -85,7 +86,7 @@ class MatchSteps(_Matches):
         e = self.eps[i]
         frames = np.ascontiguousarray(stack_at(self._frames(i), t, e['starts'][t], self.stack))
         return dict(frames=torch.from_numpy(frames), vec=torch.from_numpy(e['vec'][t]),
-                    action=int(e['actions'][t]), loss=True)
+                    action=torch.from_numpy(e['actions'][t].astype(np.int64)), loss=True)
 
 
 class MatchSegments(_Matches):
@@ -105,9 +106,9 @@ class MatchSegments(_Matches):
         frames = np.zeros((L, self.stack) + fr.shape[1:], np.uint8)
         for j in range(e - s):
             frames[j] = stack_at(fr, s + j, ep['starts'][s + j], self.stack)
-        vec = np.zeros((L, 2), np.float32)
+        vec = np.zeros((L, ep['vec'].shape[1]), np.float32)
         vec[:e - s] = ep['vec'][s:e]
-        action = np.zeros(L, np.int64)
+        action = np.zeros((L, ep['actions'].shape[1]), np.int64)
         action[:e - s] = ep['actions'][s:e]
         valid = np.arange(L) < e - s
         loss = valid & (np.arange(L) >= lf - s)
@@ -117,8 +118,11 @@ class MatchSegments(_Matches):
 
 
 def mirror_batch(b):
-    # a horizontally flipped batch: frames flipped, every left action swapped with its right one
+    # a horizontally flipped batch: frames flipped, left and right moves swapped, turns negated
     out = dict(b)
     out['frames'] = torch.flip(b['frames'], dims=[-1])
-    out['action'] = MIRROR_T.to(b['action'].device)[b['action']]
+    a = b['action'].clone()
+    a[..., 0] = MOVE_T.to(a.device)[a[..., 0]]
+    a[..., 1] = TURN_T.to(a.device)[a[..., 1]]
+    out['action'] = a
     return out

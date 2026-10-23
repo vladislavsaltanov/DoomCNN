@@ -7,13 +7,14 @@ from collections import Counter
 import numpy as np
 
 from doomagent.dm import config as C
-from doomagent.dm.config import BOT, DM, MODES, NOISE_ACTIONS, SHOOT
+from doomagent.dm.actions import HEAD_SIZES
+from doomagent.dm.config import BOT, DM, MODES
 from doomagent.variants import BASE, load_variants, spread_seeds
 
 
 class MatchNoise:
-    # executor: the teacher's label, with probability p replaced by a random move or turn; a shot is
-    # never injected nor replaced. Reseeded per match, so parallel recording equals serial.
+    # executor: the teacher's label; with probability p the move or the turn head (half and half) gets another
+    # random value; fire and weapon are never changed. Reseeded per match, so parallel recording equals serial.
     def __init__(self, p=DM.noise_p):
         self.p, self.rng = p, np.random.default_rng(0)
 
@@ -21,9 +22,12 @@ class MatchNoise:
         self.rng = np.random.default_rng(seed)
 
     def __call__(self, obs, priv, label):
-        if label != SHOOT and self.rng.random() < self.p:
-            return int(NOISE_ACTIONS[self.rng.integers(len(NOISE_ACTIONS))])
-        return int(label)
+        a = [int(x) for x in label]
+        if self.rng.random() < self.p:
+            head = int(self.rng.integers(2))
+            v = int(self.rng.integers(HEAD_SIZES[head] - 1))
+            a[head] = v + (v >= a[head])  # any value but the label's
+        return tuple(a)
 
 
 def record_match(env, seed, executor, teacher, prefix, cfg=DM):
@@ -33,12 +37,12 @@ def record_match(env, seed, executor, teacher, prefix, cfg=DM):
         executor.reset(seed)
     obs, done = env.reset(seed), False
     rows = {k: [] for k in ('actions', 'executed', 'vec', 'first', 'rewards', 'modes', 'pose',
-                            'stats', 'counters', 'bot_visible')}
+                            'stats', 'counters', 'bot_visible', 'weapon')}
     frames = []
     while not done:
         p = env.privileged()
-        label = int(teacher(obs, p))
-        action = int(executor(obs, p, label))
+        label = tuple(int(x) for x in teacher(obs, p))
+        action = tuple(int(x) for x in executor(obs, p, label))
         frames.append(obs.frames[-1].copy())
         rows['actions'].append(label)
         rows['executed'].append(action)
@@ -49,12 +53,13 @@ def record_match(env, seed, executor, teacher, prefix, cfg=DM):
         rows['stats'].append((p.health, p.armor, p.ammo, p.items))
         rows['counters'].append((p.frags, p.deaths, p.hits))
         rows['bot_visible'].append(any(lb.object_name == BOT for lb in p.labels))
+        rows['weapon'].append(p.weapon)
         obs, r, done = env.step(action)
         rows['rewards'].append(r)
     np.save(prefix + '.frames.npy', np.stack(frames).astype(np.uint8))
     dtypes = dict(actions=np.int64, executed=np.int64, vec=np.float32, first=bool, rewards=np.float32,
                   modes=np.int8, pose=np.float32, stats=np.float32, counters=np.float32,
-                  bot_visible=bool)
+                  bot_visible=bool, weapon=np.int8)
     np.savez(prefix + '.npz', **{k: np.array(v, dtype=dtypes[k]) for k, v in rows.items()},
              seed=seed, variant=env.variant.name, scenario='deathmatch')
     return len(frames)
