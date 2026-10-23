@@ -4,6 +4,7 @@ A run whose log reached the last epoch and whose model file exists is skipped, s
 
     python scripts/dm/dm_runs.py --phase 1 --parallel 1
     python scripts/dm/dm_runs.py --phase 2 --parallel 1 [--conv]
+    python scripts/dm/dm_runs.py --phase 3 --parallel 1
 """
 import argparse
 import json
@@ -19,7 +20,11 @@ PHASES = {1: [('dm2_m0_r0', 'm0', R0, []),
               ('dm2_m1_r0', 'm1', R0, []),
               ('dm2_m0_r0_conv', 'm0', R0, ['--conv-init', CONV])],
           2: [('dm2_m0_r01', 'm0', R01, []),
-              ('dm2_m1_r01', 'm1', R01, [])]}
+              ('dm2_m1_r01', 'm1', R01, [])],
+          # after the inventory and the auxiliary targets (E4 ruling): R0 of 300 matches + R1, conv init kept
+          3: [('dm3_m1_aux', 'm1', R01, ['--conv-init', CONV, '--aux', '1.0']),
+              ('dm3_m1', 'm1', R01, ['--conv-init', CONV]),
+              ('dm3_m0_aux', 'm0', R01, ['--conv-init', CONV, '--aux', '1.0'])]}
 
 
 def finished(out, epochs):
@@ -64,7 +69,7 @@ def run_queue(jobs, root=ROOT, epochs=12, parallel=1, make_cmd=train_cmd, poll_s
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('--phase', type=int, choices=[1, 2], required=True)
+    ap.add_argument('--phase', type=int, choices=[1, 2, 3], required=True)
     ap.add_argument('--parallel', type=int, default=1, help='one at a time: two do not fit in 8 GB')
     ap.add_argument('--epochs', type=int, default=12)
     ap.add_argument('--workers', type=int, default=2, help='DataLoader workers per run')
