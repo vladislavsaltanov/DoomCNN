@@ -1,0 +1,9 @@
+{
+ "name": "mix_test_01_sswv",
+ "split": "test",
+ "kind": "mix",
+ "iwad": "",
+ "pwads": [
+  "variants_dm/mix_test_01_sswv.wad"
+ ]
+}

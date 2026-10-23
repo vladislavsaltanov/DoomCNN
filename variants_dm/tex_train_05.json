@@ -1,0 +1,9 @@
+{
+ "name": "tex_train_05",
+ "split": "train",
+ "kind": "tex",
+ "iwad": "",
+ "pwads": [
+  "variants_dm/tex_train_05.wad"
+ ]
+}

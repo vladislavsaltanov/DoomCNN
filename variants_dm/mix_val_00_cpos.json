@@ -1,0 +1,9 @@
+{
+ "name": "mix_val_00_cpos",
+ "split": "val",
+ "kind": "mix",
+ "iwad": "",
+ "pwads": [
+  "variants_dm/mix_val_00_cpos.wad"
+ ]
+}

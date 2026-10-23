@@ -184,6 +184,7 @@ docs/
 data/
 runs/
 variants/*.wad
+variants_dm/*.wad
 _vizdoom.ini
 
 # videos are large; kept locally, not in git
