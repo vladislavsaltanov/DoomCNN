@@ -72,10 +72,14 @@ class MemoryTape:
         labels = [(x0, 8, 'память M1: 512 ячеек GRU за последние 20 с (синий −, красный +)', INK)]
         n = len(self.cols)
         px = lambda i: x0 + int((self.steps - n + i + 0.5) * rw / self.steps)  # noqa: E731
+        last_x = -10 ** 6  # events closer than a word apart keep their line but not their label
         for i, ev in enumerate(self.evs):
-            for k, e in enumerate(sorted(ev)):
+            if ev:
                 cv2.line(img, (px(i), y0 - 4), (px(i), y0 + rh), INK, 1)
-                labels.append((px(i) + 2, y0 - 18 - 12 * k, EVENT_TEXT[e], MUTED))
+            if ev and px(i) - last_x >= 48:
+                last_x = px(i)
+                for k, e in enumerate(sorted(ev)):
+                    labels.append((px(i) + 2, y0 - 18 - 12 * k, EVENT_TEXT[e], MUTED))
         zy0, zh = y0 + rh + 30, 60
         cv2.rectangle(img, (x0, zy0), (x0 + rw, zy0 + zh), (40, 40, 40), 1)
         pts = [(px(i), int(zy0 + zh - z * zh)) for i, z in enumerate(self.zs)]

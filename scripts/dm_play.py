@@ -4,7 +4,7 @@
     python scripts/dm_play.py --who random --seed 35000 --boxes --hud --no-window --record artifacts/d0_random.mp4
 
 One frame per game tic (35 per second). Boxes, the status bar and the action list are drawn for the
-viewer only. The teacher joins in D1 (Task 7), trained models in D2 (Task 15).
+viewer only. --who takes random, teacher or a dm_*.pt checkpoint (M0 or M1).
 """
 import argparse
 import os
@@ -62,7 +62,22 @@ def make_chooser(who, seed):
         return lambda obs, priv: (int(rng.integers(0, N_ACTIONS)), None)
     if who == 'teacher':
         return TeacherChooser(DM)
-    raise SystemExit(f'--who {who}: trained models arrive in D2')
+    return ModelChooser(who)
+
+
+class ModelChooser:
+    # a trained M0 or M1 on the CPU: it gets frames, vec and first only; probs go to the overlay
+    def __init__(self, path):
+        from doomagent.dm.agent import DMAgent
+        from doomagent.dm.model import load_model
+        self.agent = DMAgent(load_model(path, DM))
+
+    def reset(self):
+        self.agent.reset()
+
+    def __call__(self, obs, priv):
+        info = self.agent.explain(obs.frames, obs.vec, obs.first)
+        return info['action'], info
 
 
 def snapshot_grid(snaps, path):

@@ -261,8 +261,9 @@ def curves_figure(logs, out_png, teacher=None, confusion_of=None, action_names=N
         a.tick_params(length=0)
         for s in a.spines.values():
             s.set_visible(False)
-        a.set_title('Confusion, held out (row: teacher, column: network; % of row)', color=INK, fontsize=9,
-                    loc='left')
+        a.set_title('Held-out confusion, % of row', color=INK, fontsize=10, loc='left')
+        a.set_ylabel('teacher', color=MUTED, fontsize=8)
+        a.set_xlabel('network', color=MUTED, fontsize=8)
     else:
         a.axis('off')
     fig.tight_layout()
