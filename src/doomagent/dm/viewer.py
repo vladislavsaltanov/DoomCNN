@@ -36,7 +36,7 @@ def compose_view(rgb, priv, action=None, info=None, cfg=DM, boxes=True, hud=None
     out[:, :W] = game
     m = cv2.resize(mapview.draw(priv, teacher), (320, 320), interpolation=cv2.INTER_AREA)
     out[:320, W:] = m
-    lines = [f'health {priv.health:.0f}   rockets {priv.ammo:.0f}',
+    lines = [f'health {priv.health:.0f}   ammo {priv.ammo:.0f}',
              f'frags {priv.frags:.0f}   deaths {priv.deaths:.0f}']
     if teacher is not None:
         lines.insert(0, f'teacher: {teacher.mode}')
