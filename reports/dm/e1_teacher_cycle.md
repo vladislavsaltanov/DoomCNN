@@ -10,3 +10,6 @@ Each row: one change against the accepted teacher; 20 val matches, then 20 fresh
 | weapon_first_256 | `weapon_first=256.0` | pistol 45% of steps: fights with a pistol keep it from gearing up | 6.25 → 7.85 | 6.85 → 8.25 | +1.40 [+0.25, +2.60] | 8.47 | 2.70 | 48% | yes |
 | armor_50 | `weapon_first=256.0 armor_below=50.0` | 76% of deaths in fights; armor halves the damage | 7.85 → 7.50 | 8.25 → 8.53 | +0.28 [-1.38, +1.77] | 8.65 | 4.37 | 52% | no |
 | chase_3 | `weapon_first=256.0 chase_s=3.0` | bots get away; a 1 s chase loses them | 7.85 → 8.30 | 8.25 → 7.75 | -0.50 [-2.10, +0.95] | 7.65 | 2.42 | 52% | no |
+| min_vis_1 | `weapon_first=256.0 min_vis_px=1.0` | 36% of bot labels have 0 pixels (behind walls and ledges); shots under 50 px hit 13% | 7.85 → 8.00 | 8.25 → 8.47 | +0.23 [-1.02, +1.40] | 7.97 | 3.36 | 62% | no |
+| min_vis_50 | `weapon_first=256.0 min_vis_px=50.0` | 36% of bot labels have 0 pixels (behind walls and ledges); shots under 50 px hit 13% | 7.85 → 9.60 | 8.25 → 9.90 | +1.65 [-0.05, +3.15] | 8.68 | 3.84 | 70% | no |
+| min_vis_200 | `weapon_first=256.0 min_vis_px=200.0` | 36% of bot labels have 0 pixels (behind walls and ledges); shots under 50 px hit 13% | 7.85 → 8.15 | 8.25 → 8.43 | +0.17 [-1.50, +1.78] | 7.85 | 2.67 | 55% | no |

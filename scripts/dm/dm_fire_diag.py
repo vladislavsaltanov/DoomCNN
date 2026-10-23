@@ -2,7 +2,7 @@
 a straight 3D line from the gun to the target's body passes every opening on the way, and whether the
 shot hit (HITCOUNT rose this step). Also how often a bot label sits behind a wall.
 
-    python scripts/dm/dm_fire_diag.py [--seeds val|fresh] [--n 10] [--out reports/dm/fire_diag]
+    python scripts/dm/dm_fire_diag.py [--seeds val|fresh] [--n 10] [--out reports/dm/fire_diag] [--set key=value ...]
 """
 import argparse
 import json
@@ -48,11 +48,11 @@ def bucket(v):
             return f'{VIS_BINS[i]}-{VIS_BINS[i + 1] if VIS_BINS[i + 1] < 10 ** 9 else ""}'
 
 
-def run(seeds):
+def run(seeds, cfg=DM):
     shots, labels_seen, steps, fires = [], dict(n=0, blocked=0, blocked_small=0), 0, 0
-    teacher = DMTeacher(DM)
+    teacher = DMTeacher(cfg)
     for seed in seeds:
-        env = DeathmatchEnv(DM)
+        env = DeathmatchEnv(cfg)
         obs, done = env.reset(seed), False
         teacher.reset()
         lines = shot_lines_from_sectors(env.sectors)
@@ -113,9 +113,11 @@ if __name__ == '__main__':
     ap.add_argument('--seeds', choices=['val', 'fresh'], default='val')
     ap.add_argument('--n', type=int, default=10)
     ap.add_argument('--out', default='reports/dm/fire_diag')
+    ap.add_argument('--set', nargs='*', default=[])
     a = ap.parse_args()
     seeds = list(VAL_SEEDS[:a.n]) if a.seeds == 'val' else list(FRESH_SEEDS[:a.n])
-    shots, labels_seen, steps, fires = run(seeds)
+    from dm_teacher_diag import with_overrides
+    shots, labels_seen, steps, fires = run(seeds, with_overrides(DM, a.set))
     s = summary(shots, labels_seen, steps, fires)
     with open(a.out + '.json', 'w') as fh:
         json.dump(dict(summary=s, shots=shots), fh, indent=1)
