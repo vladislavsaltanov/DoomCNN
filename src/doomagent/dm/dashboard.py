@@ -22,6 +22,7 @@ from doomagent.dm.live import DMLive
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VIEWS = ('screen', 'map', 'brain', 'memory')
+BOOT = str(time.time())  # a new value after a restart: the page then reconnects its picture streams
 
 
 def _read_json(p):
@@ -115,7 +116,7 @@ def make_handler(dm, system=None):
             if u.path == '/api/live':
                 with dm.lock:
                     req = {k: v for k, v in dm.req.items() if k != 'changed'}
-                return self._send(dict(state=dm.state, req=req, history=list(dm.history),
+                return self._send(dict(boot=BOOT, state=dm.state, req=req, history=list(dm.history),
                                        series=list(dm.series), heads=list(HEADS), values=VALUES))
             if u.path == '/api/control':
                 kw = {k: q[k] for k in ('model', 'variant') if k in q}

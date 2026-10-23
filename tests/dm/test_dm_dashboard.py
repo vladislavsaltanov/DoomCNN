@@ -30,6 +30,14 @@ def test_page_and_api(server):
     assert json.loads(get(server + '/api/live')[1])['state']['status'] == 'остановлено'
 
 
+def test_live_reports_the_server_boot(server):
+    # the page reconnects its picture streams when the server it watches was restarted
+    a, b = (json.loads(get(server + '/api/live')[1]).get('boot') for _ in range(2))
+    assert a and a == b
+    html = get(server + '/dm')[1]
+    assert 'reconnectViews' in html and '.onerror' in html
+
+
 def test_unknown_path_is_404(server):
     with pytest.raises(urllib.error.HTTPError) as e:
         get(server + '/live/secret.mjpg')
