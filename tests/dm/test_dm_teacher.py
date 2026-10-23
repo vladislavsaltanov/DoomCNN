@@ -244,7 +244,7 @@ def test_barrel_check_holds_fire():
 def test_weapon_first_skips_far_fights_with_a_pistol():
     gun = dict(weapon=2, weapon_ammo=50.0, ammo=50.0, owned=(0, 1, 1, 0, 0, 0, 0, 0), slot_ammo=(0, 0, 50, 0, 50, 0, 0, 0),
                objects=[MapObject(1, 'Chaingun', 600.0, 900.0, 0.0)])
-    for cfg, dist, mode in ((DM, 600, 'combat'), (replace(DM, weapon_first=256.0), 600, 'gear'),
+    for cfg, dist, mode in ((replace(DM, weapon_first=0.0), 600, 'combat'), (replace(DM, weapon_first=256.0), 600, 'gear'),
                             (replace(DM, weapon_first=256.0), 200, 'combat')):
         t = DMTeacher(cfg)
         t(obs(first=True), priv(labels=[bot(1, 0.0, dist)], **gun))
