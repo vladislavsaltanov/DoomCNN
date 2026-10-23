@@ -1,9 +1,9 @@
 import json
 
-from doomagent.dm.config import ACTION_NAMES
+
 from dmfiles import make_match
-from doomagent.dm.reports import (curves_figure, d0_figure, dataset_figure, dataset_stats, gate_a, match_table_md,
-                                  teacher_figure)
+from doomagent.dm.reports import (curves_figure, d0_figure, dataset_figure, dataset_stats, e0_figure, gate_a,
+                                  match_table_md, teacher_figure)
 
 
 def test_dataset_stats_counts(tmp_path):
@@ -36,7 +36,7 @@ def test_curves_figure_writes_png(tmp_path):
     (tmp_path / 'm1.live.json').write_text(json.dumps(dict(confusion=conf, holdout_confusion=conf)))
     out = tmp_path / 'c.png'
     curves_figure(logs, str(out), teacher=ci(6.25), confusion_of=str(tmp_path / 'm1.live.json'),
-                  action_names=ACTION_NAMES)
+                  action_names=[str(i) for i in range(10)])
     assert out.stat().st_size > 10_000
 
 
@@ -76,3 +76,12 @@ def test_d0_figure_writes_png(tmp_path):
     out = tmp_path / 'd0.png'
     d0_figure(physics, bots, str(out))
     assert out.exists() and out.stat().st_size > 10_000
+
+
+def test_e0_figure_writes_png(tmp_path):
+    turns = {d: d * 0.99 for d in (1.0, -1.0, 3.0, -3.0, 10.0, -10.0, 40.0, -40.0)}
+    moves = {'forward': 29.5, 'back': 24.0, 'strafe_left': 23.0, 'strafe_right': 23.0, 'forward_left': 33.0}
+    bots = {'player': ci(-3.0), 'bot_median': ci(3.5), 'bot_best': ci(6.0)}
+    out = tmp_path / 'e0.png'
+    e0_figure(turns, moves, bots, str(out))
+    assert out.stat().st_size > 10_000

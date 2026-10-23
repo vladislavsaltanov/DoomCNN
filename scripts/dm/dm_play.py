@@ -13,7 +13,7 @@ import time
 import cv2
 import numpy as np
 
-from doomagent.dm.config import DM, N_ACTIONS, VARIANTS_DIR
+from doomagent.dm.config import DM, VARIANTS_DIR
 from doomagent.dm.env import DeathmatchEnv
 from doomagent.dm.viewer import compose_view
 from doomagent.variants import get_variant
@@ -58,8 +58,16 @@ class TeacherChooser:
 def make_chooser(who, seed):
     # chooser(obs, priv) -> (action, info for the overlay)
     if who == 'random':
-        rng = np.random.default_rng(seed)
-        return lambda obs, priv: (int(rng.integers(0, N_ACTIONS)), None)
+        from doomagent.dm.evaluate import RandomChooser
+        rnd = RandomChooser()
+
+        class Random:
+            def reset(self):
+                rnd.reset()
+
+            def __call__(self, obs, priv):
+                return rnd(obs, priv), None
+        return Random()
     if who == 'teacher':
         return TeacherChooser(DM)
     return ModelChooser(who)

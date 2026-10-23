@@ -60,6 +60,38 @@ def d0_figure(physics, bots, out_png):
     plt.close(fig)
 
 
+def e0_figure(turns, moves, bots, out_png):
+    # turns: {requested degrees: executed}; moves: {move name: map units per step, steady}; bots: {'player',
+    # 'bot_median', 'bot_best': {mean, lo, hi}} frags per match with a random player
+    fig, ax = plt.subplots(1, 3, figsize=(16, 3.8), facecolor=SURFACE, gridspec_kw=dict(width_ratios=(1.4, 1.2, 0.8)))
+    req = sorted(turns)
+    err = [turns[d] - d for d in req]
+    bars = ax[0].bar([f'{d:+g}' for d in req], err, color=CATEGORICAL[0], width=0.6)
+    ax[0].bar_label(bars, labels=['%+.2f' % e for e in err], color=MUTED, fontsize=7, padding=2)
+    ax[0].axhline(0, color='#c9c8c2', linewidth=0.8)
+    _style(ax[0], 'Turn error: executed minus requested (degrees)')
+    _xlabel(ax[0], 'requested turn per step, degrees (+ is left)')
+    names = list(moves)
+    bars = ax[1].bar([n.replace('_', ' ') for n in names], [moves[n] for n in names], color=CATEGORICAL[0], width=0.6)
+    ax[1].bar_label(bars, labels=['%.1f' % moves[n] for n in names], color=MUTED, fontsize=7, padding=2)
+    ax[1].tick_params(axis='x', labelrotation=30)
+    _style(ax[1], 'Distance per step at full speed (map units)')
+    keys = [('player', 'random player', ENTITY['random']), ('bot_median', 'median bot', ENTITY['bots']),
+            ('bot_best', 'best bot', ENTITY['bots'])]
+    for i, (k, name, color) in enumerate(keys):
+        d = bots[k]
+        ax[2].errorbar([i], [d['mean']], yerr=[[d['mean'] - d['lo']], [d['hi'] - d['mean']]], fmt='o', color=color,
+                       capsize=4, markersize=8)
+        _end_label(ax[2], i, d['mean'], '%.1f' % d['mean'])
+    ax[2].set_xticks(range(len(keys)), [n for _, n, _ in keys])
+    ax[2].set_xlim(-0.5, len(keys) - 0.3)
+    ax[2].axhline(0, color='#c9c8c2', linewidth=0.8)
+    _style(ax[2], 'Frags per 2-minute match (95% CI)')
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=130, facecolor=SURFACE)
+    plt.close(fig)
+
+
 def _ci(d, f='%.2f'):
     return (f + ' [' + f + ', ' + f + ']') % (d['mean'], d['lo'], d['hi'])
 

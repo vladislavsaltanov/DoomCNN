@@ -2,27 +2,31 @@ import math
 
 import numpy as np
 
-from doomagent.dm.config import BOT, DM, N_ACTIONS
+from doomagent.dm.actions import HEAD_SIZES, N_WEAPON_SLOTS
+from doomagent.dm.config import BOT, DM
 from doomagent.evaluate import bootstrap_ci
 
 STUCK_STEPS = 17   # 2 s of agent steps
 STUCK_DIST = 32.0  # map units: moving less than this over STUCK_STEPS with no bot around is stuck
 TRACE_KEYS = ('px', 'py', 'angle', 'action', 'first', 'enemy', 'enemy_x', 'enemy_wx', 'enemy_wy',
-              'health', 'ammo', 'frags', 'items')
+              'health', 'ammo', 'frags', 'items', 'weapon')
 SUMMARY_KEYS = ('frags', 'deaths', 'kills', 'suicides', 'kd', 'hits_per_shot', 'items', 'path',
-                'stuck_share', 'enemy_share', 'bot_median')
+                'stuck_share', 'enemy_share', 'bot_median', 'bot_best')
+FIRE_P, WEAPON_P = 0.3, 0.05  # random player: fire and next-weapon press probabilities
 
 
 class RandomChooser:
-    # uniform over the ten actions; the generator is seeded from the match's first frame, so a match
-    # repeats in any worker process
+    # move and turn uniform, fire with FIRE_P, next weapon with WEAPON_P; the generator is seeded from the
+    # match's first frame, so a match repeats in any worker process
     def reset(self):
         self.rng, self.actions = None, []
 
     def __call__(self, obs, priv):
         if self.rng is None:
             self.rng = np.random.default_rng(int(obs.frames[-1].sum()))
-        a = int(self.rng.integers(0, N_ACTIONS))
+        g = self.rng
+        a = (int(g.integers(0, HEAD_SIZES[0])), int(g.integers(0, HEAD_SIZES[1])), int(g.random() < FIRE_P),
+             int(g.random() < WEAPON_P))
         self.actions.append(a)
         return a
 
@@ -61,10 +65,12 @@ def run_match(env, chooser, seed, trace=False):
     rows = {k: [] for k in TRACE_KEYS}
     pos, enemy, first = [], [], []
     shots, suicides, pickups, path, length, done = 0, 0, 0, 0.0, 0, False
+    weapon_steps = np.zeros(N_WEAPON_SLOTS + 1)
     while not done:
         p = env.privileged()
         bot = nearest_bot(p.labels, p.px, p.py, w)
-        action = int(chooser(obs, p))
+        action = tuple(int(x) for x in chooser(obs, p))
+        weapon_steps[min(max(int(p.weapon), 0), N_WEAPON_SLOTS)] += 1
         pos.append((p.px, p.py))
         enemy.append(bot is not None)
         first.append(bool(obs.first))
@@ -72,17 +78,19 @@ def run_match(env, chooser, seed, trace=False):
             nan = float('nan')
             for k, v in zip(TRACE_KEYS, (p.px, p.py, p.angle, action, obs.first, bot is not None,
                                          bot[1] if bot else nan, bot[2] if bot else nan,
-                                         bot[3] if bot else nan, p.health, p.ammo, p.frags, p.items)):
+                                         bot[3] if bot else nan, p.health, p.ammo, p.frags, p.items,
+                                         p.weapon)):
                 rows[k].append(v)
         obs, r, done = env.step(action)
         q = env.privileged()
         suicides += r < 0  # only a suicide lowers the frag count
-        if not obs.first:  # a respawn refills the rockets and moves the player: not a shot, no path
-            if q.ammo < p.ammo:
+        if not obs.first:  # a respawn resets the weapons and moves the player: not a shot, no path
+            same = q.weapon == p.weapon  # a switch changes the ammo shown, it is not a shot or a pickup
+            if same and q.ammo < p.ammo:
                 shots += int(round(p.ammo - q.ammo))
             path += math.hypot(q.px - p.px, q.py - p.py)
-            # ITEMCOUNT skips medikits and rockets: a pickup is a rise in health, rockets or armor
-            pickups += q.health > p.health or q.ammo > p.ammo or q.armor > p.armor
+            # ITEMCOUNT skips medikits and ammo: a pickup is a rise in health, ammo in hand or armor
+            pickups += q.health > p.health or (same and q.ammo > p.ammo) or q.armor > p.armor
         length += 1
     end = env.privileged()
     bots = [float(f) for f in end.player_frags[1:]]
@@ -94,7 +102,8 @@ def run_match(env, chooser, seed, trace=False):
                items=float(pickups), path=path, stuck_steps=stuck,
                stuck_share=stuck / max(length, 1), enemy_steps=int(sum(enemy)),
                enemy_share=sum(enemy) / max(length, 1), length=length, bot_frags=bots,
-               bot_median=float(np.median(bots)) if bots else None)
+               bot_median=float(np.median(bots)) if bots else None, bot_best=max(bots) if bots else None,
+               weapon_share={k: float(weapon_steps[k] / max(length, 1)) for k in range(1, N_WEAPON_SLOTS + 1)})
     if trace:
         out['trace'] = {k: np.asarray(v) for k, v in rows.items()}
         if hasattr(chooser, 'take_trace'):
@@ -144,4 +153,6 @@ def summarize(results):
     out['kd_total'] = sum(r['frags'] for r in results) / max(sum(r['deaths'] for r in results), 1.0)
     out['shots'] = float(np.mean([r['shots'] for r in results]))
     out['length'] = float(np.mean([r['length'] for r in results]))
+    out['weapon_share'] = {k: float(np.mean([r['weapon_share'][k] for r in results]))
+                           for k in range(1, N_WEAPON_SLOTS + 1)}
     return out

@@ -9,7 +9,7 @@ from doomagent.dm.nav import walls_from_sectors
 # BGR, dark theme; the agent never sees this map
 BG, LINE, WALL, PLAYER = (25, 26, 26), (70, 70, 70), (200, 200, 200), (255, 255, 255)
 BOT_COLOR, PATH = (103, 103, 230), (38, 89, 217)
-KIND = {'health': (112, 158, 25), 'ammo': (0, 133, 201), 'armor': (233, 133, 144)}
+KIND = {'health': (112, 158, 25), 'ammo': (0, 133, 201), 'armor': (233, 133, 144), 'weapon': (0, 215, 255)}
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 

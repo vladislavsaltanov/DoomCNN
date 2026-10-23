@@ -15,7 +15,8 @@ import numpy as np
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt  # noqa: E402
 
-from doomagent.dm.config import DM, FORWARD, N_ACTIONS, TURN_LEFT, VAL_SEEDS  # noqa: E402
+from doomagent.dm.actions import FORWARD, HEAD_SIZES, STAY, turn_index  # noqa: E402
+from doomagent.dm.config import DM, VAL_SEEDS  # noqa: E402
 from doomagent.dm.env import DeathmatchEnv  # noqa: E402
 from doomagent.dm.viewer import compose_view, label_class  # noqa: E402
 from doomagent.reports import INK, MUTED, SURFACE  # noqa: E402
@@ -26,10 +27,10 @@ def stack(out, seed):
     env = DeathmatchEnv(DM)
     rows = [('match start: four copies of the first frame', env.reset(seed).frames)]
     for i in range(12):
-        obs, _, _ = env.step(TURN_LEFT if i % 2 else FORWARD)
+        obs, _, _ = env.step((STAY, turn_index(10.0), 0, 0) if i % 2 else (FORWARD, 0, 0, 0))
     rows.append(('middle of a life: the last four steps', obs.frames))
     env.game.send_game_command('kill')
-    obs, _, _ = env.step(FORWARD)
+    obs, _, _ = env.step((FORWARD, 0, 0, 0))
     assert obs.first, 'the kill did not start a new life'
     rows.append(('right after a respawn: four copies of the new first frame', obs.frames))
     env.close()
@@ -62,7 +63,7 @@ def view(out, seed):
             best = (score, env.screen().copy(), p)
         if len(kinds) == 3:
             break
-        _, _, done = env.step(int(rng.integers(0, N_ACTIONS)))
+        _, _, done = env.step(tuple(int(rng.integers(0, k)) for k in HEAD_SIZES))
     env.close()
     cv2.imwrite(out, compose_view(best[1], best[2], None, None, DM, True, Hud()))
 

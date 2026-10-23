@@ -1,7 +1,10 @@
 import cv2
 import numpy as np
 
-from doomagent.dm.config import ACTION_NAMES, BARREL, BOT, DM, ITEM_KIND
+from doomagent.dm.actions import MOVE_NAMES, TURN_DEG
+from doomagent.dm.config import BARREL, BOT, DM, ITEM_KIND, WEAPON_ITEMS
+
+SLOT_NAMES = {1: 'fist', 2: 'pistol', **{s: n for n, s in WEAPON_ITEMS.items() if n not in ('Chainsaw', 'Shotgun')}}
 
 # BGR box colors by label class (palette slots: red, aqua, yellow); for viewers only
 BOX = {'bot': (72, 73, 227), 'item': (122, 175, 27), 'barrel': (0, 161, 237)}
@@ -57,15 +60,15 @@ def _game_view(rgb, priv, action, info, cfg, boxes, hud, teacher):
     cv2.line(img, (cx, cy - 8), (cx, cy + 8), INK, 1)
     cv2.line(img, (cx - 8, cy), (cx + 8, cy), INK, 1)
     if action is not None:
+        move, turn, fire, weapon = (int(x) for x in action)
         probs = None if info is None else info.get('probs')
-        for i, name in enumerate(ACTION_NAMES):
-            y = 18 + 17 * i
-            color = ACTIVE if i == action else INK
+        lines = [f'move {MOVE_NAMES[move]}', f'turn {TURN_DEG[turn]:+g}', 'fire' if fire else '-',
+                 'next weapon' if weapon else '-']
+        for i, (t, v) in enumerate(zip(lines, (move, turn, fire, weapon))):
             if probs is not None:
-                cv2.rectangle(img, (112, y - 10), (112 + int(110 * probs[i]), y + 1), color, -1)
-            cv2.putText(img, name + ('' if probs is not None or i != action else ' <'), (8, y), FONT,
-                        0.42, color, 1, cv2.LINE_AA)
-    text = f'frags {priv.frags:.0f}  deaths {priv.deaths:.0f}'
+                t += f'  {probs[i][v]:.2f}'
+            cv2.putText(img, t, (8, 18 + 17 * i), FONT, 0.45, ACTIVE if t[0] != '-' else MUTED, 1, cv2.LINE_AA)
+    text = f'frags {priv.frags:.0f}  deaths {priv.deaths:.0f}  {SLOT_NAMES.get(priv.weapon, "?")} {priv.weapon_ammo:.0f}'
     (tw, _), _ = cv2.getTextSize(text, FONT, 0.5, 1)
     cv2.putText(img, text, (W - tw - 10, 20), FONT, 0.5, INK, 1, cv2.LINE_AA)
     if hud is not None:

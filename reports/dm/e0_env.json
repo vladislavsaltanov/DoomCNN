@@ -1,0 +1,202 @@
+{
+ "turns": {
+  "1.0": 1.011,
+  "-1.0": -0.989,
+  "3.0": 3.01,
+  "-3.0": -2.988,
+  "5.0": 5.01,
+  "-5.0": -4.988,
+  "10.0": 10.02,
+  "-10.0": -9.998,
+  "20.0": 20.017,
+  "-20.0": -19.995,
+  "30.0": 30.015,
+  "-30.0": -29.993,
+  "40.0": 40.012,
+  "-40.0": -39.99
+ },
+ "moves": {
+  "forward": 30.0,
+  "back": 20.1,
+  "strafe_left": 28.8,
+  "strafe_right": 28.8,
+  "forward_left": 41.6,
+  "forward_right": 41.6,
+  "back_left": 19.0,
+  "back_right": 41.6
+ },
+ "weapon_walks": [
+  {
+   "seed": 35000,
+   "weapon": "Chaingun",
+   "slot": 4,
+   "steps": 16,
+   "weapon_after": [
+    2,
+    2,
+    2,
+    4,
+    4,
+    4
+   ],
+   "auto_switch": true
+  },
+  {
+   "seed": 35001,
+   "weapon": "PlasmaRifle",
+   "slot": 6,
+   "steps": 25,
+   "weapon_after": [
+    2,
+    2,
+    2,
+    6,
+    6,
+    6
+   ],
+   "auto_switch": true
+  },
+  {
+   "seed": 35002,
+   "weapon": "SuperShotgun",
+   "slot": 3,
+   "steps": 18,
+   "weapon_after": [
+    2,
+    2,
+    2,
+    3,
+    3,
+    3
+   ],
+   "auto_switch": true
+  },
+  {
+   "seed": 35003,
+   "weapon": "PlasmaRifle",
+   "slot": 6,
+   "steps": 25,
+   "weapon_after": [
+    2,
+    2,
+    2,
+    6,
+    6,
+    6
+   ],
+   "auto_switch": true
+  },
+  {
+   "seed": 35004,
+   "weapon": "SuperShotgun",
+   "slot": 3,
+   "steps": 18,
+   "weapon_after": [
+    2,
+    2,
+    2,
+    3,
+    3,
+    3
+   ],
+   "auto_switch": true
+  },
+  {
+   "seed": 35005,
+   "weapon": "PlasmaRifle",
+   "slot": 6,
+   "steps": 25,
+   "weapon_after": [
+    2,
+    2,
+    2,
+    6,
+    6,
+    6
+   ],
+   "auto_switch": true
+  }
+ ],
+ "projectiles": {
+  "PlasmaBall": {
+   "median": 25.0,
+   "n": 296
+  },
+  "Rocket": {
+   "median": 20.0,
+   "n": 25
+  }
+ },
+ "map": {
+  "linedefs": 530,
+  "specials": {
+   "182": 2
+  }
+ },
+ "repeat": true,
+ "ms_per_step": 8.22,
+ "bots": {
+  "player": {
+   "mean": 0.0,
+   "lo": 0.0,
+   "hi": 0.0
+  },
+  "bot_median": {
+   "mean": 4.8,
+   "lo": 3.6,
+   "hi": 6.0
+  },
+  "bot_best": {
+   "mean": 9.8,
+   "lo": 8.2,
+   "hi": 11.2
+  }
+ },
+ "bot_frags": [
+  [
+   4.0,
+   7.0,
+   12.0,
+   6.0,
+   5.0,
+   2.0,
+   5.0
+  ],
+  [
+   8.0,
+   3.0,
+   4.0,
+   7.0,
+   10.0,
+   3.0,
+   7.0
+  ],
+  [
+   7.0,
+   2.0,
+   1.0,
+   2.0,
+   10.0,
+   6.0,
+   4.0
+  ],
+  [
+   5.0,
+   8.0,
+   1.0,
+   4.0,
+   3.0,
+   9.0,
+   10.0
+  ],
+  [
+   2.0,
+   7.0,
+   1.0,
+   3.0,
+   5.0,
+   0.0,
+   5.0
+  ]
+ ]
+}

@@ -1,12 +1,13 @@
 import pytest
 
-from dmfiles import FakeMatchEnv, row  # tests/ is on sys.path, as for epfiles
+from dmfiles import FakeMatchEnv, row  # tests/dm is on sys.path
+from doomagent.dm.actions import HEAD_SIZES, NOOP
 from doomagent.dm.evaluate import run_match, summarize
 from doomagent.evaluate import val_score
 
 
 def forward(obs, priv):
-    return 0
+    return NOOP
 
 
 def test_counts_suicides_kills_and_kd():
@@ -46,7 +47,7 @@ def test_chooser_reset_once_per_match():
             self.resets += 1
 
         def __call__(self, obs, priv):
-            return 0
+            return NOOP
 
     c = C()
     run_match(FakeMatchEnv([row(first=i == 0) for i in range(5)]), c, 1)
@@ -55,7 +56,7 @@ def test_chooser_reset_once_per_match():
 
 def test_trace_has_one_row_per_step():
     r = run_match(FakeMatchEnv([row(first=i == 0) for i in range(7)]), forward, 1, trace=True)
-    assert all(len(v) == 7 for v in r['trace'].values())
+    assert all(len(v) == 7 for v in r['trace'].values()) and r['trace']['action'].shape == (7, 4)
 
 
 @pytest.mark.vizdoom
@@ -78,6 +79,21 @@ def test_random_chooser_repeats_per_match():
         runs.append([run_match(FakeMatchEnv([row(first=i == 0) for i in range(20)]), c, 1)['length'],
                      c.actions[:]])
     assert runs[0] == runs[1] and len(set(runs[0][1])) > 3
+    acts = runs[0][1]
+    assert all(len(a) == 4 and all(0 <= v < k for v, k in zip(a, HEAD_SIZES)) for a in acts)
+    assert len({a[0] for a in acts}) > 3 and len({a[1] for a in acts}) > 3
+
+
+def test_shots_ignore_weapon_switch():
+    # pistol 50 -> shotgun 20 is a switch, 20 -> 19 is a shot
+    rows = [row(ammo=a, weapon=w, first=i == 0) for i, (a, w) in enumerate([(50, 2), (20, 3), (19, 3), (19, 3)])]
+    assert run_match(FakeMatchEnv(rows), forward, 1)['shots'] == 1
+
+
+def test_weapon_share():
+    rows = [row(weapon=w, first=i == 0) for i, w in enumerate([2, 2, 3, 5])]
+    r = run_match(FakeMatchEnv(rows), forward, 1)
+    assert r['weapon_share'][2] == 0.5 and r['weapon_share'][5] == 0.25
 
 
 def test_items_count_pickups_not_respawn_refills():
@@ -85,3 +101,10 @@ def test_items_count_pickups_not_respawn_refills():
     rows = [row(ammo=a, health=h, first=i in (0, 3)) for i, (a, h) in
             enumerate([(10, 60), (15, 60), (15, 85), (15, 100), (15, 100)])]
     assert run_match(FakeMatchEnv(rows), forward, 1)['items'] == 2
+
+
+def test_summarize_weapon_share():
+    res = [run_match(FakeMatchEnv([row(weapon=w, first=i == 0) for i, w in enumerate(ws)]), forward, 1)
+           for ws in ([2, 2], [3, 3])]
+    sh = summarize(res)['weapon_share']
+    assert sh[2] == 0.5 and sh[3] == 0.5 and sh[5] == 0.0

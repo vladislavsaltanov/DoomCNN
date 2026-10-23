@@ -1,7 +1,9 @@
-"""D0 measurements on cig MAP01: physics per step, number of bots, labels and items, map specials,
-repeatability and distinct seeds.
+"""E0 measurements on cig MAP02: turns and moves per step, the next-weapon key and auto-switch on pickup,
+projectile speeds, map specials (doors, lifts), repeatability, time per step and bot strength.
 
-    python scripts/dm/dm_measure.py   ->  reports/dm/d0_env.md, reports/dm/d0_env.png
+    python scripts/dm/dm_measure.py   ->  reports/dm/e0_env.md, reports/dm/e0_env.png, reports/dm/e0_env.json
+
+The D0 version for MAP01 is at the tag deathmatch-v1.
 """
 import argparse
 import hashlib
@@ -10,200 +12,186 @@ import math
 import os
 import re
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import replace
 
 import numpy as np
 import vizdoom as vzd
 
-from doomagent.dm.config import (BOT, DM, FINE_LEFT, FINE_RIGHT, FORWARD, FORWARD_LEFT,
-                                 FORWARD_RIGHT, ITEM_KIND, N_ACTIONS, STRAFE_LEFT, TURN_LEFT,
-                                 TURN_RIGHT, VAL_SEEDS)
+from doomagent.dm.actions import FORWARD, MOVE_NAMES, NOOP, STAY, TURN_DEG, turn_index
+from doomagent.dm.config import DM, PROJECTILES, VAL_SEEDS, WEAPON_ITEMS
 from doomagent.dm.env import DeathmatchEnv
-from doomagent.dm.evaluate import evaluate_plan, run_match, summarize
-from doomagent.dm.reports import d0_figure
+from doomagent.dm.evaluate import RandomChooser, evaluate_plan, summarize
+from doomagent.dm.nav import lookahead, nav_for
+from doomagent.dm.reports import e0_figure
 from doomagent.variants import BASE
 from doomagent.wadgen import read_wad
 
 GV = vzd.GameVariable
-STEPS = 12
+WARM = 6  # steps a player who just teleported in cannot move
 
 
-class RandomAgent:
-    # uniform over the ten actions, the same sequence in every match; picklable for workers
-    def reset(self):
-        self.rng = np.random.default_rng(0)
-
-    def __call__(self, obs, priv):
-        return int(self.rng.integers(0, N_ACTIONS))
+def wrap(d):
+    return (d + 180.0) % 360.0 - 180.0
 
 
-def pose(env):
-    g = env.game
-    return g.get_game_variable(GV.POSITION_X), g.get_game_variable(GV.POSITION_Y), \
-        g.get_game_variable(GV.ANGLE)
+def bearing(px, py, angle, x, y):
+    # degrees from the view direction to (x, y), + is left
+    return wrap(math.degrees(math.atan2(y - py, x - px)) - angle)
 
 
-def idle(env, steps=8):
-    # stand still between measurements: no agent action does that
-    for _ in range(steps):
-        env.game.make_action([0] * 7, 4)
-
-
-def moves(env, actions):
-    out = []
-    for a in actions:
-        x, y, ang = pose(env)
-        env.step(a)
-        x2, y2, ang2 = pose(env)
-        out.append((round(math.hypot(x2 - x, y2 - y), 1), round((ang2 - ang + 180) % 360 - 180, 2)))
-    return out
-
-
-def physics():
-    # a match without bots; straight runs from 5 spawn spots, the longest free run kept
-    env = DeathmatchEnv(replace(DM, bots=0))
+def turns(env, seed):
     out = {}
-    for seed in VAL_SEEDS[:5]:
+    for i in range(1, len(TURN_DEG)):
         env.reset(seed)
-        idle(env)
-        for key, action in (('forward', FORWARD), ('strafe_left', STRAFE_LEFT)):
-            run = [d for d, _ in moves(env, [action] * STEPS)]
-            idle(env)
-            if sum(run) > sum(out.get(key, [])):
-                out[key] = run
-    env.reset(VAL_SEEDS[0])
-    idle(env)
-    for key, a, b in (('turn_left', TURN_LEFT, TURN_RIGHT), ('fine_left', FINE_LEFT, FINE_RIGHT),
-                      ('forward_left', FORWARD_LEFT, FORWARD_RIGHT)):
-        hold = moves(env, [a] * STEPS)
-        idle(env)
-        alternate = moves(env, [a, b] * (STEPS // 2))
-        idle(env)
-        out[key] = dict(hold=[t for _, t in hold], alternate=[t for _, t in alternate],
-                        hold_dist=[d for d, _ in hold])
-    env.close()
+        for _ in range(WARM):
+            env.step(NOOP)
+        a0 = env.privileged().angle
+        env.step((STAY, i, 0, 0))
+        out[TURN_DEG[i]] = round(wrap(env.privileged().angle - a0), 3)
     return out
 
 
-def bot_count(n, workers):
-    cfg = replace(DM, bots=n)
-    env = DeathmatchEnv(cfg)
-    t0 = time.perf_counter()
-    r = run_match(env, RandomAgent(), VAL_SEEDS[0])
-    ms = 1000.0 * (time.perf_counter() - t0) / r['length']  # a fresh game included
-    env.close()
-    res = evaluate_plan([(BASE, VAL_SEEDS[:5])], RandomAgent(), cfg, workers=workers)
-    s = summarize(res)
-    bots = np.array([f for x in res for f in x['bot_frags']])
-    return dict(ms_per_step=ms, bot_median=s['bot_median'], bot_mean=float(bots.mean()),
-                bot_negative=float((bots < 0).mean()),
-                match_frags=float(np.mean([sum(x['bot_frags']) + x['frags'] for x in res])),
-                random_frags=s['frags'], random_suicides=s['suicides'],
-                random_enemy_share=s['enemy_share']['mean'])
+def moves(env, seeds, steps=8):
+    # map units per step, mean of the last 4 of `steps` (full speed); a wall next to a spawn spot cuts a run
+    # short, so the best of several spawn spots counts
+    out = {}
+    for m in range(1, len(MOVE_NAMES)):
+        best = 0.0
+        for seed in seeds:
+            env.reset(seed)
+            for _ in range(WARM):
+                env.step(NOOP)
+            d = []
+            for _ in range(steps):
+                p = env.privileged()
+                env.step((m, 0, 0, 0))
+                q = env.privileged()
+                d.append(math.hypot(q.px - p.px, q.py - p.py))
+            best = max(best, float(np.mean(d[-4:])))
+        out[MOVE_NAMES[m]] = round(best, 1)
+    return out
 
 
-def labels_and_items():
-    env = DeathmatchEnv(DM)
-    agent, names = RandomAgent(), Counter()
-    agent.reset()
-    obs, done = env.reset(VAL_SEEDS[1]), False
-    start = Counter(o.name for o in env.privileged().objects)
-    while not done:
-        for lb in env.privileged().labels:
-            names[lb.object_name] += 1
-        obs, _, done = env.step(agent(obs, env.privileged()))
-    end = Counter(o.name for o in env.privileged().objects)
-    picked = env.privileged().items
-    env.close()
-    return names, {k: (start[k], end[k]) for k in sorted(set(start) | set(end))}, picked
-
-
-def map_specials():
-    lumps = read_wad(os.path.join(vzd.scenarios_path, 'cig.wad'))
-    names = [n for n, _ in lumps]
-    textmap = lumps[names.index('MAP01') + 1][1].decode('ascii', 'replace')
-    return dict(Counter(re.findall(r'special\s*=\s*(\d+)', textmap)))
-
-
-def signature(env, seed, steps):
+def walk_to_weapon(env, seed, max_steps=400):
+    # A* walk to the nearest weapon on the map; records the weapon in hand around the pickup
     env.reset(seed)
-    h = hashlib.md5()
-    for _ in range(steps):
-        obs, _, _ = env.step(FORWARD)
-        h.update(obs.frames[-1].tobytes())
-    bots = sorted((round(o.x), round(o.y)) for o in env.privileged().objects if o.name == BOT)
-    return h.hexdigest(), tuple(bots)
+    p = env.privileged()
+    nav = nav_for(p.sectors)
+    weapons = [o for o in p.objects if o.name in WEAPON_ITEMS]
+    goal = min(weapons, key=lambda o: math.hypot(o.x - p.px, o.y - p.py))
+    owned0 = p.owned
+    for t in range(max_steps):
+        p = env.privileged()
+        if p.owned != owned0:
+            slot = next(i for i in range(len(p.owned)) if p.owned[i] > owned0[i])
+            after = []
+            for _ in range(6):
+                env.step(NOOP)
+                after.append(env.privileged().weapon)
+            return dict(seed=seed, weapon=goal.name, slot=slot, steps=t, weapon_after=after,
+                        auto_switch=slot in after)
+        path = nav.path((p.px, p.py), (goal.x, goal.y))
+        if not path:
+            return dict(seed=seed, weapon=goal.name, error='no path')
+        x, y = lookahead(path, p.px, p.py)
+        rel = bearing(p.px, p.py, p.angle, x, y)
+        turn = min(range(len(TURN_DEG)), key=lambda i: abs(rel - TURN_DEG[i]))
+        _, _, done = env.step((FORWARD if abs(rel) < 30 else STAY, turn, 0, 0))
+        if done or p.deaths != env.privileged().deaths:
+            return dict(seed=seed, weapon=goal.name, error='died or match over')
+    return dict(seed=seed, weapon=goal.name, error='not reached')
 
 
-def repeats():
-    cfg = replace(DM, timelimit=0.25)
-    sigs = []
-    for _ in range(2):
-        env = DeathmatchEnv(cfg)
-        sigs.append(signature(env, VAL_SEEDS[2], 120))
-        env.close()
-    env = DeathmatchEnv(cfg)
-    distinct = len({signature(env, s, 3)[1] for s in VAL_SEEDS})
-    env.close()
-    return sigs[0] == sigs[1], distinct
+def projectile_speeds(env, seeds):
+    # map units per tic of each projectile class, from object positions on consecutive steps (objects: a
+    # rocket flies 80 units a step and is rarely on screen twice; the measurement only, never the teacher)
+    speeds = defaultdict(list)
+    chooser = RandomChooser()
+    for seed in seeds:
+        chooser.reset()
+        obs, done, prev = env.reset(seed), False, {}
+        while not done:
+            p = env.privileged()
+            now = {o.id: (o.name, o.x, o.y) for o in p.objects if o.name in PROJECTILES}
+            for k, (name, x, y) in now.items():
+                if k in prev:
+                    d = math.hypot(x - prev[k][1], y - prev[k][2]) / DM.frame_skip
+                    if d > 1.0:  # not just spawned or exploding
+                        speeds[name].append(d)
+            prev = now
+            obs, _, done = env.step(chooser(obs, p))
+    return {k: dict(median=round(float(np.median(v)), 2), n=len(v)) for k, v in speeds.items()}
 
 
-def report_md(phys, bots, names, items, picked, specials, same, distinct):
-    md = ['# D0: deathmatch environment on cig.wad MAP01', '',
-          '## Label names (random agent, one 2-minute match, label-steps)', '',
-          '| name | class | label-steps |', '| --- | --- | --- |']
-    for n, c in names.most_common():
-        cls = 'bot' if n == BOT else ITEM_KIND.get(n, 'other')
-        md.append(f'| {n} | {cls} | {c} |')
-    md += ['', '## Physics per agent step (4 tics), no bots', '',
-           '| action | per step |', '| --- | --- |',
-           '| forward, held (units) | ' + ' '.join('%.1f' % v for v in phys['forward']) + ' |',
-           '| strafe left, held (units) | ' + ' '.join('%.1f' % v for v in phys['strafe_left']) + ' |']
-    for key in ('turn_left', 'fine_left', 'forward_left'):
-        for mode in ('hold', 'alternate'):
-            md.append(f'| {key.replace("_", " ")}, {mode} (degrees) | '
-                      + ' '.join('%.2f' % v for v in phys[key][mode]) + ' |')
-    md.append('| forward left, held (units) | '
-              + ' '.join('%.1f' % v for v in phys['forward_left']['hold_dist']) + ' |')
-    md += ['', '## Number of bots (random agent, 5 val matches each)', '',
-           '| bots | ms per step | median bot frags [95% CI] | mean bot frags | bots below 0 | '
-           'all frags per match | random agent frags | random suicides | random sees a bot |',
-           '| --- | --- | --- | --- | --- | --- | --- | --- | --- |']
-    for n, b in sorted(bots.items()):
-        m = b['bot_median']
-        md.append(f'| {n} | {b["ms_per_step"]:.1f} | {m["mean"]:.2f} [{m["lo"]:.2f}, {m["hi"]:.2f}] | '
-                  f'{b["bot_mean"]:.2f} | {b["bot_negative"]:.0%} | {b["match_frags"]:.1f} | '
-                  f'{b["random_frags"]["mean"]:.1f} | {b["random_suicides"]["mean"]:.1f} | '
-                  f'{b["random_enemy_share"]:.0%} |')
-    md += ['', '## Items and map', '',
-           '- objects at match start and end (objects_info): '
-           + ', '.join(f'{k} {a}/{b}' for k, (a, b) in items.items()),
-           f'- items the random agent picked up: {picked:.0f}',
-           f'- MAP01 line specials: {json.dumps(specials)} (no doors or lifts: no USE button)',
-           '', '## Repeatability', '',
-           f'- two matches with one seed and one action sequence (120 steps): '
-           f'{"identical" if same else "DIFFERENT"}',
-           f'- distinct matches among the {len(VAL_SEEDS)} VAL_SEEDS: {distinct}']
-    return '\n'.join(md) + '\n'
+def specials():
+    # line specials of MAP02 in TEXTMAP: doors and lifts would need the use key
+    wad = read_wad(os.path.join(vzd.scenarios_path, 'cig.wad'))
+    i = [n for n, _ in wad].index(DM.map.upper())
+    text = wad[i + 1][1].decode('ascii', 'replace')
+    lines = re.findall(r'linedef\s*\{([^}]*)\}', text, re.I)
+    found = Counter(int(m) for body in lines for m in re.findall(r'special\s*=\s*(\d+)', body))
+    return dict(linedefs=len(lines), specials=dict(found))
 
 
-if __name__ == '__main__':  # worker processes re-import this file
+def repeat(seed):
+    def run():
+        e, c = DeathmatchEnv(replace(DM, timelimit=0.2)), RandomChooser()
+        c.reset()
+        obs, done, h = e.reset(seed), False, hashlib.md5()
+        while not done:
+            h.update(obs.frames[-1].tobytes())
+            obs, _, done = e.step(c(obs, e.privileged()))
+        e.close()
+        return h.hexdigest()
+    return run() == run()
+
+
+if __name__ == '__main__':  # evaluation workers re-import this file
     ap = argparse.ArgumentParser()
+    ap.add_argument('--matches', type=int, default=5)
     ap.add_argument('--workers', type=int, default=4)
-    ap.add_argument('--out', default='reports/dm/d0_env')
     a = ap.parse_args()
-    phys = physics()
-    print('physics', json.dumps(phys))
-    bots = {n: bot_count(n, a.workers) for n in (3, 5, 7)}
-    for n, b in bots.items():
-        print('bots', n, json.dumps({k: v for k, v in b.items() if k != 'random_frags'}, default=str))
-    names, items, picked = labels_and_items()
-    specials = map_specials()
-    same, distinct = repeats()
-    print('repeat:', 'identical' if same else 'DIFFERENT', '| distinct val matches:', distinct)
-    os.makedirs(os.path.dirname(a.out) or '.', exist_ok=True)
-    with open(a.out + '.md', 'w', encoding='utf-8') as fh:
-        fh.write(report_md(phys, bots, names, items, picked, specials, same, distinct))
-    d0_figure(phys, bots, a.out + '.png')
-    print('written', a.out + '.md', a.out + '.png')
+    env = DeathmatchEnv(DM)
+    t_turn = turns(env, VAL_SEEDS[0])
+    t_move = moves(env, VAL_SEEDS[:6])
+    walks = [walk_to_weapon(env, s) for s in VAL_SEEDS[:6]]
+    speeds = projectile_speeds(env, VAL_SEEDS[:2])
+    t0 = time.perf_counter()
+    env.reset(VAL_SEEDS[1])
+    for i in range(300):
+        env.step((FORWARD, turn_index(3.0) if i % 2 else 0, 0, 0))
+    ms = (time.perf_counter() - t0) / 300 * 1000
+    env.close()
+    res = evaluate_plan([(BASE, VAL_SEEDS[:a.matches])], RandomChooser(), DM, workers=a.workers)
+    s = summarize(res)
+    bots = dict(player=s['frags'], bot_median=s['bot_median'], bot_best=s['bot_best'])
+    out = dict(turns=t_turn, moves=t_move, weapon_walks=walks, projectiles=speeds, map=specials(),
+               repeat=repeat(VAL_SEEDS[2]), ms_per_step=round(ms, 2), bots=bots,
+               bot_frags=[r['bot_frags'] for r in res])
+    os.makedirs('reports/dm', exist_ok=True)
+    with open('reports/dm/e0_env.json', 'w') as fh:
+        json.dump(out, fh, indent=1)
+    e0_figure(t_turn, t_move, bots, 'reports/dm/e0_env.png')
+    worst = max(abs(v - k) for k, v in t_turn.items())
+    ok_walks = [w for w in walks if 'auto_switch' in w]
+    ci = lambda d: f"{d['mean']:.2f} [{d['lo']:.2f}, {d['hi']:.2f}]"  # noqa: E731
+    lines = ['# E0: cig MAP02 environment', '',
+             f'Turns (requested → executed, degrees): worst error {worst:.3f}. ' +
+             ', '.join(f'{k:+g} → {v:+.2f}' for k, v in sorted(t_turn.items())), '',
+             'Moves at full speed (map units per step): ' + ', '.join(f'{k} {v}' for k, v in t_move.items()), '',
+             f'Walks to the nearest weapon (A*): {len(ok_walks)} of {len(walks)} reached; auto-switch on pickup in '
+             f'{sum(w["auto_switch"] for w in ok_walks)} of {len(ok_walks)}. ' +
+             '; '.join(f'seed {w["seed"]} {w["weapon"]}: ' + (f'slot {w["slot"]} after {w["steps"]} steps, '
+                                                             f'in hand {w["weapon_after"]}' if 'slot' in w else w['error'])
+                       for w in walks), '',
+             'Projectile speeds (map units per tic, median over object tracks): ' +
+             ', '.join(f'{k} {v["median"]} (n={v["n"]})' for k, v in speeds.items()), '',
+             f'Map {DM.map.upper()}: {out["map"]["linedefs"]} linedefs, specials {out["map"]["specials"]}', '',
+             f'Same seed twice, same random actions: frames identical = {out["repeat"]}; {out["ms_per_step"]} ms per step.', '',
+             f'Random player on VAL_SEEDS[:{a.matches}]: player {ci(bots["player"])}, median bot '
+             f'{ci(bots["bot_median"])}, best bot {ci(bots["bot_best"])} frags per match.', '',
+             '![e0](e0_env.png)', '']
+    with open('reports/dm/e0_env.md', 'w', encoding='utf-8') as fh:
+        fh.write('\n'.join(lines))
+    print('written reports/dm/e0_env.{md,png,json}; worst turn error %.3f' % worst)

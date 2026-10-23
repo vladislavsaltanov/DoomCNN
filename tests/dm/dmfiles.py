@@ -1,5 +1,6 @@
 import numpy as np
 
+from doomagent.dm.actions import make_vec
 from doomagent.dm.config import DM
 from doomagent.dm.env import DMObs, DMPrivileged
 from doomagent.env import Label
@@ -8,10 +9,10 @@ BOT_LABEL = Label(1, 7, 'DoomPlayer', DM.width / 2 - 20.0, 40.0, 40.0, 40.0, 500
 
 
 def row(px=0.0, py=0.0, ammo=15.0, frags=0.0, deaths=0.0, first=False, bot=False, health=100.0,
-        items=0.0, hits=0.0, done=False):
-    # one scripted step for FakeMatchEnv: the state the agent sees before acting
+        items=0.0, hits=0.0, done=False, weapon=5):
+    # one scripted step for FakeMatchEnv: the state the agent sees before acting; ammo is the weapon in hand's
     return dict(px=px, py=py, ammo=ammo, frags=frags, deaths=deaths, first=first, bot=bot,
-                health=health, items=items, hits=hits, done=done)
+                health=health, items=items, hits=hits, done=done, weapon=weapon)
 
 
 class FakeMatchEnv:
@@ -28,19 +29,19 @@ class FakeMatchEnv:
                             health=r['health'], ammo=r['ammo'], attack_ready=True, frags=r['frags'],
                             deaths=r['deaths'], hits=r['hits'], items=r['items'],
                             players=len(self.player_frags), player_frags=self.player_frags,
-                            tic=4 * self.t)
+                            tic=4 * self.t, weapon=r['weapon'], weapon_ammo=r['ammo'])
 
     def _obs(self):
         r = self.rows[self.t]
         return DMObs(np.full((DM.stack, DM.height, DM.width), self.t % 256, np.uint8),
-                     np.array([r['health'] / 100.0, r['ammo'] / 50.0], np.float32), bool(r['first']))
+                     make_vec(r['health'], 0.0, r['weapon'], r['ammo']), bool(r['first']))
 
     def reset(self, seed):
         self.t, self.actions = 0, []
         return self._obs()
 
     def step(self, action):
-        self.actions.append(int(action))
+        self.actions.append(tuple(int(x) for x in action))
         prev = self.rows[self.t]['frags']
         if self.t + 1 < len(self.rows):
             self.t += 1
