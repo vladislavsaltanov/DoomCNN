@@ -1,4 +1,4 @@
-"""The cheater teacher and a random player on the 20 val matches (base graphics), Gate A v2.
+"""The cheater teacher and a random player on the 20 val matches (base graphics), Gate A v2.1.
 
     python scripts/dm/dm_teacher_report.py --diag runs/dm/diag_<name>.json [--set name=value ...] [--workers 4]
     ->  reports/dm/e1_teacher.md, reports/dm/e1_teacher.png, reports/dm/e1_teacher.json
@@ -18,6 +18,7 @@ from doomagent.dm.config import DM, MODES, VAL_SEEDS
 from doomagent.dm.evaluate import RandomChooser, evaluate_plan, summarize
 from doomagent.dm.reports import gate_a2, match_table_md, teacher_figure2
 from doomagent.dm.teacher import DMTeacher
+from doomagent.evaluate import bootstrap_ci
 from doomagent.variants import BASE
 
 
@@ -46,7 +47,8 @@ if __name__ == '__main__':  # worker processes re-import this file
     rand = evaluate_plan(plan, RandomChooser(), cfg, workers=a.workers)
     report = {'teacher': summarize(teacher), 'random': summarize(rand)}
     shares = mode_share(teacher)
-    gate = gate_a2(report)
+    diff = bootstrap_ci([r['frags'] - r['bot_best'] for r in teacher])
+    gate = gate_a2(report, diff)
     diag = json.load(open(a.diag))['summary']
     t = report['teacher']
     md = ['# E1: cheater teacher on the val matches (MAP02)', '',
@@ -55,7 +57,7 @@ if __name__ == '__main__':  # worker processes re-import this file
           match_table_md(report),
           f'Best bot of the match: {t["bot_best"]["mean"]:.2f} [{t["bot_best"]["lo"]:.2f}, {t["bot_best"]["hi"]:.2f}] '
           f'frags; first of 8 in {100 * t["first_share"]:.0f} % of matches.', '',
-          '## Gate A v2', ''] + [f'- {"PASS" if ok else "FAIL"}: {name}: {value}' for name, value, ok in gate] + [
+          '## Gate A v2.1 (revised 2026-10-23)', ''] + [f'- {"PASS" if ok else "FAIL"}: {name}: {value}' for name, value, ok in gate] + [
           '', '## Teacher decisions (share of steps)', '', ', '.join(f'{m} {100 * s:.0f}%' for m, s in shares.items()),
           '', '## Weapon in hand (share of steps)', '',
           ', '.join(f'{k} {100 * v:.0f}%' for k, v in diag['weapon_share'].items()),

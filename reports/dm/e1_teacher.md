@@ -11,11 +11,11 @@ Matches: 20 (base graphics, VAL_SEEDS)
 
 Best bot of the match: 7.90 [7.10, 8.65] frags; first of 8 in 55 % of matches.
 
-## Gate A v2
+## Gate A v2.1 (revised 2026-10-23)
 
 - PASS: K/D over all matches >= 3: 3.019230769230769
-- FAIL: first of 8 in >= 90 % of matches: 0.55
-- FAIL: frags >= 2 x the best bot's frags: (7.85, 7.9)
+- PASS: first of 8 in >= 50 % of matches: 0.55
+- PASS: frags - best bot, upper 95% bound >= 0: (-0.05, -1.3, 1.35)
 
 ## Teacher decisions (share of steps)
 

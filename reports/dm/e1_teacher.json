@@ -204,17 +204,18 @@
    true
   ],
   [
-   "first of 8 in >= 90 % of matches",
+   "first of 8 in >= 50 % of matches",
    0.55,
-   false
+   true
   ],
   [
-   "frags >= 2 x the best bot's frags",
+   "frags - best bot, upper 95% bound >= 0",
    [
-    7.85,
-    7.9
+    -0.05,
+    -1.3,
+    1.35
    ],
-   false
+   true
   ]
  ]
 }

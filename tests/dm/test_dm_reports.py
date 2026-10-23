@@ -94,8 +94,11 @@ def summary2(frags, kd_total, best, first):
 
 
 def test_gate_a2_rules():
-    assert [p for _, _, p in gate_a2({'teacher': summary2(20.0, 3.5, 9.0, 0.95)})] == [True, True, True]
-    assert [p for _, _, p in gate_a2({'teacher': summary2(12.0, 2.0, 9.0, 0.6)})] == [False, False, False]
+    # v2.1 (user decision 2026-10-23): K/D >= 3, first of 8 in >= 50 %, frags not significantly below the best bot
+    ok = gate_a2({'teacher': summary2(7.9, 3.1, 8.0, 0.55)}, diff_ci=(-0.1, -1.0, 0.8))
+    assert [p for _, _, p in ok] == [True, True, True]
+    bad = gate_a2({'teacher': summary2(6.0, 2.6, 8.0, 0.25)}, diff_ci=(-2.0, -3.0, -0.5))
+    assert [p for _, _, p in bad] == [False, False, False]
 
 
 def test_teacher_figure2_writes_png(tmp_path):

@@ -121,13 +121,14 @@ def gate_a(report):
             ('stuck share < 5 %', t['stuck_share']['mean'], t['stuck_share']['mean'] < 0.05)]
 
 
-def gate_a2(report):
-    # spec v2 §1: K/D over all matches >= 3, first of 8 in >= 90 % of matches, frags >= 2 x the best bot
+def gate_a2(report, diff_ci):
+    # spec v2 §1, revised 2026-10-23 (v2.1, user decision on the E1 numbers): K/D over all matches >= 3, first of 8
+    # in >= 50 % of matches, frags not significantly below the best bot of the match: diff_ci = (mean, lo, hi) of the
+    # per-match difference teacher - best bot, its upper bound >= 0
     t = report['teacher']
     return [('K/D over all matches >= 3', t['kd_total'], t['kd_total'] >= 3.0),
-            ('first of 8 in >= 90 % of matches', t['first_share'], t['first_share'] >= 0.9),
-            ("frags >= 2 x the best bot's frags", (t['frags']['mean'], t['bot_best']['mean']),
-             t['frags']['mean'] >= 2.0 * t['bot_best']['mean'])]
+            ('first of 8 in >= 50 % of matches', t['first_share'], t['first_share'] >= 0.5),
+            ('frags - best bot, upper 95% bound >= 0', tuple(round(x, 2) for x in diff_ci), diff_ci[2] >= 0.0)]
 
 
 def teacher_figure2(report, diag, out_png):
