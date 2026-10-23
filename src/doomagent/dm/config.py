@@ -61,6 +61,7 @@ CHECK_SEEDS = tuple(range(37000, 37006))    # graphics variant check
 PILOT_SEEDS = tuple(range(38000, 38010))    # D2 pilot dataset
 TEST_SEEDS = tuple(range(39000, 39040))     # D7 only
 RL_SEEDS = tuple(range(40000, 41000))
+CONFIRM_SEEDS = tuple(range(42000, 42040))  # one look at the teacher after the E3 cycle tuned on FRESH_SEEDS
 
 VAL_OOD_MATCHES = 5   # per val variant
 TEST_OOD_MATCHES = 8  # per test variant

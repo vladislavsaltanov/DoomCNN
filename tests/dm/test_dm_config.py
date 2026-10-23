@@ -30,7 +30,7 @@ def test_map02_names_are_disjoint():
 
 def test_seed_sets_disjoint_and_new():
     new = [D.TRAIN_SEEDS, D.VARIANT_SEEDS, D.DAGGER_SEEDS, D.VAL_SEEDS, D.FRESH_SEEDS,
-           D.CHECK_SEEDS, D.PILOT_SEEDS, D.TEST_SEEDS, D.RL_SEEDS]
+           D.CHECK_SEEDS, D.PILOT_SEEDS, D.TEST_SEEDS, D.RL_SEEDS, D.CONFIRM_SEEDS]
     flat = [s for ss in new for s in ss]
     assert len(flat) == len(set(flat))
     old = set(C.TRAIN_SEEDS + C.TRAIN_SEEDS_EXTRA + C.DAGGER_SEEDS + C.VARIANT_SEEDS + C.VAL_SEEDS

@@ -15,7 +15,7 @@ from dataclasses import fields, replace
 
 import numpy as np
 
-from doomagent.dm.config import DM, FRESH_SEEDS, MODES, VAL_SEEDS
+from doomagent.dm.config import CONFIRM_SEEDS, DM, FRESH_SEEDS, MODES, VAL_SEEDS
 from doomagent.dm.teacher import visible_bots
 from doomagent.dm.weapons import WEAPONS
 
@@ -116,7 +116,7 @@ def with_overrides(cfg, items):
 
 if __name__ == '__main__':  # workers re-import this file
     ap = argparse.ArgumentParser()
-    ap.add_argument('--seeds', choices=['val', 'fresh'], default='val')
+    ap.add_argument('--seeds', choices=['val', 'fresh', 'confirm'], default='val')
     ap.add_argument('--matches', type=int, default=20)
     ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--set', nargs='*', default=[])
@@ -124,7 +124,7 @@ if __name__ == '__main__':  # workers re-import this file
     ap.add_argument('--no-live', action='store_true', help='no frames for the dashboard')
     a = ap.parse_args()
     cfg = with_overrides(DM, a.set)
-    seeds = {'val': VAL_SEEDS, 'fresh': FRESH_SEEDS}[a.seeds][:a.matches]
+    seeds = {'val': VAL_SEEDS, 'fresh': FRESH_SEEDS, 'confirm': CONFIRM_SEEDS}[a.seeds][:a.matches]
     live = not a.no_live
     if live:
         from doomagent.dm.livetap import write_plan
