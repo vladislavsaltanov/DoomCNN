@@ -82,7 +82,7 @@ class DMTeacher:
     def reset(self):
         # a new match: the map's items are read again on the first step
         self.spots, self.known, self.used, self.modes = None, [], {}, []
-        self.mode, self.goal = 'patrol', None
+        self.mode, self.goal, self.why = 'patrol', None, 'no_combat'
         self._new_life(None)
 
     def _new_life(self, me):
@@ -159,7 +159,7 @@ class DMTeacher:
             if any(s != 1 for s in usable(priv.owned, priv.slot_ammo)) or near.dist < WEAPONS[1].hi:
                 self.mode = 'combat'
                 return self._combat(priv, me, bots)
-        self.target, self.aim = None, None
+        self.target, self.aim, self.why = None, None, 'no_combat'
         weapon = self._switch(priv, best_weapon(priv.owned, priv.slot_ammo, NAV_RANGE))
         if self.last_seen is not None:
             x, y, tic = self.last_seen
@@ -231,6 +231,9 @@ class DMTeacher:
         ready = priv.attack_ready or (self.fired_last and priv.weapon != 5)
         fresh = not (self.fired_last and priv.weapon == 5)
         fire = int(abs(rel) <= tol and safe and ready and fresh and weapon == 0 and priv.weapon_ammo >= w.cost)
+        # the first failed condition, for the diagnostics
+        self.why = ('shoot' if fire else 'switching' if weapon else 'not_aimed' if abs(rel) > tol else
+                    'unsafe' if not safe else 'no_ammo' if priv.weapon_ammo < w.cost else 'reloading')
         fwd = 0
         if t.dist < w.lo + RANGE_MARGIN or (w.splash and t.dist < c.safe_dist + RANGE_MARGIN):
             fwd = -1

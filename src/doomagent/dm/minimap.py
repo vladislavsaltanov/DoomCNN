@@ -3,7 +3,7 @@ import math
 import cv2
 import numpy as np
 
-from doomagent.dm.config import BOT, ITEM_KIND
+from doomagent.dm.config import BOT, ITEM_KIND, WEAPON_ITEMS
 from doomagent.dm.nav import walls_from_sectors
 
 # BGR, dark theme; the agent never sees this map
@@ -11,6 +11,9 @@ BG, LINE, WALL, PLAYER = (25, 26, 26), (70, 70, 70), (200, 200, 200), (255, 255,
 BOT_COLOR, PATH = (103, 103, 230), (38, 89, 217)
 KIND = {'health': (112, 158, 25), 'ammo': (0, 133, 201), 'armor': (233, 133, 144), 'weapon': (0, 215, 255)}
 FONT = cv2.FONT_HERSHEY_SIMPLEX
+# weapons as filled squares, one colour per slot (BGR): shotguns, chaingun, rockets, plasma, BFG
+WEAPON_COLOR = {1: (163, 149, 139), 3: (0, 161, 237), 4: (229, 135, 57), 5: (38, 89, 217), 6: (122, 175, 27),
+                7: (164, 112, 230)}
 
 
 class MapView:
@@ -47,6 +50,8 @@ class MapView:
             p = self.to_px(o.x, o.y)
             if o.name == BOT:
                 cv2.circle(img, p, 4, BOT_COLOR, -1, cv2.LINE_AA)
+            elif o.name in WEAPON_ITEMS:
+                cv2.rectangle(img, (p[0] - 3, p[1] - 3), (p[0] + 3, p[1] + 3), WEAPON_COLOR[WEAPON_ITEMS[o.name]], -1)
             elif o.name in ITEM_KIND:
                 cv2.circle(img, p, 3, KIND[ITEM_KIND[o.name]], 1, cv2.LINE_AA)
         if teacher is not None:

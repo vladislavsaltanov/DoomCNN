@@ -1,7 +1,10 @@
+import math
+
 import cv2
 import numpy as np
 
 from doomagent.dm.actions import MOVE_NAMES, TURN_DEG
+from doomagent.dm.aim import target_angle
 from doomagent.dm.config import BARREL, BOT, DM, ITEM_KIND, WEAPON_ITEMS
 
 SLOT_NAMES = {1: 'fist', 2: 'pistol', **{s: n for n, s in WEAPON_ITEMS.items() if n not in ('Chainsaw', 'Shotgun')}}
@@ -45,8 +48,9 @@ def compose_view(rgb, priv, action=None, info=None, cfg=DM, boxes=True, hud=None
 def _game_view(rgb, priv, action, info, cfg, boxes, hud, teacher):
     img = cv2.cvtColor(np.ascontiguousarray(rgb), cv2.COLOR_RGB2BGR)
     H, W = img.shape[:2]
-    if teacher is not None and teacher.target is not None and teacher.lead is not None:
-        x = int((teacher.target.offset + teacher.lead + 1.0) / 2.0 * W)  # where the rocket should go
+    if teacher is not None and getattr(teacher, 'aim', None) is not None:
+        rel = target_angle(priv.px, priv.py, priv.angle, *teacher.aim)  # where the teacher's shot should go
+        x = int((1.0 - math.tan(math.radians(max(-44.0, min(44.0, rel))))) / 2.0 * W)
         cv2.line(img, (x, 0), (x, H), (38, 89, 217), 1)
     sx, sy = W / cfg.width, H / cfg.height
     if boxes:

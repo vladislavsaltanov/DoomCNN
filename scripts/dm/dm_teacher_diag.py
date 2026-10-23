@@ -1,51 +1,27 @@
-"""Where the deathmatch teacher loses: deaths, shots and fights on the val matches.
+"""Where the cheater teacher loses on MAP02: deaths, shots by weapon, fights, the weapon in hand.
 
-    python scripts/dm/dm_teacher_diag.py [--matches 20] [--workers 2] [--set key=value ...]
+    python scripts/dm/dm_teacher_diag.py [--seeds val|fresh] [--matches 20] [--workers 4] [--set key=value ...]
+        [--out runs/dm/diag_<name>]
 
-Per death: a suicide (frags went down), a spawn death (life shorter than 2 s), whether a bot was on
-screen in the 2 s before, the teacher's mode and health 2 s before. Per shot: did the hit counter
-rise within 1.5 s, the distance and width of the target. Per fight (a run of steps with a bot on
-screen): steps to the first shot, kill or death within it. Plus the teacher's rank among the 8
-players. Writes reports/dm/d3_teacher_diag.{md,json}.
+Per death: a suicide (frags went down), a bot on screen in the 2 s before or not, the mode and health 2 s
+before. Per shot (ammo in hand went down, same weapon): did the hit counter rise within 1.5 s, by weapon.
+Per step with a bot on screen: the teacher's reason for not firing (teacher.why). Per life: steps until a
+weapon of rank >= 3 was in hand. Plus the place among the 8 players and the best bot. The version 1.1 script
+for MAP01 is at the tag deathmatch-v1.
 """
 import argparse
 import json
-import math
-from collections import Counter
-from dataclasses import replace
+from dataclasses import fields, replace
 
 import numpy as np
 
-from doomagent.dm.config import DM, FRESH_SEEDS, MODES, SHOOT, VAL_SEEDS
+from doomagent.dm.config import DM, FRESH_SEEDS, MODES, VAL_SEEDS
 from doomagent.dm.teacher import visible_bots
+from doomagent.dm.weapons import WEAPONS
 
 WINDOW = 17      # 2 s of agent steps
-HIT_WINDOW = 13  # 1.5 s: a rocket at 20 units per tic flies about 1000 units
-
-
-WHY = ('shoot', 'no_combat', 'not_aimed', 'reloading', 'too_close', 'wall', 'barrel')
-
-
-def why_no_shot(teacher, p, a, cfg):
-    # the first of the teacher's shot conditions that failed on this step
-    from doomagent.dm.teacher import Enemy, is_aimed
-    if a == SHOOT:
-        return 'shoot'
-    t = teacher.target
-    if teacher.mode != 'combat' or t is None:
-        return 'no_combat'
-    slack, lead = cfg.aim_slack / max(t.dist, 1.0), teacher.lead or 0.0
-    aim = Enemy(t.id, t.left + lead - slack, t.right + lead + slack, t.dist, t.width_px)
-    if not is_aimed(aim, cfg.aim_margin):
-        return 'not_aimed'
-    if not p.attack_ready:
-        return 'reloading'
-    if t.dist < cfg.safe_dist:
-        return 'too_close'
-    ray = teacher.nav.shot_dist if cfg.shot_check == 'rocket' else teacher.nav.wall_dist
-    if ray(p.px, p.py, p.angle) < cfg.safe_dist:
-        return 'wall'
-    return 'barrel'
+HIT_WINDOW = 13  # 1.5 s
+WHY = ('shoot', 'switching', 'not_aimed', 'unsafe', 'no_ammo', 'reloading', 'no_combat')
 
 
 def run_one(seed, cfg):
@@ -56,135 +32,82 @@ def run_one(seed, cfg):
     while not done:
         p = env.privileged()
         a = teacher(obs, p)
-        bots = visible_bots(p.labels, p.px, p.py, cfg.width)
-        near = min(bots, key=lambda e: e.dist) if bots else None
-        t = teacher.target if teacher.mode == 'combat' else None
-        rows.append(dict(a=int(a), why=why_no_shot(teacher, p, a, cfg), mode=MODES.index(teacher.mode),
-                         off=t.offset if t else math.nan, half=(t.right - t.left) / 2 if t else math.nan,
-                         lead=(teacher.lead or 0.0) if t else math.nan, tdist=t.dist if t else math.nan,
-                         health=p.health, ammo=p.ammo, frags=p.frags,
-                         deaths=p.deaths, hits=p.hits, bot=bool(bots), n_bots=len(bots),
-                         dist=near.dist if near else math.nan, width=near.width_px if near else math.nan,
-                         first=bool(obs.first)))
+        rows.append(dict(why=teacher.why, mode=MODES.index(teacher.mode), health=p.health, ammo=p.weapon_ammo,
+                         weapon=p.weapon, frags=p.frags, deaths=p.deaths, hits=p.hits, first=bool(obs.first),
+                         bot=bool(visible_bots(p.labels, p.px, p.py, cfg.width)), fire=int(a[2])))
         obs, _, done = env.step(a)
     end = env.privileged()
     env.close()
-    return dict(seed=seed, rows=rows, player_frags=[float(f) for f in end.player_frags], frags=end.frags,
-                deaths=end.deaths)
+    return dict(seed=seed, rows=rows, player_frags=[float(f) for f in end.player_frags])
 
 
 def analyze(m):
     rows = m['rows']
-    T = len(rows)
     col = {k: np.array([r[k] for r in rows]) for k in rows[0]}
-    deaths, shots, fights = [], [], []
-    life_start = 0
+    T = len(rows)
+    deaths, shots, to_gear, life, got = [], [], [], 0, None
     for t in range(1, T):
-        if col['deaths'][t] > col['deaths'][t - 1]:
-            w0 = max(life_start, t - WINDOW)
-            deaths.append(dict(suicide=bool(col['frags'][t] < col['frags'][t - 1]),
-                               spawn=t - life_start < WINDOW, bot_seen=bool(col['bot'][w0:t].any()),
-                               mode=MODES[int(col['mode'][t - 1])], health_before=float(col['health'][w0]),
-                               shots_before=int((col['a'][w0:t] == SHOOT).sum())))
+        if col['deaths'][t] > col['deaths'][t - 1]:  # before the new life starts: the death step is also its first
+            w0 = max(life, t - WINDOW)
+            deaths.append(dict(suicide=bool(col['frags'][t] < col['frags'][t - 1]), bot_seen=bool(col['bot'][w0:t].any()),
+                               mode=MODES[int(col['mode'][t - 1])], health_before=float(col['health'][w0])))
         if col['first'][t]:
-            life_start = t
-    for t in np.where(col['ammo'][1:] < col['ammo'][:-1])[0]:
-        if col['first'][t + 1]:
-            continue  # a respawn refill, not a shot
-        hit = bool(col['hits'][min(t + HIT_WINDOW, T - 1)] > col['hits'][t])
-        shots.append(dict(hit=hit, dist=float(col['dist'][t]), width=float(col['width'][t])))
-    t = 0
-    while t < T:
-        if not col['bot'][t]:
-            t += 1
-            continue
-        s = t
-        while t < T and col['bot'][t] and not col['first'][t]:
-            t += 1
-        e = min(t + 4, T - 1)
-        shot_at = np.where(col['a'][s:t] == SHOOT)[0]
-        fights.append(dict(steps=t - s, first_shot=int(shot_at[0]) if len(shot_at) else None,
-                           kill=bool(col['frags'][e] > col['frags'][s]), died=bool(col['deaths'][e] > col['deaths'][s]),
-                           close=float(np.nanmin(col['dist'][s:t])) if t > s else math.nan,
-                           health=float(col['health'][s])))
-        t += 1
+            to_gear.append(got if got is not None else t - life)
+            life, got = t, None
+        if got is None and WEAPONS.get(int(col['weapon'][t]), WEAPONS[2]).rank >= 3:
+            got = t - life
+        if col['ammo'][t] < col['ammo'][t - 1] and col['weapon'][t] == col['weapon'][t - 1] and not col['first'][t]:
+            shots.append(dict(weapon=int(col['weapon'][t]),
+                              hit=bool(col['hits'][min(t - 1 + HIT_WINDOW, T - 1)] > col['hits'][t - 1])))
+    why = {w: int(((col['why'] == w) & col['bot']).sum()) for w in WHY}
     pf = m['player_frags']
-    rank = 1 + sum(f > pf[0] for f in pf[1:])
-    na = [r for r in rows if r['why'] == 'not_aimed']
-    if na:
-        off = np.array([r['off'] for r in na])
-        lead = np.array([r['lead'] for r in na])
-        half = np.array([r['half'] for r in na])
-        aim_err = np.abs(off + lead)  # the aim point's distance from the screen center
-        lead_jump = [abs(b['lead'] - a['lead']) for a, b in zip(rows, rows[1:])
-                     if a['why'] != 'no_combat' and b['why'] != 'no_combat' and not math.isnan(a['lead'] + b['lead'])]
-        aim_stats = dict(err_median=float(np.median(aim_err)), half_median=float(np.median(half)),
-                         lead_abs_median=float(np.median(np.abs(lead))), lead_jump_median=float(np.median(lead_jump)) if lead_jump else None,
-                         err_in_fine_zone=float(np.mean(aim_err <= DM.fine_zone)),
-                         err_le_half_if_no_lead=float(np.mean(np.abs(off) <= half)),
-                         dist_median=float(np.nanmedian([r['tdist'] for r in na])),
-                         actions=dict(Counter(int(r['a']) for r in na)))
-    else:
-        aim_stats = {}
-    combat = [r['why'] for r in rows if r['bot']]
-    why = {w: sum(x == w for x in combat) for w in WHY}
-    return dict(deaths=deaths, shots=shots, fights=fights, rank=rank, best_bot=max(pf[1:]), why=why, aim=aim_stats,
-                frags=m['frags'], n_deaths=m['deaths'], steps=T,
-                low_health_combat=float(((col['mode'] == 0) & (col['health'] < 40)).mean()),
-                close_no_shot=float(((col['bot']) & (col['dist'] < 128)).mean()))
+    return dict(seed=m['seed'], frags=pf[0], deaths=deaths, shots=shots, to_gear=to_gear, why=why,
+                rank=1 + sum(f > pf[0] for f in pf[1:]), best_bot=max(pf[1:]), median_bot=float(np.median(pf[1:])),
+                weapon_share={k: float((col['weapon'] == k).mean()) for k in WEAPONS})
 
 
 def summary(res):
     d = [x for r in res for x in r['deaths']]
     s = [x for r in res for x in r['shots']]
-    f = [x for r in res for x in r['fights']]
     n = max(len(d), 1)
-    by_mode = {m: sum(x['mode'] == m for x in d) / n for m in MODES}
-    dist = np.array([x['dist'] for x in s])
-    bins = [(0, 256), (256, 512), (512, 1024), (1024, 1e9)]
-    hit_by_dist = {f'{lo}-{hi if hi < 1e9 else "inf"}': (float(np.mean([x['hit'] for x, dd in zip(s, dist) if lo <= dd < hi]))
-                                                       if any(lo <= dd < hi for dd in dist) else None,
-                                                       int(sum(lo <= dd < hi for dd in dist))) for lo, hi in bins}
-    fs = [x for x in f if x['steps'] >= 3]
-    first = [x['first_shot'] for x in fs if x['first_shot'] is not None]
     why = {w: sum(r['why'][w] for r in res) for w in WHY}
     nw = max(sum(why.values()), 1)
+    by_w = {WEAPONS[k].name: (float(np.mean([x['hit'] for x in s if x['weapon'] == k])),
+                              sum(x['weapon'] == k for x in s)) for k in WEAPONS if any(x['weapon'] == k for x in s)}
+    gear = [g for r in res for g in r['to_gear']]
     return dict(
-        bot_on_screen_steps_by_reason={w: v / nw for w, v in why.items()},
-        matches=len(res), frags=float(np.mean([r['frags'] for r in res])), deaths=float(np.mean([r['n_deaths'] for r in res])),
-        rank_mean=float(np.mean([r['rank'] for r in res])), rank_first_share=float(np.mean([r['rank'] == 1 for r in res])),
-        best_bot_mean=float(np.mean([r['best_bot'] for r in res])),
-        deaths_total=len(d), suicide_share=sum(x['suicide'] for x in d) / n, spawn_share=sum(x['spawn'] for x in d) / n,
-        unseen_share=sum(not x['bot_seen'] for x in d) / n, death_mode_share=by_mode,
+        matches=len(res), frags=float(np.mean([r['frags'] for r in res])),
+        deaths=len(d) / max(len(res), 1), best_bot=float(np.mean([r['best_bot'] for r in res])),
+        median_bot=float(np.mean([r['median_bot'] for r in res])),
+        first_share=float(np.mean([r['rank'] == 1 for r in res])), rank_mean=float(np.mean([r['rank'] for r in res])),
+        kd_total=sum(r['frags'] for r in res) / max(len(d), 1),
+        death_cause={'suicide': sum(x['suicide'] for x in d) / n,
+                     'bot seen': sum(x['bot_seen'] and not x['suicide'] for x in d) / n,
+                     'unseen': sum(not x['bot_seen'] and not x['suicide'] for x in d) / n},
+        death_mode={m: sum(x['mode'] == m for x in d) / n for m in MODES},
         death_health_before=float(np.mean([x['health_before'] for x in d])) if d else None,
-        shots_per_match=len(s) / max(len(res), 1), hit_share=float(np.mean([x['hit'] for x in s])) if s else None,
-        no_target_shot_share=float(np.mean(np.isnan(dist))) if s else None, hit_by_dist=hit_by_dist,
-        fights=len(fs), fight_kill_share=float(np.mean([x['kill'] for x in fs])) if fs else None,
-        fight_death_share=float(np.mean([x['died'] for x in fs])) if fs else None,
-        fight_no_shot_share=float(np.mean([x['first_shot'] is None for x in fs])) if fs else None,
-        steps_to_first_shot=float(np.median(first)) if first else None,
-        fights_low_health_share=float(np.mean([x['health'] < 40 for x in fs])) if fs else None,
-        low_health_combat_share=float(np.mean([r['low_health_combat'] for r in res])),
-        close_bot_share=float(np.mean([r['close_no_shot'] for r in res])))
+        shots_per_match=len(s) / max(len(res), 1),
+        hit_share_by_weapon={k: v[0] for k, v in by_w.items()}, shots_by_weapon={k: v[1] for k, v in by_w.items()},
+        bot_on_screen_by_reason={w: v / nw for w, v in why.items()},
+        steps_to_gear_median=float(np.median(gear)) if gear else None,
+        weapon_share={WEAPONS[k].name: float(np.mean([r['weapon_share'][k] for r in res])) for k in WEAPONS})
 
 
-def parse_set(items):
-    out = {}
-    for kv in items:
-        k, v = kv.split('=')
-        out[k] = type(getattr(DM, k))(v)
-    return out
+def with_overrides(cfg, items):
+    types = {f.name: type(getattr(cfg, f.name)) for f in fields(cfg)}
+    return replace(cfg, **{k: (v == 'True') if types[k] is bool else types[k](v)
+                           for k, v in (x.split('=', 1) for x in items or [])})
 
 
 if __name__ == '__main__':  # workers re-import this file
     ap = argparse.ArgumentParser()
-    ap.add_argument('--matches', type=int, default=20)
     ap.add_argument('--seeds', choices=['val', 'fresh'], default='val')
-    ap.add_argument('--workers', type=int, default=2)
+    ap.add_argument('--matches', type=int, default=20)
+    ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--set', nargs='*', default=[])
-    ap.add_argument('--out', default='reports/dm/d3_teacher_diag')
+    ap.add_argument('--out', default='runs/dm/diag_teacher')
     a = ap.parse_args()
-    cfg = replace(DM, **parse_set(a.set))
+    cfg = with_overrides(DM, a.set)
     seeds = {'val': VAL_SEEDS, 'fresh': FRESH_SEEDS}[a.seeds][:a.matches]
     import multiprocessing as mp
     from concurrent.futures import ProcessPoolExecutor
@@ -193,6 +116,6 @@ if __name__ == '__main__':  # workers re-import this file
     res = [analyze(m) for m in matches]
     s = summary(res)
     with open(a.out + '.json', 'w') as fh:
-        json.dump(dict(summary=s, per_match=[{k: v for k, v in r.items() if k not in ('shots', 'fights')} for r in res]),
-                  fh, indent=1)
+        json.dump(dict(set=a.set, seeds=a.seeds, summary=s,
+                       per_match=[{k: v for k, v in r.items() if k not in ('shots', 'deaths')} for r in res]), fh, indent=1)
     print(json.dumps(s, indent=1))

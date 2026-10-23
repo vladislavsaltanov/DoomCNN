@@ -108,3 +108,11 @@ def test_summarize_weapon_share():
            for ws in ([2, 2], [3, 3])]
     sh = summarize(res)['weapon_share']
     assert sh[2] == 0.5 and sh[3] == 0.5 and sh[5] == 0.0
+
+
+def test_rank_among_players():
+    rows = [row(frags=3, first=True)]
+    r = run_match(FakeMatchEnv(rows, player_frags=(3, 5, 3, 1, 0, 0, 0, 0)), forward, 1)
+    assert r['rank'] == 2   # one bot has more, a tie does not push the player down
+    res = [r, run_match(FakeMatchEnv(rows, player_frags=(3, 2, 1, 0, 0, 0, 0, 0)), forward, 1)]
+    assert summarize(res)['first_share'] == 0.5

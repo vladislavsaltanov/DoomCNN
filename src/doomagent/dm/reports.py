@@ -98,7 +98,7 @@ def _ci(d, f='%.2f'):
 
 def match_table_md(report):
     # report: {name: dm.evaluate.summarize(...)}
-    head = ['player', 'frags [95% CI]', 'deaths', 'K/D (mean, total)', 'suicides', 'hits per rocket',
+    head = ['player', 'frags [95% CI]', 'deaths', 'K/D (mean, total)', 'suicides', 'hits per shot',
             'items', 'path', 'stuck', 'sees a bot', "median bot's frags [95% CI]"]
     lines = ['| ' + ' | '.join(head) + ' |', '|' + ' --- |' * len(head)]
     for name, s in report.items():
@@ -119,6 +119,41 @@ def gate_a(report):
             ("frags >= median bot's frags", (t['frags']['mean'], t['bot_median']['mean']),
              t['frags']['mean'] >= t['bot_median']['mean']),
             ('stuck share < 5 %', t['stuck_share']['mean'], t['stuck_share']['mean'] < 0.05)]
+
+
+def gate_a2(report):
+    # spec v2 §1: K/D over all matches >= 3, first of 8 in >= 90 % of matches, frags >= 2 x the best bot
+    t = report['teacher']
+    return [('K/D over all matches >= 3', t['kd_total'], t['kd_total'] >= 3.0),
+            ('first of 8 in >= 90 % of matches', t['first_share'], t['first_share'] >= 0.9),
+            ("frags >= 2 x the best bot's frags", (t['frags']['mean'], t['bot_best']['mean']),
+             t['frags']['mean'] >= 2.0 * t['bot_best']['mean'])]
+
+
+def teacher_figure2(report, diag, out_png):
+    # spec v2: frags against the best and the median bot, the weapon in hand, death causes, hits by weapon;
+    # diag: {'death_cause': {cause: share}, 'hit_share_by_weapon': {weapon: hits per shot}}
+    from doomagent.dm.weapons import WEAPONS
+    t = report['teacher']
+    fig, ax = plt.subplots(1, 4, figsize=(18, 3.9), facecolor=SURFACE, gridspec_kw=dict(width_ratios=(1, 1.3, 1, 1.2)))
+    _dots(ax[0], ['teacher', 'best bot', 'median bot'], [t['frags'], t['bot_best'], t['bot_median']],
+          [ENTITY['teacher'], ENTITY['bots'], ENTITY['bots']])
+    ax[0].axhline(2.0 * t['bot_best']['mean'], color=MUTED, linewidth=0.8, linestyle='--')
+    _style(ax[0], 'Frags per match (95% CI); dashed: 2 x best bot')
+    for a, data, title, fmt in (
+            (ax[1], {WEAPONS[k].name: v for k, v in t['weapon_share'].items()}, 'Weapon in hand (share of steps)', '%.0f%%'),
+            (ax[2], diag['death_cause'], 'Deaths by cause (share)', '%.0f%%'),
+            (ax[3], diag['hit_share_by_weapon'], 'Hits per shot by weapon', '%.2f')):
+        names = list(data)
+        vals = [data[n] for n in names]
+        bars = a.bar(range(len(names)), vals, color=ENTITY['teacher'], width=0.65)
+        a.bar_label(bars, labels=[fmt % (100 * v if fmt.endswith('%%') else v) for v in vals], color=MUTED,
+                    fontsize=7, padding=2)
+        a.set_xticks(range(len(names)), names, rotation=30, ha='right', fontsize=7)
+        _style(a, title)
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=130, facecolor=SURFACE)
+    plt.close(fig)
 
 
 def _dots(ax, names, stats, colors):

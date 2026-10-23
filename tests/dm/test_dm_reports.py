@@ -3,7 +3,7 @@ import json
 
 from dmfiles import make_match
 from doomagent.dm.reports import (curves_figure, d0_figure, dataset_figure, dataset_stats, e0_figure, gate_a,
-                                  match_table_md, teacher_figure)
+                                  gate_a2, match_table_md, teacher_figure, teacher_figure2)
 
 
 def test_dataset_stats_counts(tmp_path):
@@ -84,4 +84,23 @@ def test_e0_figure_writes_png(tmp_path):
     bots = {'player': ci(-3.0), 'bot_median': ci(3.5), 'bot_best': ci(6.0)}
     out = tmp_path / 'e0.png'
     e0_figure(turns, moves, bots, str(out))
+    assert out.stat().st_size > 10_000
+
+
+def summary2(frags, kd_total, best, first):
+    s = summary(frags, kd_total, 1.0, 0.0)
+    s.update(bot_best=ci(best), first_share=first, weapon_share={k: 1 / 7 for k in range(1, 8)})
+    return s
+
+
+def test_gate_a2_rules():
+    assert [p for _, _, p in gate_a2({'teacher': summary2(20.0, 3.5, 9.0, 0.95)})] == [True, True, True]
+    assert [p for _, _, p in gate_a2({'teacher': summary2(12.0, 2.0, 9.0, 0.6)})] == [False, False, False]
+
+
+def test_teacher_figure2_writes_png(tmp_path):
+    diag = {'death_cause': {'bot seen': 0.6, 'unseen': 0.3, 'suicide': 0.1},
+            'hit_share_by_weapon': {'pistol': 0.4, 'chaingun': 0.3, 'rocket launcher': 0.5}}
+    out = tmp_path / 't2.png'
+    teacher_figure2({'teacher': summary2(15.0, 3.0, 8.0, 0.9)}, diag, str(out))
     assert out.stat().st_size > 10_000

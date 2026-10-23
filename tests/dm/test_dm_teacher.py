@@ -204,3 +204,13 @@ def test_teacher_patrols_map02_without_getting_stuck():
     r = run_match(e, t, 35000)
     e.close()
     assert r['stuck_share'] < 0.05 and r['path'] > 1500 and r['weapon_share'][2] < 0.5
+
+
+def test_why_names_the_reason():
+    t = DMTeacher(DM)
+    t(obs(), priv(labels=[bot(1, 0.0, 600)]))
+    assert t.why == 'shoot'
+    t(obs(), priv(labels=[bot(1, 40.0, 600)], tic=108))
+    assert t.why == 'not_aimed'
+    t(obs(), priv(tic=200))
+    assert t.why == 'no_combat'

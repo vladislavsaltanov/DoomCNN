@@ -103,6 +103,7 @@ def run_match(env, chooser, seed, trace=False):
                stuck_share=stuck / max(length, 1), enemy_steps=int(sum(enemy)),
                enemy_share=sum(enemy) / max(length, 1), length=length, bot_frags=bots,
                bot_median=float(np.median(bots)) if bots else None, bot_best=max(bots) if bots else None,
+               rank=1 + sum(b > float(end.frags) for b in bots),
                weapon_share={k: float(weapon_steps[k] / max(length, 1)) for k in range(1, N_WEAPON_SLOTS + 1)})
     if trace:
         out['trace'] = {k: np.asarray(v) for k, v in rows.items()}
@@ -153,6 +154,7 @@ def summarize(results):
     out['kd_total'] = sum(r['frags'] for r in results) / max(sum(r['deaths'] for r in results), 1.0)
     out['shots'] = float(np.mean([r['shots'] for r in results]))
     out['length'] = float(np.mean([r['length'] for r in results]))
+    out['first_share'] = float(np.mean([r['rank'] == 1 for r in results]))
     out['weapon_share'] = {k: float(np.mean([r['weapon_share'][k] for r in results]))
                            for k in range(1, N_WEAPON_SLOTS + 1)}
     return out

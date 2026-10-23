@@ -1,5 +1,5 @@
-from doomagent.dm.env import DMPrivileged
-from doomagent.dm.minimap import MapView
+from doomagent.dm.env import DMPrivileged, MapObject
+from doomagent.dm.minimap import WEAPON_COLOR, MapView
 
 BOX = [(0.0, 128.0, ((0, 0, 512, 0, True), (512, 0, 512, 512, True), (512, 512, 0, 512, True),
                      (0, 512, 0, 0, True)))]
@@ -24,3 +24,10 @@ def test_draw_works_without_a_teacher_and_keeps_the_base():
     before = m.base().copy()
     m.draw(DMPrivileged(px=256.0, py=256.0, sectors=BOX))
     assert (m.base() == before).all()
+
+
+def test_minimap_draws_weapons_by_slot():
+    m = MapView(BOX)
+    img = m.draw(DMPrivileged(px=100.0, py=100.0, sectors=BOX, objects=[MapObject(1, 'Chaingun', 300.0, 300.0, 0.0)]))
+    x, y = m.to_px(300, 300)
+    assert tuple(img[y, x]) == WEAPON_COLOR[4]
