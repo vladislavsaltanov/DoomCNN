@@ -21,7 +21,7 @@ total = dataset_stats(a.dirs)
 dataset_figure(total, a.out + '.png')
 with open(a.out + '.json', 'w') as fh:
     json.dump(dict(total=total, per_dir=per_dir), fh, indent=1)
-lines = ['# D3: recorded teacher matches', '',
+lines = ['# E3: recorded teacher matches, cig MAP02', '',
          '| set | matches | steps | GB | steps per match | lives per match | teacher frags per match | noise share | variants |',
          '|---|---|---|---|---|---|---|---|---|']
 for d, s in list(per_dir.items()) + [('all', total)]:
