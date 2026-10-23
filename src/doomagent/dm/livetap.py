@@ -56,6 +56,7 @@ class LiveTap:
         self.last = now
         from doomagent.dm.live import describe
         from doomagent.dm.viewer import compose_view
+        label = action if label is None else label
         base = os.path.join(self.root, self.worker)
         _put(base + '.screen.jpg', _jpg(compose_view(env.screen(), priv, action, None, self.cfg, True, None, None,
                                                      teacher), rgb=False))
@@ -68,5 +69,5 @@ class LiveTap:
         _put(base + '.json', json.dumps(dict(
             worker=self.worker, time=now, seed=int(info['seed']), variant=info['variant'], step=int(info['step']),
             frags=float(priv.frags), deaths=float(priv.deaths), health=float(priv.health), weapon=int(priv.weapon),
-            mode=teacher.mode, why=getattr(teacher, 'why', ''), label=describe(label),
+            mode=getattr(teacher, 'mode', 'net'), why=getattr(teacher, 'why', ''), label=describe(label),
             action=describe(action))).encode())

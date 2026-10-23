@@ -51,8 +51,9 @@ def _acc_per_value(conf):
 
 class Live:
     # the dashboard's training charts: loss and accuracy points, confusion of the recent batches per head
-    def __init__(self, out, n_batches, keep=4000):
-        self.out, self.n_batches, self.keep = str(out), n_batches, keep
+    def __init__(self, out, n_batches, epochs=None, keep=4000):
+        self.out, self.n_batches, self.epochs, self.keep = str(out), n_batches, epochs, keep
+        self.start = time.time()
         self.points, self.total, self.holdout_confusion = [], 0, None
         self._clear()
 
@@ -74,7 +75,8 @@ class Live:
                                            acc=self.sum_acc / self.n,
                                            **{f'acc_{h}': self.sum_head[h] / self.n for h in HEADS})])[-self.keep:]
         write_json_atomic(self.out + '.progress.json',
-                          dict(epoch=epoch, batch=batch, n_batches=self.n_batches, t=time.time(),
+                          dict(epoch=epoch, batch=batch, n_batches=self.n_batches, epochs=self.epochs,
+                               start=self.start, t=time.time(),
                                points=self.points))
         write_json_atomic(self.out + '.live.json', dict(
             confusion={h: m.tolist() for h, m in self.conf.items()}, acc_per_value=_acc_per_value(self.conf),
@@ -114,9 +116,10 @@ def holdout_metrics(model, ds, memory, dev, batch_size):
 
 def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=True, eval_every=2,
           val=None, init=None, conv_init=None, seed=0, workers=2, eval_workers=4, max_minutes=None,
-          holdout=0.05, clip=1.0, cfg=DM):
+          holdout=0.05, clip=1.0, cfg=DM, live_dir=None):
     # behavior cloning of the teacher's labels: M0 on single steps, M1 on windows inside lives;
-    # the checkpoint is chosen by frags on the val matches (val=[]: no games, the last one is kept)
+    # the checkpoint is chosen by frags on the val matches (val=[]: no games, the last one is kept);
+    # live_dir: a folder (dm.livetap.LIVE_DIR) where the val matches are shown on the dashboard
     assert kind in ('m0', 'm1')
     torch.manual_seed(seed)
     dev, memory = pick_device(), kind == 'm1'
@@ -138,7 +141,7 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
                   aug=aug, init=init, conv_init=conv_init, seed=seed, clip=clip,
                   val=[(v.name, len(s)) for v, s in val], train_files=train_files,
                   holdout_files=hold_files)
-    live, log, best, t0, stop = Live(out, len(dl)), [], -float('inf'), time.time(), False
+    live, log, best, t0, stop = Live(out, len(dl), epochs), [], -float('inf'), time.time(), False
     for epoch in range(1, epochs + 1):
         sums, n = dict(ce=0.0, acc=0.0), 0
         for i, batch in enumerate(dl, 1):
@@ -175,7 +178,11 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
             live.holdout_confusion = {h: c.tolist() for h, c in conf.items()}
         if val:
             state = {k: t.detach().cpu() for k, t in model.state_dict().items()}
-            res = evaluate_plan(val, DMChooser(state, memory, cfg), cfg, workers=eval_workers)
+            if live_dir:
+                from doomagent.dm.livetap import write_plan
+                name = os.path.basename(str(out)).split('.pt')[0]
+                write_plan(f'{name} · сеть на val · эпоха {epoch}', '', sum(len(s) for _, s in val), live_dir, 'eval')
+            res = evaluate_plan(val, DMChooser(state, memory, cfg), cfg, workers=eval_workers, live=live_dir)
             score, per = val_score(res)
             s = summarize(res)
             row.update(val_score=score, per_variant=per, frags=s['frags'], kd_total=s['kd_total'],
@@ -209,9 +216,10 @@ if __name__ == '__main__':  # loader and evaluation processes re-import this fil
     ap.add_argument('--workers', type=int, default=2)
     ap.add_argument('--eval-workers', type=int, default=4)
     ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--no-live', action='store_true', help='no val match frames for the dashboard')
     a = ap.parse_args()
     val = {'full': None, 'base': [(BASE, VAL_SEEDS)], 'base10': [(BASE, VAL_SEEDS[:10])], 'none': []}[a.val]
     print('best val_score:', train(a.kind, a.dirs, a.out, a.epochs, a.lr, eval_every=a.eval_every,
                                    val=val, init=a.init, conv_init=a.conv_init, seed=a.seed,
                                    workers=a.workers, eval_workers=a.eval_workers,
-                                   max_minutes=a.max_minutes))
+                                   max_minutes=a.max_minutes, live_dir=None if a.no_live else 'runs/dm/live'))

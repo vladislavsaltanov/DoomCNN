@@ -47,3 +47,12 @@ def test_train_with_val_on_a_short_match(tmp_path):
     train('m1', [str(tmp_path / 'd')], out, epochs=1, val=[(BASE, (35000,))], workers=0,
           eval_workers=1, batch_steps=64, cfg=replace(DM, timelimit=0.1))
     assert 'val_score' in json.load(open(out + '.log.json'))['log'][-1]
+
+
+def test_progress_knows_the_epochs_and_the_start(tmp_path):
+    make_match(tmp_path / 'd', 0, T=70, first_at=(0,))
+    make_match(tmp_path / 'd', 1, T=70, first_at=(0,))
+    out = str(tmp_path / 'm0.pt')
+    train('m0', [str(tmp_path / 'd')], out, epochs=2, val=[], workers=0, batch_steps=64)
+    p = json.load(open(out + '.progress.json'))
+    assert p['epochs'] == 2 and p['start'] <= p['t']

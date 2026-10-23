@@ -55,8 +55,16 @@ def dm_runs():
 def dm_train(name):
     name = os.path.basename(name)  # no paths from the query string
     d = {k: _read_json(f'runs/dm/{name}.pt.{k}.json') for k in ('progress', 'live', 'log')}
-    teacher = (_read_json('reports/dm/e1_teacher.json') or {}).get('report', {}).get('teacher', {}).get('frags')
-    return dict(name=name, heads=list(HEADS), values=VALUES, teacher=teacher, **d)
+    return dict(name=name, heads=list(HEADS), values=VALUES, teacher=_teacher_frags(), **d)
+
+
+def _teacher_frags():
+    # the teacher on the val matches: the final one (E3), else the E1 one
+    for p in ('reports/dm/e1_teacher_final.json', 'reports/dm/e1_teacher.json'):
+        frags = (_read_json(p) or {}).get('report', {}).get('teacher', {}).get('frags')
+        if frags:
+            return frags
+    return None
 
 
 _MATCH_CACHE = {}  # npz path -> (mtime, its numbers): finished matches are read once
@@ -79,7 +87,32 @@ def _match_numbers(path):
 
 
 def dm_record():
-    # the recording card: what is recorded, the finished matches and their numbers, the live workers
+    # the top strip: a recording or an evaluation in progress, and the training run, if one is active
+    return dict(_record_plan(), train=_train_status(), teacher=_teacher_frags())
+
+
+def _train_status():
+    # the newest active run: where it is, time left (training and its val checks together), the last check
+    run = next((r for r in dm_runs() if r['active']), None)
+    if run is None:
+        return None
+    p = _read_json(f'runs/dm/{run["name"]}.pt.progress.json') or {}
+    log = (_read_json(f'runs/dm/{run["name"]}.pt.log.json') or {}).get('log', [])
+    if not p.get('epochs') or not p.get('n_batches'):
+        return dict(name=run['name'], done=None, eta_s=None, last=log[-1] if log else None, progress=p)
+    done = ((p['epoch'] - 1) * p['n_batches'] + p['batch']) / (p['epochs'] * p['n_batches'])
+    spent = p['t'] - p['start']
+    last = None
+    if log:
+        last = {k: v for k, v in log[-1].items() if k != 'holdout_acc_per_value'}
+        fire = (log[-1].get('holdout_acc_per_value') or {}).get('fire') or [None, None]
+        last['holdout_fire_recall'] = fire[1]  # share of the teacher's shots the network also fires
+    return dict(name=run['name'], done=done, eta_s=spent * (1 - done) / done if done > 0 else None,
+                last=last, progress={k: p.get(k) for k in ('epoch', 'batch', 'n_batches', 'epochs')})
+
+
+def _record_plan():
+    # what is recorded, the finished matches and their numbers, the live workers
     from doomagent.dm.livetap import LIVE_DIR, STALE_S
     from doomagent.dm.weapons import WEAPONS
     plan = _read_json(os.path.join(LIVE_DIR, 'record.json'))
@@ -141,7 +174,9 @@ def _eval_progress(plan, workers, now):
 
 def dm_neurons(run):
     # neuron maps of this run's network kind (m0 or m1), newest first
-    kind = os.path.basename(run).split('_')[0]
+    kind = next((k for k in os.path.basename(run).split('_') if k in ('m0', 'm1')), None)
+    if kind is None:
+        return dict(images=[])
     files = sorted(glob.glob(f'artifacts/dm/*_select_{kind}.png'), key=os.path.getmtime, reverse=True)
     return dict(images=[dict(name=os.path.basename(f), mtime=os.path.getmtime(f)) for f in files])
 

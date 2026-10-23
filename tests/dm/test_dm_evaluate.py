@@ -116,3 +116,17 @@ def test_rank_among_players():
     assert r['rank'] == 2   # one bot has more, a tie does not push the player down
     res = [r, run_match(FakeMatchEnv(rows, player_frags=(3, 2, 1, 0, 0, 0, 0, 0)), forward, 1)]
     assert summarize(res)['first_share'] == 0.5
+
+
+def test_live_tap_shows_a_student_match(tmp_path):
+    # the network's val matches are shown live too: frame, state and the finished match
+    import json
+    from doomagent.dm.livetap import LiveTap
+    tap = LiveTap(str(tmp_path), every_s=0.0, worker='e1')
+    rows = [row(frags=float(i // 4), first=i == 0) for i in range(8)]
+    r = run_match(FakeMatchEnv(rows, player_frags=(0, 3, 1, 0, 0, 0, 0, 0)), forward, 9, tap=tap)
+    st = json.load(open(tmp_path / 'e1.json'))
+    assert st['seed'] == 9 and st['mode'] == 'net' and st['label'] == st['action']
+    assert (tmp_path / 'e1.screen.jpg').stat().st_size > 0
+    done = json.load(open(tmp_path / 'e1.done.json'))
+    assert done[0]['frags'] == r['frags'] and done[0]['best_bot'] == 3.0 and done[0]['first'] is False

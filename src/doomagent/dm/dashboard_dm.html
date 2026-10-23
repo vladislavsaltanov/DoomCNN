@@ -63,17 +63,31 @@
 <section class="rec">
   <div class="card">
     <h2 id="r-title">Запись данных — учитель играет, каждый шаг пишется в датасет</h2>
-    <div id="recempty" class="empty">ни запись, ни проверка учителя не идут; они появятся здесь, когда запущен <code>python -m doomagent.dm.record</code> или <code>scripts/dm/dm_teacher_cycle.py</code></div>
+    <div id="recempty" class="empty">ничего не идёт: запись (<code>python -m doomagent.dm.record</code>), проверка учителя (<code>scripts/dm/dm_teacher_cycle.py</code>) и обучение (<code>scripts/dm/dm_runs.py</code>) появятся здесь</div>
+    <div id="r-train" class="note" style="display:none;margin-bottom:4px"></div>
+    <div id="trainbody" style="display:none">
+      <div class="row" style="margin-top:0"><b id="t-name">—</b><span class="note" id="t-prog">—</span></div>
+      <div class="bar"><div id="t-bar"></div></div>
+      <div class="tiles six">
+        <div class="tile"><small>эпоха</small><b id="t-epoch">—</b></div>
+        <div class="tile"><small>фраги сети на val, последняя проверка</small><b id="t-val">—</b> <i id="t-vkd"></i></div>
+        <div class="tile"><small>учитель на тех же val-матчах</small><b id="t-teacher">—</b></div>
+        <div class="tile"><small>точность «движение» / «поворот», отложенная</small><b id="t-mt">—</b></div>
+        <div class="tile"><small>точность «выстрел», отложенная</small><b id="t-fire">—</b> <i id="t-fire1"></i></div>
+        <div class="tile"><small>точность «оружие», отложенная</small><b id="t-weapon">—</b></div>
+      </div>
+      <div class="note" id="t-note">Сеть учится на записанных матчах учителя. Каждые 2 эпохи она сама играет 40 матчей на val — тогда здесь появятся живые кадры сети. Графики потерь и точности — ниже, в «Обучении».</div>
+    </div>
     <div id="recbody" style="display:none">
       <div class="row" style="margin-top:0"><b id="r-name">—</b><span class="note" id="r-prog">—</span>
         <label>воркер <select id="r-worker"></select></label><span class="note" id="r-state">—</span></div>
       <div class="bar"><div id="r-bar"></div></div>
       <div class="recgrid">
-        <div><img class="view" id="r-screen" alt="кадр воркера записи"><div class="note">кадр, который записывается сейчас (учитель, рамки ботов, выбранное действие)</div></div>
+        <div><img class="view" id="r-screen" alt="кадр воркера записи"><div class="note" id="r-l0">кадр, который записывается сейчас (учитель, рамки ботов, выбранное действие)</div></div>
         <div><img class="view" id="r-map" alt="карта воркера записи" style="max-width:320px;margin:auto"></div>
         <div>
           <div class="tiles six">
-            <div class="tile"><small>фраги учителя за матч</small><b id="r-frags">—</b> <i id="r-kd"></i></div>
+            <div class="tile"><small id="r-l1">фраги учителя за матч</small><b id="r-frags">—</b> <i id="r-kd"></i></div>
             <div class="tile"><small>смерти за матч</small><b id="r-deaths">—</b></div>
             <div class="tile"><small id="r-l3">попаданий за матч</small><b id="r-hits">—</b></div>
             <div class="tile"><small id="r-l4">шагов с выстрелом</small><b id="r-fire">—</b></div>
@@ -84,7 +98,7 @@
             <div><div class="note">режим учителя, доля шагов</div><div class="chart" id="r-modes"></div></div>
             <div><div class="note">оружие в руках, доля шагов</div><div class="chart" id="r-weapons"></div></div>
           </div>
-          <div class="note">фраги учителя в последних матчах</div><div class="chart" id="r-fpm"></div>
+          <div class="note" id="r-l7">фраги учителя в последних матчах</div><div class="chart" id="r-fpm"></div>
         </div>
       </div>
     </div>
@@ -430,12 +444,25 @@ let recWorkers = [];
 async function tickRecord() {
   let d;
   try { d = await api('/api/record'); } catch (e) { return; }
-  const on = !!d.plan;
-  $('recempty').style.display = on ? 'none' : ''; $('recbody').style.display = on ? '' : 'none';
-  if (!on) return;
-  const ev = d.plan.kind === 'eval';
-  $('r-title').textContent = ev ? 'Проверка учителя — оценочные матчи, ничего не записывается'
-                                : 'Запись данных — учитель играет, каждый шаг пишется в датасет';
+  // a recording or an evaluation in progress comes first; else the active training; else the last finished plan
+  const busy = d.plan && (d.done < d.plan.total || d.workers.length > 0);
+  const tr = d.train, showTrain = !!tr && !busy, on = !!d.plan && !showTrain;
+  $('recempty').style.display = on || showTrain ? 'none' : '';
+  $('recbody').style.display = on ? '' : 'none';
+  $('trainbody').style.display = showTrain ? '' : 'none';
+  const trLine = tr ? `обучение ${tr.name}: ` + (tr.progress && tr.progress.epochs ? `эпоха ${tr.progress.epoch} из ${tr.progress.epochs}, ` +
+    `батч ${tr.progress.batch} из ${tr.progress.n_batches} · ${pct(tr.done)} · осталось ≈ ${dur(tr.eta_s)}` : 'идёт') : '';
+  $('r-train').style.display = tr && busy ? '' : 'none'; $('r-train').textContent = trLine;
+  if (showTrain) { trainStrip(tr, d.teacher); return; }
+  if (!on) { $('r-title').textContent = 'Запись данных, проверки и обучение'; return; }
+  const ev = d.plan.kind === 'eval', net = ev && d.plan.name.includes('сеть');
+  $('r-title').textContent = net ? 'Проверка сети на val — играет сеть, учитель не подсказывает'
+    : ev ? 'Проверка учителя — оценочные матчи, ничего не записывается'
+         : 'Запись данных — учитель играет, каждый шаг пишется в датасет';
+  const who = net ? 'сети' : 'учителя';
+  $('r-l0').textContent = net ? 'кадр матча сети сейчас (рамки ботов только для вас, сеть видит серый кадр 320x240)'
+                              : 'кадр, который записывается сейчас (учитель, рамки ботов, выбранное действие)';
+  $('r-l1').textContent = `фраги ${who} за матч`; $('r-l7').textContent = `фраги ${who} в последних матчах`;
   $('r-name').textContent = ev ? d.plan.name : d.plan.out;
   $('r-prog').textContent = `${d.done} из ${d.plan.total} матчей · ` + (ev ? '' : `${d.steps.toLocaleString('ru')} шагов · ${fmt(d.gb, 1)} ГБ · `) +
     (d.done >= d.plan.total ? 'готово' : `${fmt(d.per_min, 1)} матча/мин · осталось ≈ ${dur(d.eta_s)}`);
@@ -450,7 +477,10 @@ async function tickRecord() {
     recWorkers = names;
   }
   const w = d.workers.find(x => x.worker === sel.value);
-  $('r-state').textContent = w ? `seed ${w.seed} · ${w.variant} · шаг ${w.step} · фраги ${w.frags} · смерти ${w.deaths} · режим ${RU_MODE[w.mode] || w.mode} · учитель: ${w.label}${w.label !== w.action ? ' · сыграно (шум): ' + w.action : ''}` : 'воркеров нет: запись закончилась или не началась';
+  $('r-state').textContent = !w ? 'воркеров нет: закончилось или ещё не началось'
+    : w.mode === 'net' ? `seed ${w.seed} · ${w.variant} · шаг ${w.step} · фраги ${w.frags} · смерти ${w.deaths} · сеть: ${w.action}`
+    : `seed ${w.seed} · ${w.variant} · шаг ${w.step} · фраги ${w.frags} · смерти ${w.deaths} · режим ${RU_MODE[w.mode] || w.mode} · учитель: ${w.label}${w.label !== w.action ? ' · сыграно (шум): ' + w.action : ''}`;
+  ['r-screen', 'r-map'].forEach(id => { $(id).style.visibility = w ? 'visible' : 'hidden'; });
   const m = d.metrics;
   if (!m) { ['r-frags', 'r-kd', 'r-deaths', 'r-hits', 'r-fire'].forEach(id => { $(id).textContent = '—'; }); return; }
   $('r-frags').textContent = fmt(m.frags); $('r-kd').textContent = 'K/D ' + fmt(m.kd);
@@ -465,6 +495,22 @@ async function tickRecord() {
   barChart($('r-modes'), modes.map(k => m.mode_share[k]), modes.map(k => RU_MODE[k] || k), C.s1);
   barChart($('r-weapons'), wn.map(k => m.weapon_share[k]), wn, C.s3);
   line();
+}
+function trainStrip(tr, teacher) {
+  $('r-title').textContent = 'Обучение сети на записях учителя';
+  $('t-name').textContent = tr.name;
+  const p = tr.progress || {};
+  $('t-prog').textContent = p.epochs ? `батч ${p.batch} из ${p.n_batches} · ${pct(tr.done)} всего · осталось ≈ ${dur(tr.eta_s)} (с проверками на val)` : 'идёт';
+  $('t-bar').style.width = Math.min(100, 100 * (tr.done || 0)) + '%';
+  $('t-epoch').textContent = p.epochs ? `${p.epoch} из ${p.epochs}` : '—';
+  const l = tr.last || {};
+  $('t-val').textContent = l.frags ? fmt(l.frags.mean) : '—';
+  $('t-vkd').textContent = l.frags ? `эпоха ${l.epoch} · K/D ${fmt(l.kd_total)}` : 'после 2-й эпохи';
+  $('t-teacher').textContent = teacher ? fmt(teacher.mean) : '—';
+  $('t-mt').textContent = l.holdout_acc_move != null ? `${pct(l.holdout_acc_move)} / ${pct(l.holdout_acc_turn)}` : '—';
+  $('t-fire').textContent = pct(l.holdout_acc_fire);
+  $('t-fire1').textContent = l.holdout_fire_recall != null ? `выстрелы угаданы в ${pct(l.holdout_fire_recall)}` : '';
+  $('t-weapon').textContent = pct(l.holdout_acc_weapon);
 }
 // the worker's frame and map: one picture at a time, the next after the last has loaded
 function pullRecImg(img, k) {

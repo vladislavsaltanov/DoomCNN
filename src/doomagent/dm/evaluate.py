@@ -56,8 +56,9 @@ def stuck_steps(pos, enemy, first):
     return n
 
 
-def run_match(env, chooser, seed, trace=False):
-    # chooser(obs, priv) -> action; game data is read here for the metrics only
+def run_match(env, chooser, seed, trace=False, tap=None):
+    # chooser(obs, priv) -> action; game data is read here for the metrics only; tap (dm.livetap.LiveTap)
+    # shows the match on the dashboard
     if hasattr(chooser, 'reset'):
         chooser.reset()
     w = getattr(env, 'cfg', DM).width
@@ -70,6 +71,9 @@ def run_match(env, chooser, seed, trace=False):
         p = env.privileged()
         bot = nearest_bot(p.labels, p.px, p.py, w)
         action = tuple(int(x) for x in chooser(obs, p))
+        if tap is not None:
+            tap(env, p, getattr(chooser, 'teacher', chooser if hasattr(chooser, 'mode') else None), action, action,
+                dict(seed=seed, step=length, variant=env.variant.name))
         weapon_steps[min(max(int(p.weapon), 0), N_WEAPON_SLOTS)] += 1
         pos.append((p.px, p.py))
         enemy.append(bot is not None)
@@ -105,6 +109,9 @@ def run_match(env, chooser, seed, trace=False):
                bot_median=float(np.median(bots)) if bots else None, bot_best=max(bots) if bots else None,
                rank=1 + sum(b > float(end.frags) for b in bots),
                weapon_share={k: float(weapon_steps[k] / max(length, 1)) for k in range(1, N_WEAPON_SLOTS + 1)})
+    if tap is not None:
+        tap.match_done(seed, frags=out['frags'], deaths=out['deaths'], best_bot=out['bot_best'] or 0.0,
+                       first=out['rank'] == 1)
     if trace:
         out['trace'] = {k: np.asarray(v) for k, v in rows.items()}
         if hasattr(chooser, 'take_trace'):
@@ -112,7 +119,12 @@ def run_match(env, chooser, seed, trace=False):
     return out
 
 
-def run_chunk(variant, seeds, chooser, cfg, env_factory=None, trace=False):
+def run_chunk(variant, seeds, chooser, cfg, env_factory=None, trace=False, live=None):
+    # live: a folder (dm.livetap.LIVE_DIR) where this worker shows its matches on the dashboard
+    tap = None
+    if live:
+        from doomagent.dm.livetap import LiveTap
+        tap = LiveTap(live, cfg=cfg)
     if env_factory is None:
         from doomagent.dm.env import DeathmatchEnv
         env_factory = DeathmatchEnv
@@ -120,7 +132,7 @@ def run_chunk(variant, seeds, chooser, cfg, env_factory=None, trace=False):
     env = env_factory(cfg, variant)
     try:
         for s in seeds:
-            r = run_match(env, chooser, s, trace)
+            r = run_match(env, chooser, s, trace, tap)
             r.update(variant=variant.name, seed=int(s))
             out.append(r)
     finally:
@@ -128,18 +140,18 @@ def run_chunk(variant, seeds, chooser, cfg, env_factory=None, trace=False):
     return out
 
 
-def evaluate_plan(plan, chooser, cfg=DM, env_factory=None, workers=1, trace=False):
+def evaluate_plan(plan, chooser, cfg=DM, env_factory=None, workers=1, trace=False, live=None):
     # plan: [(variant, seeds)]; workers > 1 runs matches in spawn processes (chooser must pickle);
     # a match depends only on its seed, so the results equal the serial ones, in plan order
     if workers <= 1:
-        return [r for v, seeds in plan for r in run_chunk(v, seeds, chooser, cfg, env_factory, trace)]
+        return [r for v, seeds in plan for r in run_chunk(v, seeds, chooser, cfg, env_factory, trace, live)]
     import multiprocessing as mp
     from concurrent.futures import ProcessPoolExecutor
     total = sum(len(s) for _, s in plan)
     size = max(1, -(-total // (2 * workers)))  # about two chunks per worker
     chunks = [(v, tuple(seeds[i:i + size])) for v, seeds in plan for i in range(0, len(seeds), size)]
     with ProcessPoolExecutor(workers, mp_context=mp.get_context('spawn')) as ex:
-        futures = [ex.submit(run_chunk, v, s, chooser, cfg, env_factory, trace) for v, s in chunks]
+        futures = [ex.submit(run_chunk, v, s, chooser, cfg, env_factory, trace, live) for v, s in chunks]
         return [r for f in futures for r in f.result()]
 
 

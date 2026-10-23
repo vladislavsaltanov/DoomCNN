@@ -112,3 +112,28 @@ def test_eval_progress_from_finished_matches(tmp_path, monkeypatch):
     m = d['metrics']
     assert m['frags'] == 6.0 and m['kd'] == 3.0 and m['best_bot'] == 6.5 and m['first_share'] == 0.5
     assert m['frags_per_match'] == [8.0, 4.0] and d['eta_s'] > 0
+
+
+def test_record_reports_the_active_training(tmp_path, monkeypatch):
+    # the top strip shows the training run when nothing is recorded: epoch, batch, time left, last check
+    import time
+    from doomagent.dm.dashboard import dm_record
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / 'runs' / 'dm').mkdir(parents=True)
+    now = time.time()
+    (tmp_path / 'runs' / 'dm' / 'dm2_m0_r0.pt.progress.json').write_text(json.dumps(
+        dict(epoch=2, batch=50, n_batches=100, epochs=4, start=now - 150, t=now, points=[])))
+    (tmp_path / 'runs' / 'dm' / 'dm2_m0_r0.pt.log.json').write_text(json.dumps(
+        dict(config={}, log=[dict(epoch=1, holdout_acc_fire=0.8, frags=dict(mean=1.5, lo=1, hi=2))])))
+    t = dm_record()['train']
+    assert t['name'] == 'dm2_m0_r0' and t['done'] == pytest.approx(150 / 400)
+    assert t['eta_s'] == pytest.approx(250, rel=0.05) and t['last']['holdout_acc_fire'] == 0.8
+
+
+def test_neurons_find_the_kind_inside_the_run_name(tmp_path, monkeypatch):
+    from doomagent.dm.dashboard import dm_neurons
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / 'artifacts' / 'dm').mkdir(parents=True)
+    (tmp_path / 'artifacts' / 'dm' / 'e2_select_m1.png').write_bytes(b'\x89PNG')
+    assert dm_neurons('dm2_m1_r01')['images'][0]['name'] == 'e2_select_m1.png'
+    assert dm_neurons('dm2_m0_r0')['images'] == []
