@@ -215,7 +215,7 @@ class DeathmatchEnv:
         # only. on_tic(rgb, privileged) runs after every tic, the death skip included: the viewer's path
         g, c = self.game, self.cfg
         frags0, deaths0 = self._priv.frags, self._priv.deaths
-        first, rest = buttons_for(tuple(int(x) for x in action), c.frame_skip)
+        first, rest = buttons_for(tuple(int(x) for x in action), c.frame_skip, c.flick)
         if on_tic is None and first == rest:
             g.make_action(first, c.frame_skip)
         elif on_tic is None:

@@ -48,11 +48,14 @@ def make_vec(health, armor, weapon, weapon_ammo):
     return v
 
 
-def buttons_for(action, frame_skip):
+def buttons_for(action, frame_skip, flick=False):
     # (buttons of the step's first tic, buttons of the other tics) in the order MOVE_FORWARD, MOVE_BACKWARD,
     # MOVE_LEFT, MOVE_RIGHT, ATTACK, SELECT_NEXT_WEAPON, TURN_LEFT_RIGHT_DELTA; the turn is spread evenly over
-    # the tics, the next-weapon key is pressed on the first tic only
+    # the tics, or with flick done whole on the first tic (Doom turns before it fires within a tic, so that
+    # tic's shot already goes the new way); the next-weapon key is pressed on the first tic only
     move, turn, fire, weapon = action
     keys = list(_MOVE_KEYS[move]) + [int(fire)]
-    delta = -DELTA_SIGN * TURN_DEG[turn] / frame_skip  # a positive delta turns right (measured in E0)
-    return keys + [int(weapon), delta], keys + [0, delta]
+    full = -DELTA_SIGN * TURN_DEG[turn]  # a positive delta turns right (measured in E0)
+    if flick:
+        return keys + [int(weapon), full], keys + [0, 0.0]
+    return keys + [int(weapon), full / frame_skip], keys + [0, full / frame_skip]

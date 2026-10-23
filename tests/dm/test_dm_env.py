@@ -204,3 +204,17 @@ def test_run_and_autoaim_are_set_on_every_game():
     b = game_args(replace(DM, run=True, autoaim=True))
     assert '+cl_run 1' in b and '+sv_noautoaim 0' in b
     assert ' ' not in a.split('+viz_bots_path ')[1]
+
+
+@pytest.mark.parametrize('deg', [40.0, -3.0])
+def test_flick_turn_is_done_after_the_first_tic(deg):
+    # the whole turn on the step's first tic: a shot pressed on that tic already goes the new way
+    from doomagent.dm.env import DeathmatchEnv
+    env = DeathmatchEnv(replace(SHORT, flick=True))
+    env.reset(35011)
+    for _ in range(6):
+        env.step(NOOP)
+    a0, seen = env.privileged().angle, []
+    env.step((STAY, turn_index(deg), 0, 0), on_tic=lambda rgb, p: seen.append(p.angle))
+    env.close()
+    assert abs(wrap(seen[0] - a0) - deg) <= 0.2 and abs(wrap(seen[-1] - a0) - deg) <= 0.2

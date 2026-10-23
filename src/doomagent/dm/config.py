@@ -40,6 +40,7 @@ class DMCfg:
     weapon_first: float = 256.0  # with only weapons below gear_rank: fight bots closer than this, else gear up; 0: off (E1 cycle: +1.40 [+0.25, +2.60] on 40 fresh seeds)
     armor_below: float = 0.0   # go for armor below this much armor; 0: off
     retreat_health: float = 0.0  # leave a fight for a medikit below this health; 0: off
+    flick: bool = False        # the whole turn on a step's first tic; the teacher fires when the turn ends on target
     target: str = 'dist'       # 'dist': nearest bot; 'angle': nearest the crosshair, kept while seen
     run: bool = False          # the player always runs (+cl_run 1), as fast as the bots; set on every game
     autoaim: bool = False      # Doom's vertical autoaim for the player (sv_noautoaim 0): shots over steps

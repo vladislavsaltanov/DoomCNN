@@ -293,3 +293,12 @@ def test_retreat_leaves_a_fight_for_a_medikit():
         t = DMTeacher(cfg)
         t(obs(first=True), priv(health=20.0, labels=[bot(1, 0.0, 600)], objects=spots))
         assert t.mode == mode
+
+
+def test_flick_fires_in_the_step_that_turns_onto_the_target():
+    # the turn ends on the bot: with a flick the shot of this step already hits, so it fires now
+    p = dict(weapon=4, weapon_ammo=50.0, ammo=50.0, owned=(0, 1, 1, 0, 1, 0, 0, 0), slot_ammo=(0, 0, 50, 0, 50, 0, 0, 0))
+    _, turn, fire, _ = DMTeacher(DM)(obs(), priv(labels=[bot(1, 10.0, 600)], **p))
+    assert TURN_DEG[turn] == 10.0 and fire == 0
+    _, turn, fire, _ = DMTeacher(replace(DM, flick=True))(obs(), priv(labels=[bot(1, 10.0, 600)], **p))
+    assert TURN_DEG[turn] == 10.0 and fire == 1

@@ -40,3 +40,8 @@ def test_buttons_for_turn_and_weapon():
     first, rest = buttons_for((FORWARD, TURN_DEG.index(10.0), 1, 1), 4)
     assert first[0] == 1 and first[4] == 1 and first[5] == 1 and rest[5] == 0
     assert first[6] == rest[6] == -DELTA_SIGN * 2.5  # + is a left turn, the delta button turns right on +
+
+
+def test_buttons_for_flick_turns_on_the_first_tic():
+    first, rest = buttons_for((FORWARD, TURN_DEG.index(10.0), 1, 0), 4, flick=True)
+    assert first[6] == -DELTA_SIGN * 10.0 and rest[6] == 0.0 and first[4] == rest[4] == 1

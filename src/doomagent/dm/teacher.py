@@ -239,7 +239,8 @@ class DMTeacher:
         self.aim = lead_point(self.tracks[t.id], priv.px, priv.py, w.speed)
         rel = target_angle(priv.px, priv.py, priv.angle, *self.aim)
         tol = c.aim_tol * half_width_deg(t.dist)
-        turn = pick_turn(self._ahead(priv, t.id) if c.track_ahead else rel, tol)
+        want = self._ahead(priv, t.id) if c.track_ahead else rel
+        turn = pick_turn(want, tol)
         safe = t.dist >= w.lo and (w.splash == 0.0 or
                                    self.nav.shot_dist(priv.px, priv.py, priv.angle) >= c.safe_dist)
         if c.barrel_check and self._barrel_in_line(priv):
@@ -248,9 +249,11 @@ class DMTeacher:
         ready = priv.attack_ready or (self.fired_last and priv.weapon != 5)
         fresh = not (self.fired_last and priv.weapon == 5)
         fire_tol = max(tol, c.hitscan_tol) if w.speed == 0.0 else tol
-        fire = int(abs(rel) <= fire_tol and safe and ready and fresh and weapon == 0 and priv.weapon_ammo >= w.cost)
+        # with a flick the shot leaves after this step's turn: the error that counts is what the turn leaves
+        err = abs(want - TURN_DEG[turn]) if c.flick else abs(rel)
+        fire = int(err <= fire_tol and safe and ready and fresh and weapon == 0 and priv.weapon_ammo >= w.cost)
         # the first failed condition, for the diagnostics
-        self.why = ('shoot' if fire else 'switching' if weapon else 'not_aimed' if abs(rel) > fire_tol else
+        self.why = ('shoot' if fire else 'switching' if weapon else 'not_aimed' if err > fire_tol else
                     'unsafe' if not safe else 'no_ammo' if priv.weapon_ammo < w.cost else 'reloading')
         fwd = 0
         if t.dist < w.lo + RANGE_MARGIN or (w.splash and t.dist < c.safe_dist + RANGE_MARGIN):
