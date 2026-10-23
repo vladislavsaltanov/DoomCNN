@@ -4,18 +4,7 @@ import numpy as np
 
 from doomagent.variants import BASE, load_variants
 
-FORWARD, FORWARD_LEFT, FORWARD_RIGHT, TURN_LEFT, TURN_RIGHT, FINE_LEFT, FINE_RIGHT, \
-    STRAFE_LEFT, STRAFE_RIGHT, SHOOT = range(10)
-N_ACTIONS = 10
-ACTION_NAMES = ('forward', 'forward_left', 'forward_right', 'turn_left', 'turn_right', 'fine_left',
-                'fine_right', 'strafe_left', 'strafe_right', 'shoot')
-# a horizontally flipped frame swaps every left action with its right one, strafes included
-MIRROR = (FORWARD, FORWARD_RIGHT, FORWARD_LEFT, TURN_RIGHT, TURN_LEFT, FINE_RIGHT, FINE_LEFT,
-          STRAFE_RIGHT, STRAFE_LEFT, SHOOT)
-NOISE_ACTIONS = tuple(a for a in range(N_ACTIONS) if a != SHOOT)  # recording noise never shoots
-TURN_SIDE = {FORWARD_LEFT: -1, TURN_LEFT: -1, FINE_LEFT: -1,
-             FORWARD_RIGHT: 1, TURN_RIGHT: 1, FINE_RIGHT: 1}
-MODES = ('combat', 'chase', 'items', 'patrol')  # teacher decisions, in priority order
+MODES = ('combat', 'chase', 'gear', 'items', 'patrol')  # teacher decisions, in priority order
 
 # vizdoom/bots.cfg order; a match with n bots adds the first n by name
 BOT_NAMES = ('Rambo', 'McClane', 'MacGyver', 'Plissken', 'Machete', 'Anderson', 'Leone', 'Predator',
@@ -33,22 +22,14 @@ class DMCfg:
     render_w: int = 640        # game render: demo, video, labels
     render_h: int = 480
     hud: bool = False
-    fine_turn_delta: float = 0.5  # fine turns: 2 degrees per step
-    fine_zone: float = 0.15    # teacher turns finely within this share of the half screen
-    aim_margin: float = 0.0    # D1 grid (reports/dm/d1_grid.md)
-    min_target_w: float = 0.0  # px at network resolution; narrower bots are not shot
+    map: str = 'map02'         # spec v2: full deathmatch with weapons
     noise_p: float = 0.10
-    bots: int = 7              # D0 decision
+    bots: int = 7
     timelimit: float = 2.0     # minutes per match: 4200 tics, 1050 agent steps
-    safe_dist: float = 128.0   # D1 grid: no rocket at a target, wall or barrel closer than this
-    chase_s: float = 1.0       # D1 grid: go where a bot was last seen for this long
-    low_health: float = 50.0   # go for a known medikit below this
-    low_ammo: float = 5.0      # go for known rockets below this
-    # teacher upgrades under test (D3 teacher check); the defaults keep the D1 teacher
-    shot_check: str = 'walk'   # 'walk': walking walls block a shot; 'rocket': only what stops a rocket
-    aim_slack: float = 0.0     # map units of sideways miss still counted as aimed (splash, bot radius)
-    dodge: bool = False        # strafe from side to side while reloading instead of standing
-    dodge_steps: int = 4       # steps per strafe direction
+    safe_dist: float = 128.0   # no rocket at a target or wall closer than this
+    chase_s: float = 1.0       # go where a bot was last seen for this long
+    low_health: float = 40.0   # go for a medikit below this
+    low_ammo: float = 5.0      # go for ammo of the best weapon below this
     seg_len: int = 32          # M1 training windows, steps
     burn_in: int = 8           # steps that only warm up the GRU in windows that start mid-life
 
@@ -70,13 +51,21 @@ VAL_OOD_MATCHES = 5   # per val variant
 TEST_OOD_MATCHES = 8  # per test variant
 VARIANTS_DIR = 'variants_dm'
 
-# label names on cig MAP01 (probed); scripts/dm/dm_discover_labels.py fails on any other name
+# label and object names on cig MAP02 (probed 2026-10-23); scripts/dm/dm_discover_labels.py fails on any other name
 BOT = 'DoomPlayer'  # every bot, and the player itself (DeathmatchEnv filters it out)
-ITEM_KIND = {'Medikit': 'health', 'RocketAmmo': 'ammo', 'RocketBox': 'ammo',
-             'GreenArmor': 'armor', 'BlueArmor': 'armor'}
+WEAPON_ITEMS = {'Chainsaw': 1, 'Shotgun': 3, 'SuperShotgun': 3, 'Chaingun': 4, 'RocketLauncher': 5,
+                'PlasmaRifle': 6, 'BFG9000': 7}  # name -> weapon slot
+AMMO_ITEMS = {'Clip': 2, 'ClipBox': 2, 'Shell': 3, 'ShellBox': 3, 'RocketAmmo': 5, 'RocketBox': 5, 'Cell': 6,
+              'CellPack': 6, 'Backpack': 0}  # name -> slot whose ammo it gives (0: all)
+HEALTH_ITEMS = {'Medikit', 'Stimpack', 'Soulsphere'}
+ARMOR_ITEMS = {'GreenArmor', 'BlueArmor', 'ArmorBonus'}
+PROJECTILES = {'Rocket': 20.0, 'PlasmaBall': 25.0, 'BFGBall': 25.0}  # name -> map units per tic
 BARREL = 'ExplosiveBarrel'
-OTHER_NAMES = {'DeadDoomPlayer', 'DeadExplosiveBarrel', 'Rocket', 'RocketSmokeTrail',
-               'TeleportFog', 'ItemFog'}
+OTHER_NAMES = {'DeadDoomPlayer', 'DeadExplosiveBarrel', 'RocketSmokeTrail', 'TeleportFog', 'ItemFog',
+               'BulletPuff', 'Blood', 'PlasmaBallExplosion'}
+ITEM_KIND = {**{n: 'weapon' for n in WEAPON_ITEMS}, **{n: 'ammo' for n in AMMO_ITEMS},
+             **{n: 'health' for n in HEALTH_ITEMS}, **{n: 'armor' for n in ARMOR_ITEMS}}
+AMMO_MAX = {1: 1, 2: 200, 3: 50, 4: 200, 5: 50, 6: 300, 7: 300}  # weapon slot -> ammo maximum (no backpack)
 
 # Doom constants, map units and tics
 ROCKET_SPEED = 20.0
@@ -84,8 +73,6 @@ PLAYER_RADIUS = 16.0
 STEP_HEIGHT = 24.0
 PLAYER_HEIGHT = 56.0
 TIC_RATE = 35
-HEALTH_SCALE = 100.0  # observation vector: health / 100, rockets / 50
-AMMO_SCALE = 50.0
 
 
 def _with_val_variants(seeds, root):
