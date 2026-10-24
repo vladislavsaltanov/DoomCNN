@@ -172,6 +172,26 @@ def _dots(ax, names, stats, colors):
     ax.axhline(0, color='#c9c8c2', linewidth=0.8)
 
 
+def models_figure(models, out_png, teacher=None):
+    # models: {name: dm.evaluate.summarize(...)} of students on the same matches; frags, K/D and the stuck share with
+    # 95% CIs; with the teacher's summary, dotted lines at Gate B (half its frags) and at its stuck share
+    names = list(models)
+    colors = [CATEGORICAL[1 + i % (len(CATEGORICAL) - 1)] for i in range(len(names))]
+    fig, ax = plt.subplots(1, 3, figsize=(18, 4.2), facecolor=SURFACE)
+    panels = ((ax[0], 'frags', 'Frags per match (95% CI); dotted: Gate B', 0.5),
+              (ax[1], 'kd', 'K/D per match (95% CI)', None),
+              (ax[2], 'stuck_share', 'Share of steps stuck (95% CI); dotted: teacher', 1.0))
+    for a, key, title, k in panels:
+        _dots(a, names, [models[n][key] for n in names], colors)
+        a.tick_params(axis='x', labelrotation=30)
+        if teacher is not None and k is not None:
+            a.axhline(k * teacher[key]['mean'], color=ENTITY['teacher'], linewidth=0.8, linestyle=':')
+        _style(a, title)
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=130, facecolor=SURFACE)
+    plt.close(fig)
+
+
 def teacher_figure(report, mode_share, out_png):
     t, r = report['teacher'], report.get('random')
     fig, ax = plt.subplots(1, 3, figsize=(14, 3.8), facecolor=SURFACE)
