@@ -5,7 +5,7 @@ applies stop_rule. Finished recordings and trainings are skipped, so the script 
 
     python scripts/dm/dm_rounds.py --tag aux --start runs/dm/dm3_m1_aux.pt
     python scripts/dm/dm_rounds.py --tag sp --start runs/dm/dm3_m1_aux.pt --spatial 1.0 --first-data data/dm/dagger_aux_r1
-    python scripts/dm/dm_rounds.py --tag aux_w5 --start runs/dm/dm3_m1_aux.pt --dagger-weight 5 --first-data data/dm/dagger_aux_r1
+    python scripts/dm/dm_rounds.py --tag sp_w5 --start runs/dm/dagger_sp_r2.pt --spatial 1.0 --dagger-weight 5         --prior-data data/dm/dagger_aux_r1 data/dm/dagger_sp_r2 --first-round 3
 
 Every round's model then plays the fresh seeds (reports/dm/e5_fresh_<tag>.json): the val choice is noisy.
 """
@@ -45,17 +45,19 @@ if __name__ == '__main__':
     ap.add_argument('--aux', type=float, default=1.0)
     ap.add_argument('--spatial', type=float, default=0.0)
     ap.add_argument('--first-data', help='round 1 data of another arm (the same start model played it)')
+    ap.add_argument('--prior-data', nargs='*', default=[], help='rounds recorded before, trained on with the new ones')
+    ap.add_argument('--first-round', type=int, default=1, help='dagger_plan round of the first new round (its seeds)')
     ap.add_argument('--max-rounds', type=int, default=3)
     ap.add_argument('--epochs', type=int, default=3)
     ap.add_argument('--dagger-weight', type=float, default=1.0,
                     help='windows of the round data drawn this many times as often')
     a = ap.parse_args()
     py = [sys.executable, '-u']
-    models, scores, dirs = [a.start], [best_score(a.start)], []
+    models, scores, dirs = [a.start], [best_score(a.start)], list(a.prior_data)
     state = f'runs/dm/dagger_{a.tag}.json'
-    for r in range(1, a.max_rounds + 1):
+    for r in range(a.first_round, a.first_round + a.max_rounds):
         best = models[stop_rule(scores, TEACHER_VAL)[1]]
-        data = a.first_data if r == 1 and a.first_data else f'data/dm/dagger_{a.tag}_r{r}'
+        data = a.first_data if r == a.first_round and a.first_data else f'data/dm/dagger_{a.tag}_r{r}'
         if not os.path.exists(os.path.join(data, 'meta.json')):
             run(py + ['-m', 'doomagent.dm.dagger', '--model', best, '--out', data, '--round', str(r),
                       '--beta', '0.3' if r == 1 else '0'], data.rstrip('/') + '.out')
