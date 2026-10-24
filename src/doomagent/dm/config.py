@@ -111,12 +111,14 @@ def test_plans(root=VARIANTS_DIR):
 
 
 def dagger_plan(round_idx, per_round=40, root=VARIANTS_DIR):
-    # rounds start at 1; one plan for M0 and M1, so their rounds differ only by the student
-    variants = [BASE] + load_variants('train', root)
+    # rounds start at 1; one plan for M0 and M1, so their rounds differ only by the student. Half the matches on
+    # the base map (two thirds of the val and fresh matches are there), the rest spread over the train variants
+    train = load_variants('train', root)
+    variants = [BASE] * max(1, len(train)) + train
     seeds = DAGGER_SEEDS[(round_idx - 1) * per_round:round_idx * per_round]
     assert len(seeds) == per_round, 'DAGGER_SEEDS exhausted'
     pick = np.random.default_rng(round_idx).integers(0, len(variants), len(seeds))
-    groups = {}
+    groups, by_name = {}, {v.name: v for v in variants}
     for s, i in zip(seeds, pick):
-        groups.setdefault(int(i), []).append(s)
-    return [(variants[i], tuple(ss)) for i, ss in sorted(groups.items())]
+        groups.setdefault(variants[i].name, []).append(s)
+    return [(by_name[n], tuple(ss)) for n, ss in sorted(groups.items())]

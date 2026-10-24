@@ -204,6 +204,15 @@ def save_model(model, path):
     torch.save(dict(state=model.state_dict(), memory=model.memory, aux=model.aux_on, spatial=model.spatial_on), path)
 
 
+def init_from(model, state):
+    # the weights of state in model; heads model has and state lacks (auxiliary, spatial) keep their fresh init
+    missing, unexpected = model.load_state_dict(state, strict=False)
+    bad = list(unexpected) + [k for k in missing if not k.startswith(('aux.', 'spatial.', 'fwd.'))]
+    if bad:
+        raise RuntimeError(f'init_from: keys do not match: {bad[:6]}')
+    return model
+
+
 def load_model(path, cfg=DM, map_location='cpu'):
     d = torch.load(path, map_location=map_location)
     m = DMNet(cfg, memory=d['memory'], aux=d.get('aux', False), spatial=d.get('spatial', False))

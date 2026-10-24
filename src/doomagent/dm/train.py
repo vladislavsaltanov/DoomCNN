@@ -13,7 +13,7 @@ from doomagent.dm.actions import HEAD_SIZES, HEADS
 from doomagent.dm.config import DM, VAL_SEEDS, val_plan
 from doomagent.dm.data import MatchSegments, MatchSteps, expand_frames, mirror_batch, split_holdout
 from doomagent.dm.evaluate import evaluate_plan, summarize
-from doomagent.dm.model import (DMNet, aux_loss, bc_loss, fut_input, load_conv, load_model, save_model,
+from doomagent.dm.model import (DMNet, aux_loss, bc_loss, fut_input, init_from, load_conv, load_model, save_model,
                                 spatial_loss, split_logits)
 from doomagent.evaluate import val_score
 from doomagent.variants import BASE
@@ -181,7 +181,7 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
     hold = make(hold_files) if hold_files else None
     model = DMNet(cfg, memory, aux=aux_w > 0, spatial=spatial_w > 0).to(dev)
     if init:
-        model.load_state_dict(load_model(init, cfg).state_dict())
+        init_from(model, load_model(init, cfg).state_dict())  # a start without spatial heads gets fresh ones
     if conv_init:
         load_conv(model, conv_init)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
