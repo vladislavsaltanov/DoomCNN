@@ -11,7 +11,7 @@ from doomagent.dm.agent import DMChooser, pick_device
 from doomagent.dm.augment import frame_augment
 from doomagent.dm.actions import HEAD_SIZES, HEADS
 from doomagent.dm.config import DM, VAL_SEEDS, val_plan
-from doomagent.dm.data import MatchSegments, MatchSteps, mirror_batch, split_holdout
+from doomagent.dm.data import MatchSegments, MatchSteps, expand_frames, mirror_batch, split_holdout
 from doomagent.dm.evaluate import evaluate_plan, summarize
 from doomagent.dm.model import (DMNet, aux_loss, bc_loss, fut_input, load_conv, load_model, save_model,
                                 spatial_loss, split_logits)
@@ -112,9 +112,21 @@ def _extra_losses(model, out, batch, mask, dev, aux_w, spatial_w):
     return loss, parts
 
 
+def _device(batch, dev):
+    # the batch's tensors on the device; pinned ones are copied without waiting
+    return {k: v.to(dev, non_blocking=True) if torch.is_tensor(v) else v for k, v in batch.items()}
+
+
+def _augment(batch):
+    # frame_augment on the frames as they come: a compact M1 window's distinct frames, so its stacks change together
+    key = 'uframes' if 'uframes' in batch else 'frames'
+    x = batch[key].float() / 255.0
+    return dict(batch, **{key: frame_augment(x.reshape(x.shape[0], -1, *x.shape[-2:])).reshape(x.shape)})
+
+
 def _to_model(batch, memory, dev):
-    # (frames (B, T, S, H, W) uint8, vec (B, T, V), action (B, T, 4), mask (B, T)) on the device
-    f, v, a = batch['frames'].to(dev), batch['vec'].to(dev), batch['action'].to(dev)
+    # (frames (B, T, S, H, W), vec (B, T, V), action (B, T, 4), mask (B, T)) on the device
+    f, v, a = expand_frames(batch).to(dev), batch['vec'].to(dev), batch['action'].to(dev)
     if memory:
         return f, v, a, (batch['loss'] & batch['valid']).to(dev)
     return f[:, None], v[:, None], a[:, None], torch.ones(a.shape[0], 1, dtype=torch.bool, device=dev)
@@ -125,7 +137,7 @@ def holdout_metrics(model, ds, memory, dev, batch_size):
     model.eval()
     conf, ce_sum, n, all_ok, aux_sum = _confusions(), 0.0, 0, 0, {}
     for batch in DataLoader(ds, batch_size=batch_size, num_workers=0):
-        f, v, a, m = _to_model(batch, memory, dev)
+        f, v, a, m = _to_model(_device(batch, dev), memory, dev)
         logits, _, aux = model.forward_aux(f, v, fut=_fut(model, batch, memory, dev))
         _, ap = _extra_losses(model, aux, batch, m, dev, 1.0, 1.0)
         for k, x in ap.items():
@@ -157,11 +169,15 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
     assert kind in ('m0', 'm1')
     torch.manual_seed(seed)
     dev, memory = pick_device(), kind == 'm1'
+    torch.backends.cudnn.benchmark = True  # the frame shapes are fixed
     train_files, hold_files = split_holdout(dirs, holdout)
-    make = (lambda fs: MatchSegments(fs, cfg.seg_len, cfg.burn_in, cfg.stack)) if memory else \
+    make = (lambda fs: MatchSegments(fs, cfg.seg_len, cfg.burn_in, cfg.stack, compact=True)) if memory else \
         (lambda fs: MatchSteps(fs, cfg.stack))
     bs = max(1, batch_steps // cfg.seg_len) if memory else batch_steps
-    dl = DataLoader(make(train_files), batch_size=bs, shuffle=True, num_workers=workers)
+    # workers live through all epochs: on Windows each new one would re-import and get the labels again
+    dl = DataLoader(make(train_files), batch_size=bs, shuffle=True, num_workers=workers,
+                    pin_memory=dev == 'cuda', persistent_workers=workers > 0,
+                    prefetch_factor=4 if workers else None)
     hold = make(hold_files) if hold_files else None
     model = DMNet(cfg, memory, aux=aux_w > 0, spatial=spatial_w > 0).to(dev)
     if init:
@@ -179,14 +195,13 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
     for epoch in range(1, epochs + 1):
         sums, n = dict(ce=0.0, acc=0.0, aux=0.0, spatial=0.0), 0
         for i, batch in enumerate(dl, 1):
+            batch = _device(batch, dev)
             if hflip and torch.rand(()) < 0.5:
                 batch = mirror_batch(batch)
-            f, v, a, m = _to_model(batch, memory, dev)
-            x = f.float() / 255.0
             if aug:
-                B, T = x.shape[:2]
-                x = frame_augment(x.reshape(B, -1, *x.shape[3:])).reshape(x.shape)
-            logits, _, aux = model.forward_aux(x, v, fut=_fut(model, batch, memory, dev))
+                batch = _augment(batch)
+            f, v, a, m = _to_model(batch, memory, dev)
+            logits, _, aux = model.forward_aux(f, v, fut=_fut(model, batch, memory, dev))
             loss, parts = bc_loss(logits, a, m)
             le, ep = _extra_losses(model, aux, batch, m, dev, aux_w, spatial_w)
             loss = loss + le

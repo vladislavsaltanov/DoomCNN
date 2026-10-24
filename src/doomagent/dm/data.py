@@ -130,10 +130,12 @@ class MatchSteps(_Matches):
 
 
 class MatchSegments(_Matches):
-    # M1: one window of seg_len steps inside a life, padded at the end
-    def __init__(self, files, seg_len=DM.seg_len, burn_in=DM.burn_in, stack=DM.stack):
+    # M1: one window of seg_len steps inside a life, padded at the end. compact: instead of the (L, stack)
+    # frames, the window's L + stack - 1 distinct frames 'uframes' and the stack indices 'fidx' into them
+    # (expand_frames), a quarter of the reading, copying and augmenting
+    def __init__(self, files, seg_len=DM.seg_len, burn_in=DM.burn_in, stack=DM.stack, compact=False):
         super().__init__(files, stack)
-        self.seg_len = seg_len
+        self.seg_len, self.compact = seg_len, compact
         self.index = [(i, s, e, lf) for i, ep in enumerate(self.eps)
                       for s, e, lf in windows(ep['first'], seg_len, burn_in)]
 
@@ -143,17 +145,15 @@ class MatchSegments(_Matches):
     def __getitem__(self, k):
         i, s, e, lf = self.index[k]
         ep, fr, L = self.eps[i], self._frames(i), self.seg_len
-        frames = np.zeros((L, self.stack) + fr.shape[1:], np.uint8)
-        for j in range(e - s):
-            frames[j] = stack_at(fr, s + j, ep['starts'][s + j], self.stack)
+        out = self._compact(fr, ep['starts'][s], s, e) if self.compact else \
+            dict(frames=torch.from_numpy(self._stacked(fr, ep['starts'], s, e)))
         vec = np.zeros((L, ep['vec'].shape[1]), np.float32)
         vec[:e - s] = ep['vec'][s:e]
         action = np.zeros((L, ep['actions'].shape[1]), np.int64)
         action[:e - s] = ep['actions'][s:e]
         valid = np.arange(L) < e - s
         loss = valid & (np.arange(L) >= lf - s)
-        out = dict(frames=torch.from_numpy(frames), vec=torch.from_numpy(vec),
-                   action=torch.from_numpy(action), loss=torch.from_numpy(loss),
+        out.update(vec=torch.from_numpy(vec), action=torch.from_numpy(action), loss=torch.from_numpy(loss),
                    valid=torch.from_numpy(valid), aux_items_ok=ep['items_ok'], aux_depth_ok=ep['depth_ok'])
         for k in AUX_STEP + ('aux_depth',):
             src = ep[k][s:e]
@@ -166,11 +166,39 @@ class MatchSegments(_Matches):
             out[k] = torch.from_numpy(pad)
         return out
 
+    def _stacked(self, fr, starts, s, e):
+        frames = np.zeros((self.seg_len, self.stack) + fr.shape[1:], np.uint8)
+        for j in range(e - s):
+            frames[j] = stack_at(fr, s + j, starts[s + j], self.stack)
+        return frames
+
+    def _compact(self, fr, start, s, e):
+        # uframes[u] is the frame of step s - (stack - 1) + u (the life's first frame before it starts, zeros
+        # after the window); step j's stack is uframes[j:j + stack], a padded step's points at the last zeros
+        L, S = self.seg_len, self.stack
+        base = s - (S - 1)
+        lo = max(base, start)
+        uf = np.zeros((L + S - 1,) + fr.shape[1:], np.uint8)
+        uf[lo - base:e - base] = fr[lo:e]
+        uf[:lo - base] = uf[lo - base]
+        idx = np.full((L, S), L + S - 2, np.int64)
+        idx[:e - s] = np.arange(e - s)[:, None] + np.arange(S)
+        return dict(uframes=torch.from_numpy(uf), fidx=torch.from_numpy(idx))
+
+
+def expand_frames(b):
+    # the (B, L, stack, H, W) frames of a batch, gathered from a compact one's uframes by fidx
+    if 'uframes' not in b:
+        return b['frames']
+    u = b['uframes']
+    return u[torch.arange(u.shape[0], device=u.device)[:, None, None], b['fidx']]
+
 
 def mirror_batch(b):
     # a horizontally flipped batch: frames flipped, left and right moves swapped, turns negated
     out = dict(b)
-    out['frames'] = torch.flip(b['frames'], dims=[-1])
+    key = 'uframes' if 'uframes' in b else 'frames'
+    out[key] = torch.flip(b[key], dims=[-1])
     a = b['action'].clone()
     a[..., 0] = MOVE_T.to(a.device)[a[..., 0]]
     a[..., 1] = TURN_T.to(a.device)[a[..., 1]]

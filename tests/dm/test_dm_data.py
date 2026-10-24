@@ -177,3 +177,26 @@ def test_mirror_batch_flips_the_spatial_targets():
     assert m['sp_fut_move'][0].tolist() == [MOVE_MIRROR[v] for v in (3, 5, 0, 1)] and m['sp_fut_move'][1].tolist() == [-1] * 4
     assert m['sp_fut_turn'][0].tolist() == [TURN_MIRROR[v] for v in (1, 2, 0, 3)]
     assert m['sp_fut_depth'][0, :16].tolist() == list(range(15, -1, -1)) and m['sp_goal_dir'].tolist() == [12, -1]
+
+
+def test_compact_segments_expand_to_the_same_frames(tmp_path):
+    from doomagent.dm.data import expand_frames
+    make_match(tmp_path, 1, T=70, first_at=(0, 40))  # lives 0..39 and 40..69: windows that start a life and not
+    files = match_files([str(tmp_path)])
+    full, comp = MatchSegments(files), MatchSegments(files, compact=True)
+    assert len(full) == len(comp) >= 3
+    for i in range(len(full)):
+        a, b = full[i], comp[i]
+        assert 'frames' not in b and b['uframes'].shape == (32 + 3, DM.height, DM.width)
+        assert torch.equal(expand_frames(torch.utils.data.default_collate([b]))[0], a['frames'])
+        assert all(torch.equal(a[k], b[k]) for k in a if k != 'frames' and torch.is_tensor(a[k]))
+
+
+def test_mirror_of_a_compact_batch_equals_the_mirror_of_its_frames():
+    from doomagent.dm.data import expand_frames
+    g = torch.Generator().manual_seed(0)
+    u = torch.randint(0, 255, (2, 7, 3, 5), dtype=torch.uint8, generator=g)
+    idx = torch.tensor([[j + q for q in range(4)] for j in range(4)]).expand(2, 4, 4)
+    b = dict(uframes=u, fidx=idx, action=torch.zeros(2, 4, 4, dtype=torch.long))
+    full = dict(frames=expand_frames(b), action=b['action'])
+    assert torch.equal(expand_frames(mirror_batch(b)), mirror_batch(full)['frames'])
