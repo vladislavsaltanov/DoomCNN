@@ -1,0 +1,456 @@
+{
+ "models": {
+  "dagger_aux_r1": {
+   "frags": {
+    "mean": 4.533333333333333,
+    "lo": 3.8,
+    "hi": 5.317083333333331
+   },
+   "deaths": {
+    "mean": 3.7666666666666666,
+    "lo": 3.3333333333333335,
+    "hi": 4.233333333333333
+   },
+   "kills": {
+    "mean": 4.783333333333333,
+    "lo": 4.033333333333333,
+    "hi": 5.583333333333333
+   },
+   "suicides": {
+    "mean": 0.25,
+    "lo": 0.13333333333333333,
+    "hi": 0.38333333333333336
+   },
+   "kd": {
+    "mean": 1.5016402116402117,
+    "lo": 1.1689560185185188,
+    "hi": 1.8906084656084656
+   },
+   "hits_per_shot": {
+    "mean": 0.3788652094374953,
+    "lo": 0.3299292377101825,
+    "hi": 0.4368444875615975
+   },
+   "items": {
+    "mean": 6.183333333333334,
+    "lo": 5.366666666666666,
+    "hi": 7.066666666666666
+   },
+   "path": {
+    "mean": 18847.637724485536,
+    "lo": 17693.432102553128,
+    "hi": 19865.334737400546
+   },
+   "stuck_share": {
+    "mean": 0.10249442560555996,
+    "lo": 0.06012928941360375,
+    "hi": 0.15194766339915536
+   },
+   "enemy_share": {
+    "mean": 0.4782674112484686,
+    "lo": 0.43967717087393754,
+    "hi": 0.5204898783963016
+   },
+   "bot_median": {
+    "mean": 3.9166666666666665,
+    "lo": 3.6333333333333333,
+    "hi": 4.183333333333334
+   },
+   "bot_best": {
+    "mean": 8.716666666666667,
+    "lo": 8.166666666666666,
+    "hi": 9.266666666666667
+   },
+   "reward": {
+    "mean": 4.533333333333333,
+    "lo": 3.8,
+    "hi": 5.317083333333331
+   },
+   "kd_total": 1.2035398230088497,
+   "shots": 153.63333333333333,
+   "length": 1049.1166666666666,
+   "first_share": 0.18333333333333332,
+   "weapon_share": {
+    "1": 0.06802624978925015,
+    "2": 0.44359641926695664,
+    "3": 0.06292922249048215,
+    "4": 0.2864373216282819,
+    "5": 0.05147321005446255,
+    "6": 0.08169135627602617,
+    "7": 0.005846220494540523
+   },
+   "share_of_teacher": null
+  }
+ },
+ "vs_teacher": {},
+ "m1_vs_m0": {},
+ "plan": "fresh",
+ "matches": 60,
+ "models_paths": [
+  "runs/dm/dagger_aux_r1.pt"
+ ],
+ "per_match": {
+  "dagger_aux_r1": [
+   {
+    "variant": "base",
+    "seed": 36000,
+    "frags": 8.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36001,
+    "frags": 3.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36002,
+    "frags": 4.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "base",
+    "seed": 36003,
+    "frags": 6.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36004,
+    "frags": 0.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36005,
+    "frags": 5.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36006,
+    "frags": 6.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36007,
+    "frags": 8.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36008,
+    "frags": 8.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36009,
+    "frags": 1.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36010,
+    "frags": 5.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36011,
+    "frags": 2.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36012,
+    "frags": 5.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36013,
+    "frags": 5.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36014,
+    "frags": 3.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36015,
+    "frags": 9.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36016,
+    "frags": 8.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36017,
+    "frags": 8.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36018,
+    "frags": 6.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36019,
+    "frags": 0.0,
+    "deaths": 0.0
+   },
+   {
+    "variant": "base",
+    "seed": 36020,
+    "frags": 4.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36021,
+    "frags": 2.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36022,
+    "frags": 17.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36023,
+    "frags": 5.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36024,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36025,
+    "frags": 9.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36026,
+    "frags": 3.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36027,
+    "frags": 5.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36028,
+    "frags": 1.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36029,
+    "frags": 5.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36030,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36031,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36032,
+    "frags": 7.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36033,
+    "frags": 5.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36034,
+    "frags": 3.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36035,
+    "frags": 7.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36036,
+    "frags": 6.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36037,
+    "frags": 5.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36038,
+    "frags": 8.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "base",
+    "seed": 36039,
+    "frags": 3.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36000,
+    "frags": 2.0,
+    "deaths": 9.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36001,
+    "frags": 0.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36002,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36003,
+    "frags": 6.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36004,
+    "frags": 2.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36000,
+    "frags": 3.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36001,
+    "frags": 3.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36002,
+    "frags": 3.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36003,
+    "frags": 3.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36004,
+    "frags": 6.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36000,
+    "frags": 1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36001,
+    "frags": 5.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36002,
+    "frags": 1.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36003,
+    "frags": 1.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36004,
+    "frags": 0.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36000,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36001,
+    "frags": 2.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36002,
+    "frags": 1.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36003,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36004,
+    "frags": 2.0,
+    "deaths": 6.0
+   }
+  ]
+ }
+}

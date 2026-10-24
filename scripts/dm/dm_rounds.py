@@ -5,7 +5,8 @@ applies stop_rule. Finished recordings and trainings are skipped, so the script 
 
     python scripts/dm/dm_rounds.py --tag aux --start runs/dm/dm3_m1_aux.pt
     python scripts/dm/dm_rounds.py --tag sp --start runs/dm/dm3_m1_aux.pt --spatial 1.0 --first-data data/dm/dagger_aux_r1
-    python scripts/dm/dm_rounds.py --tag sp_w5 --start runs/dm/dagger_sp_r2.pt --spatial 1.0 --dagger-weight 5         --prior-data data/dm/dagger_aux_r1 data/dm/dagger_sp_r2 --first-round 3
+    python scripts/dm/dm_rounds.py --tag sp_w5 --start runs/dm/dagger_sp_r2.pt --spatial 1.0 --dagger-weight 5 \
+        --prior-data data/dm/dagger_aux_r1 data/dm/dagger_sp_r2 --first-round 3
 
 Every round's model then plays the fresh seeds (reports/dm/e5_fresh_<tag>.json): the val choice is noisy.
 """
