@@ -287,10 +287,10 @@ def curves_figure(logs, out_png, teacher=None, confusion_of=None, head='turn'):
     if confusion_of:
         live = json.load(open(confusion_of))
         conf = np.array((live.get('holdout_confusion') or live['confusion'])[head], float)
-    for name, path in logs.items():
+    for i, (name, path) in enumerate(logs.items()):
         log = json.load(open(path))['log']
         e = [r['epoch'] for r in log]
-        color = ENTITY.get(name, CATEGORICAL[0])
+        color = ENTITY.get(name, CATEGORICAL[1 + i % (len(CATEGORICAL) - 1)])  # slot 0 is the teacher's
         ax_ce.plot(e, [r.get('holdout_ce') for r in log], color=color, linewidth=2, marker='o', markersize=4,
                    label=name.upper())
         for a, h in zip(ax_heads, HEADS):
@@ -299,7 +299,7 @@ def curves_figure(logs, out_png, teacher=None, confusion_of=None, head='turn'):
             _end_label(a, e[-1], ys[-1], name.upper())
         f = [r['frags'] for r in log if 'frags' in r]
         ef = [r['epoch'] for r in log if 'frags' in r]
-        off = -0.4 if name == 'm0' else 0.4
+        off = {'m0': -0.4, 'm1': 0.4}.get(name, (i - (len(logs) - 1) / 2) * 0.2)
         ax_val.errorbar([x + off for x in ef], [d['mean'] for d in f],
                         yerr=[[d['mean'] - d['lo'] for d in f], [d['hi'] - d['mean'] for d in f]],
                         fmt='o', color=color, capsize=3, markersize=6, label=name.upper())
