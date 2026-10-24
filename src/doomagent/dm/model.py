@@ -46,15 +46,32 @@ class DMNet(nn.Module):
         hid, h_out = self.gru(torch.cat([feat, vec.to(feat.dtype)], -1), h)
         return feat, hid, h_out
 
-    def forward(self, frames, vec, h=None):
-        logits, h_out, _ = self.forward_aux(frames, vec, h, aux=False)
-        return logits, h_out
+    def features_seq(self, frames, vec, first, h=None):
+        # features() over a window that may cross life starts (PPO rollouts): the memory is zeroed before every
+        # step with first (B, T), as DMAgent does step by step; h is the state before the window
+        if not self.memory:
+            return self.features(frames, vec)
+        B, T = frames.shape[:2]
+        feat = self.encode(frames.reshape(B * T, *frames.shape[2:])).view(B, T, -1)
+        x = torch.cat([feat, vec.to(feat.dtype)], -1)
+        h = x.new_zeros(1, B, self.gru.hidden_size) if h is None else h
+        keep = (~first.bool()).to(x.dtype).T[:, None, :, None]  # (T, 1, B, 1)
+        if not first[:, 1:].any():  # a life start only before the first step: one call
+            hid, h_out = self.gru(x, h * keep[0])
+            return feat, hid, h_out
+        outs = []
+        for t in range(T):
+            o, h = self.gru(x[:, t:t + 1], h * keep[t])
+            outs.append(o)
+        return feat, torch.cat(outs, 1), h
 
-    def forward_aux(self, frames, vec, h=None, aux=True, fut=None):
-        # the action logits, the GRU state and {target: logits} of the auxiliary and spatial heads (None without
-        # them); fut (B, T, FUT_IN): the moves and turns played next (fut_input), for the forward model 'fwd'
-        feat, hid, h_out = self.features(frames, vec, h)
-        z = hid if self.memory else torch.cat([feat, vec.to(feat.dtype)], -1)
+    def trunk(self, frames, vec, h=None, first=None):
+        # what the heads read (the GRU output, or the features and the vector) and the GRU state after the window
+        feat, hid, h_out = self.features(frames, vec, h) if first is None else self.features_seq(frames, vec, first, h)
+        return (hid if self.memory else torch.cat([feat, vec.to(feat.dtype)], -1)), h_out
+
+    def outputs(self, z, aux=True, fut=None):
+        # the action logits and {target: logits} of the auxiliary and spatial heads (None without them)
         out = {}
         if aux and self.aux_on:
             out.update(zip(AUX_SIZES, torch.split(self.aux(z), list(AUX_SIZES.values()), dim=-1)))
@@ -62,7 +79,18 @@ class DMNet(nn.Module):
             out.update(zip(SPATIAL_SIZES, torch.split(self.spatial(z), list(SPATIAL_SIZES.values()), dim=-1)))
             if fut is not None:
                 out['fwd'] = self.fwd(torch.cat([z, fut.to(z.dtype)], -1))
-        return self.head(z), h_out, out or None
+        return self.head(z), out or None
+
+    def forward(self, frames, vec, h=None):
+        logits, h_out, _ = self.forward_aux(frames, vec, h, aux=False)
+        return logits, h_out
+
+    def forward_aux(self, frames, vec, h=None, aux=True, fut=None):
+        # the action logits, the GRU state and {target: logits} of the auxiliary and spatial heads (None without
+        # them); fut (B, T, FUT_IN): the moves and turns played next (fut_input), for the forward model 'fwd'
+        z, h_out = self.trunk(frames, vec, h)
+        logits, out = self.outputs(z, aux, fut)
+        return logits, h_out, out
 
 
 def split_logits(logits):
