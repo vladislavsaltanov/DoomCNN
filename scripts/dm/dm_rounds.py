@@ -5,6 +5,9 @@ applies stop_rule. Finished recordings and trainings are skipped, so the script 
 
     python scripts/dm/dm_rounds.py --tag aux --start runs/dm/dm3_m1_aux.pt
     python scripts/dm/dm_rounds.py --tag sp --start runs/dm/dm3_m1_aux.pt --spatial 1.0 --first-data data/dm/dagger_aux_r1
+    python scripts/dm/dm_rounds.py --tag aux_w5 --start runs/dm/dm3_m1_aux.pt --dagger-weight 5 --first-data data/dm/dagger_aux_r1
+
+Every round's model then plays the fresh seeds (reports/dm/e5_fresh_<tag>.json): the val choice is noisy.
 """
 import argparse
 import json
@@ -44,6 +47,8 @@ if __name__ == '__main__':
     ap.add_argument('--first-data', help='round 1 data of another arm (the same start model played it)')
     ap.add_argument('--max-rounds', type=int, default=3)
     ap.add_argument('--epochs', type=int, default=3)
+    ap.add_argument('--dagger-weight', type=float, default=1.0,
+                    help='windows of the round data drawn this many times as often')
     a = ap.parse_args()
     py = [sys.executable, '-u']
     models, scores, dirs = [a.start], [best_score(a.start)], []
@@ -59,7 +64,9 @@ if __name__ == '__main__':
         if not finished(out, a.epochs):
             run(py + ['-m', 'doomagent.dm.train', a.kind, *R01, *dirs, '--out', out, '--epochs', str(a.epochs),
                       '--lr', '1e-4', '--eval-every', '1', '--init', best, '--aux', str(a.aux),
-                      '--spatial', str(a.spatial)], out[:-3] + '.out')
+                      '--spatial', str(a.spatial)] +
+                [x for d in dirs if a.dagger_weight != 1 for x in ('--weight', f'{d}={a.dagger_weight}')],
+                out[:-3] + '.out')
         models.append(out)
         scores.append(best_score(out))
         stop, b = stop_rule(scores, TEACHER_VAL)
@@ -69,9 +76,9 @@ if __name__ == '__main__':
         print(time.strftime('%H:%M:%S'), f'round {r}: val score {scores[-1]:.2f}, best {models[b]}', flush=True)
         if stop:
             break
-    # the arm's best on the fresh seeds, paired later with e4_fresh.json (the same matches)
-    best = models[stop_rule(scores, TEACHER_VAL)[1]]
+    # every round's model on the fresh seeds, paired later with e4_fresh.json (the same matches)
     fresh = f'reports/dm/e5_fresh_{a.tag}.json'
-    if best != a.start and not os.path.exists(fresh):
-        run(py + ['scripts/dm/dm_eval.py', '--models', best, '--plan', 'fresh', '--workers', '4', '--out', fresh],
+    if not os.path.exists(fresh):
+        run(py + ['scripts/dm/dm_eval.py', '--models', *models[1:], '--plan', 'fresh', '--workers', '4',
+                  '--out', fresh],
             f'runs/dm/dagger_{a.tag}_fresh.out')

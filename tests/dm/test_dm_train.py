@@ -82,3 +82,13 @@ def test_train_with_spatial_heads(tmp_path, kind):
     from doomagent.dm.model import load_model
     m = load_model(out)
     assert m.spatial_on and m.aux_on
+
+
+def test_train_with_folder_weights(tmp_path):
+    for s in range(3):
+        make_match(tmp_path / 'd', s, T=70, first_at=(0, 30))
+    make_match(tmp_path / 'e', 9, T=70, first_at=(0,))
+    out = str(tmp_path / 'm1.pt')
+    train('m1', [str(tmp_path / 'd'), str(tmp_path / 'e')], out, epochs=1, val=[], workers=0, batch_steps=64,
+          dir_weights={str(tmp_path / 'e'): 4.0})
+    assert json.load(open(out + '.log.json'))['config']['dir_weights'] == {str(tmp_path / 'e'): 4.0}

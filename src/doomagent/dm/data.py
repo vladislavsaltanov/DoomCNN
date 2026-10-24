@@ -186,6 +186,13 @@ class MatchSegments(_Matches):
         return dict(uframes=torch.from_numpy(uf), fidx=torch.from_numpy(idx))
 
 
+def dir_weights(ds, weights):
+    # one sampling weight per item of ds: {folder: weight} by the folder of the item's match file, 1 for the others
+    w = {os.path.normpath(d): float(x) for d, x in weights.items()}
+    per_file = [w.get(os.path.normpath(os.path.dirname(p)), 1.0) for p in ds.files]
+    return torch.tensor([per_file[it[0]] for it in ds.index], dtype=torch.double)
+
+
 def expand_frames(b):
     # the (B, L, stack, H, W) frames of a batch, gathered from a compact one's uframes by fidx
     if 'uframes' not in b:

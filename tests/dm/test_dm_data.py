@@ -1,3 +1,4 @@
+import os
 from dataclasses import replace
 
 import numpy as np
@@ -200,3 +201,15 @@ def test_mirror_of_a_compact_batch_equals_the_mirror_of_its_frames():
     b = dict(uframes=u, fidx=idx, action=torch.zeros(2, 4, 4, dtype=torch.long))
     full = dict(frames=expand_frames(b), action=b['action'])
     assert torch.equal(expand_frames(mirror_batch(b)), mirror_batch(full)['frames'])
+
+
+def test_dir_weights_follow_the_folder_of_each_item(tmp_path):
+    from doomagent.dm.data import dir_weights
+    make_match(tmp_path / 'a', 1, T=70, first_at=(0, 40))
+    make_match(tmp_path / 'b', 2, T=20)
+    files = match_files([str(tmp_path / 'a'), str(tmp_path / 'b')])
+    for ds in (MatchSteps(files), MatchSegments(files)):
+        w = dir_weights(ds, {str(tmp_path / 'b'): 5.0})
+        assert len(w) == len(ds) and set(w.tolist()) == {1.0, 5.0}
+        assert all((w[k] == 5.0) == ('b' in os.path.basename(os.path.dirname(ds.files[ds.index[k][0]])))
+                   for k in range(len(ds)))

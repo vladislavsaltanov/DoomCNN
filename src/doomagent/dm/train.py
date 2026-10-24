@@ -5,13 +5,14 @@ import time
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from doomagent.dm.agent import DMChooser, pick_device
 from doomagent.dm.augment import frame_augment
 from doomagent.dm.actions import HEAD_SIZES, HEADS
 from doomagent.dm.config import DM, VAL_SEEDS, val_plan
-from doomagent.dm.data import MatchSegments, MatchSteps, expand_frames, mirror_batch, split_holdout
+from doomagent.dm.data import (MatchSegments, MatchSteps, dir_weights as dir_weights_of, expand_frames, mirror_batch,
+                               split_holdout)
 from doomagent.dm.evaluate import evaluate_plan, summarize
 from doomagent.dm.model import (DMNet, aux_loss, bc_loss, fut_input, init_from, load_conv, load_model, save_model,
                                 spatial_loss, split_logits)
@@ -160,12 +161,13 @@ def holdout_metrics(model, ds, memory, dev, batch_size):
 
 def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=True, eval_every=2,
           val=None, init=None, conv_init=None, seed=0, workers=2, eval_workers=4, max_minutes=None,
-          holdout=0.05, clip=1.0, cfg=DM, live_dir=None, aux_w=0.0, spatial_w=0.0):
+          holdout=0.05, clip=1.0, cfg=DM, live_dir=None, aux_w=0.0, spatial_w=0.0, dir_weights=None):
     # behavior cloning of the teacher's labels: M0 on single steps, M1 on windows inside lives;
     # the checkpoint is chosen by frags on the val matches (val=[]: no games, the last one is kept);
     # live_dir: a folder (dm.livetap.LIVE_DIR) where the val matches are shown on the dashboard;
     # aux_w > 0: auxiliary heads (dm.auxtargets) with this weight on their loss; spatial_w > 0: the spatial
-    # heads and the forward model (dm.spatial) with this weight
+    # heads and the forward model (dm.spatial) with this weight; dir_weights {folder: w}: windows of the matches in
+    # that folder are drawn w times as often (an epoch keeps its length)
     assert kind in ('m0', 'm1')
     torch.manual_seed(seed)
     dev, memory = pick_device(), kind == 'm1'
@@ -175,7 +177,9 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
         (lambda fs: MatchSteps(fs, cfg.stack))
     bs = max(1, batch_steps // cfg.seg_len) if memory else batch_steps
     # workers live through all epochs: on Windows each new one would re-import and get the labels again
-    dl = DataLoader(make(train_files), batch_size=bs, shuffle=True, num_workers=workers,
+    ds = make(train_files)
+    sampler = WeightedRandomSampler(dir_weights_of(ds, dir_weights), len(ds)) if dir_weights else None
+    dl = DataLoader(ds, batch_size=bs, shuffle=sampler is None, sampler=sampler, num_workers=workers,
                     pin_memory=dev == 'cuda', persistent_workers=workers > 0,
                     prefetch_factor=4 if workers else None)
     hold = make(hold_files) if hold_files else None
@@ -189,6 +193,7 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
     val = val_plan() if val is None else val
     config = dict(kind=kind, dirs=list(dirs), epochs=epochs, lr=lr, batch_steps=batch_steps, hflip=hflip,
                   aug=aug, init=init, conv_init=conv_init, seed=seed, clip=clip, aux_w=aux_w, spatial_w=spatial_w,
+                  dir_weights=dir_weights,
                   val=[(v.name, len(s)) for v, s in val], train_files=train_files,
                   holdout_files=hold_files)
     live, log, best, t0, stop = Live(out, len(dl), epochs), [], -float('inf'), time.time(), False
@@ -272,10 +277,13 @@ if __name__ == '__main__':  # loader and evaluation processes re-import this fil
     ap.add_argument('--no-live', action='store_true', help='no val match frames for the dashboard')
     ap.add_argument('--aux', type=float, default=0.0, help='weight of the auxiliary heads loss (0: none)')
     ap.add_argument('--spatial', type=float, default=0.0, help='weight of the spatial heads loss (0: none)')
+    ap.add_argument('--weight', action='append', default=[], metavar='DIR=W',
+                    help='draw the windows of the matches in DIR W times as often (repeatable)')
     a = ap.parse_args()
     val = {'full': None, 'base': [(BASE, VAL_SEEDS)], 'base10': [(BASE, VAL_SEEDS[:10])], 'none': []}[a.val]
     print('best val_score:', train(a.kind, a.dirs, a.out, a.epochs, a.lr, eval_every=a.eval_every,
                                    val=val, init=a.init, conv_init=a.conv_init, seed=a.seed,
                                    workers=a.workers, eval_workers=a.eval_workers,
                                    max_minutes=a.max_minutes, live_dir=None if a.no_live else 'runs/dm/live',
-                                   aux_w=a.aux, spatial_w=a.spatial))
+                                   aux_w=a.aux, spatial_w=a.spatial,
+                                   dir_weights={d: float(w) for d, w in (x.rsplit('=', 1) for x in a.weight)} or None))
