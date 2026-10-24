@@ -78,9 +78,10 @@ class Poison:
         raise AssertionError(f'the agent read privileged data: {name}')
 
 
-def make_match(d, seed, T=40, first_at=(0,), variant='base', aux=False):
+def make_match(d, seed, T=40, first_at=(0,), variant='base', aux=False, spatial=False):
     # a synthetic match in the recorder format; frame t is filled with t % 256; aux: with the auxiliary
-    # targets (enemy column t % 9 - 1, items, depth) and a pose that walks east across the map
+    # targets (enemy column t % 9 - 1, items, depth) and a pose that walks east across the map; spatial: the
+    # teacher's goal 300 units ahead and an egomap with only the left half walkable
     import os
     os.makedirs(d, exist_ok=True)
     pre = os.path.join(str(d), f'ep_{variant}_{seed}')
@@ -101,5 +102,13 @@ def make_match(d, seed, T=40, first_at=(0,), variant='base', aux=False):
         z['items'] = np.stack([np.arange(T) % 2 == 0] * 4, 1)
         z['depth'] = np.tile(np.arange(16, dtype=np.uint8), (T, 8, 1))
         z['pose'] = np.stack([np.linspace(-700, 1900, T), np.zeros(T), np.zeros(T)], 1).astype(np.float32)
+        np.savez(pre + '.npz', **z)
+    if spatial:
+        from doomagent.dm.spatial import MAP_N
+        z = dict(np.load(pre + '.npz'))
+        z['goal'] = (z['pose'][:, :2] + np.array([300.0, 0.0])).astype(np.float32)
+        m = np.zeros((T, MAP_N, MAP_N), bool)
+        m[:, :, :MAP_N // 2] = True
+        z['egomap'] = m
         np.savez(pre + '.npz', **z)
     return pre

@@ -139,3 +139,41 @@ def test_mirror_batch_flips_aux_and_drops_the_map_targets():
     m = mirror_batch(b)
     assert m['aux_x'].tolist() == [7, -1] and m['aux_pos'].tolist() == [-1, -1] and m['aux_head'].tolist() == [-1, -1]
     assert m['aux_depth'][0, :16].tolist() == list(range(15, -1, -1))
+
+
+def test_spatial_targets_in_steps_and_segments(tmp_path):
+    from doomagent.dm.spatial import FUT_K, MAP_N
+    make_match(tmp_path, 1, T=40, aux=True, spatial=True)
+    files = sorted(str(p) for p in tmp_path.glob('ep_*.npz'))
+    it = MatchSteps(files)[3]
+    assert it['sp_map'].shape == (MAP_N * MAP_N,) and it['sp_map_ok'] and float(it['sp_map'].sum()) == 128
+    assert it['sp_odo'].shape == (6,) and it['sp_odo_ok'].all() and float(it['sp_odo'][0]) > 0  # walks forward
+    assert it['sp_fut_ok'] and it['sp_fut_depth_ok'] and it['sp_fut_depth'].shape == (128,)
+    assert it['sp_fut_move'].tolist() == [(3 + j) % 9 for j in range(FUT_K)]
+    assert it['sp_goal_dir'] == 0 and it['sp_goal_dist'] == 1 and it['sp_mode'] == 0
+    seg = MatchSegments(files, seg_len=32, burn_in=8)[1]  # the second window is 8 steps short: padded
+    assert seg['sp_map'].shape == (32, MAP_N * MAP_N) and seg['sp_fut_move'].shape == (32, FUT_K)
+    assert not seg['sp_fut_ok'][-1] and not seg['sp_odo_ok'][-1].any() and seg['sp_goal_dir'][-1] == -1
+
+
+def test_spatial_targets_off_in_old_files(tmp_path):
+    make_match(tmp_path, 1, T=10)
+    it = MatchSteps(sorted(str(p) for p in tmp_path.glob('ep_*.npz')))[0]
+    assert not it['sp_map_ok'] and not it['sp_fut_depth_ok'] and it['sp_goal_dir'] == -1
+
+
+def test_mirror_batch_flips_the_spatial_targets():
+    from doomagent.dm.actions import MOVE_MIRROR, TURN_MIRROR
+    from doomagent.dm.spatial import MAP_N
+    m0 = torch.zeros(2, MAP_N, MAP_N)
+    m0[:, :, 0] = 1.0
+    b = dict(frames=torch.zeros(2, 4, 3, 5), vec=torch.zeros(2, 22), action=torch.zeros(2, 4, dtype=torch.long),
+             sp_map=m0.reshape(2, -1), sp_odo=torch.ones(2, 6), sp_fut=torch.ones(2, 3),
+             sp_fut_move=torch.tensor([[3, 5, 0, 1], [-1, -1, -1, -1]]), sp_fut_turn=torch.tensor([[1, 2, 0, 3]] * 2),
+             sp_fut_depth=torch.arange(256.).reshape(2, 128), sp_goal_dir=torch.tensor([4, -1]))
+    m = mirror_batch(b)
+    assert m['sp_map'].reshape(2, MAP_N, MAP_N)[:, :, -1].all() and not m['sp_map'].reshape(2, MAP_N, MAP_N)[:, :, 0].any()
+    assert m['sp_odo'][0].tolist() == [1, -1, -1, 1, -1, -1] and m['sp_fut'][0].tolist() == [1, -1, -1]
+    assert m['sp_fut_move'][0].tolist() == [MOVE_MIRROR[v] for v in (3, 5, 0, 1)] and m['sp_fut_move'][1].tolist() == [-1] * 4
+    assert m['sp_fut_turn'][0].tolist() == [TURN_MIRROR[v] for v in (1, 2, 0, 3)]
+    assert m['sp_fut_depth'][0, :16].tolist() == list(range(15, -1, -1)) and m['sp_goal_dir'].tolist() == [12, -1]

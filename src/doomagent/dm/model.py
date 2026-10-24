@@ -5,14 +5,15 @@ import torch.nn.functional as F
 from doomagent.dm.actions import HEAD_SIZES, HEADS, N_LOGITS, VEC_DIM
 from doomagent.dm.auxtargets import AUX_SIZES
 from doomagent.dm.config import DM
+from doomagent.dm.spatial import FUT_IN, FUT_OUT, SPATIAL_SIZES
 
 
 class DMNet(nn.Module):
     # M0 (memory=False): conv features + the vector (dm.actions.make_vec) -> one linear layer of N_LOGITS, read as
     # four heads (split_logits). M1 (memory=True): the same features + vector go through a GRU of 512 first.
-    def __init__(self, cfg=DM, memory=False, aux=False):
+    def __init__(self, cfg=DM, memory=False, aux=False, spatial=False):
         super().__init__()
-        self.memory, self.aux_on = memory, aux
+        self.memory, self.aux_on, self.spatial_on = memory, aux, spatial
         self.body = nn.Sequential(
             nn.Conv2d(cfg.stack, 32, 8, 4), nn.ReLU(),
             nn.Conv2d(32, 64, 4, 2), nn.ReLU(),
@@ -27,6 +28,10 @@ class DMNet(nn.Module):
             self.head = nn.Linear(512 + VEC_DIM, N_LOGITS)
         if aux:  # auxiliary heads (dm.auxtargets) read what the action heads read
             self.aux = nn.Linear(self.head.in_features, sum(AUX_SIZES.values()))
+        if spatial:  # spatial heads (dm.spatial), and a forward model: features + the next moves -> motion, depth
+            z = self.head.in_features
+            self.spatial = nn.Linear(z, sum(SPATIAL_SIZES.values()))
+            self.fwd = nn.Sequential(nn.Linear(z + FUT_IN, 256), nn.ReLU(), nn.Linear(256, FUT_OUT))
 
     def encode(self, frames):
         x = frames.float() / 255.0 if frames.dtype == torch.uint8 else frames
@@ -45,14 +50,19 @@ class DMNet(nn.Module):
         logits, h_out, _ = self.forward_aux(frames, vec, h, aux=False)
         return logits, h_out
 
-    def forward_aux(self, frames, vec, h=None, aux=True):
-        # the action logits, the GRU state and {target: logits} of the auxiliary heads (None without them)
+    def forward_aux(self, frames, vec, h=None, aux=True, fut=None):
+        # the action logits, the GRU state and {target: logits} of the auxiliary and spatial heads (None without
+        # them); fut (B, T, FUT_IN): the moves and turns played next (fut_input), for the forward model 'fwd'
         feat, hid, h_out = self.features(frames, vec, h)
         z = hid if self.memory else torch.cat([feat, vec.to(feat.dtype)], -1)
-        out = None
+        out = {}
         if aux and self.aux_on:
-            out = dict(zip(AUX_SIZES, torch.split(self.aux(z), list(AUX_SIZES.values()), dim=-1)))
-        return self.head(z), h_out, out
+            out.update(zip(AUX_SIZES, torch.split(self.aux(z), list(AUX_SIZES.values()), dim=-1)))
+        if aux and self.spatial_on:
+            out.update(zip(SPATIAL_SIZES, torch.split(self.spatial(z), list(SPATIAL_SIZES.values()), dim=-1)))
+            if fut is not None:
+                out['fwd'] = self.fwd(torch.cat([z, fut.to(z.dtype)], -1))
+        return self.head(z), h_out, out or None
 
 
 def split_logits(logits):
@@ -114,6 +124,57 @@ def aux_loss(aux, b, mask):
     return total, parts
 
 
+def fut_input(move, turn):
+    # (..., FUT_K) moves and turns played next -> (..., FUT_IN) one-hot; padding (-1) gives zeros
+    def one_hot(v, n):
+        return (F.one_hot(v.clamp_min(0), n) * (v >= 0)[..., None]).flatten(-2)
+    return torch.cat([one_hot(move, HEAD_SIZES[0]), one_hot(turn, HEAD_SIZES[1])], -1).float()
+
+
+def spatial_loss(out, b, mask):
+    # sum of the spatial losses (dm.spatial) over the steps in mask that have the target: walkable cells around
+    # (BCE), motion over the last steps and after the next ones (smooth L1), depth after them (MSE), the
+    # teacher's goal direction and distance and its mode (CE; -1 = none)
+    m = mask.reshape(-1)
+    N = m.shape[0]
+    flat = {k: v.reshape(N, -1) for k, v in out.items()}
+    total, parts = 0.0, {}
+
+    def y(key):
+        return b[key].to(m.device).reshape(N, -1)
+
+    def add(loss, key, value):
+        nonlocal total
+        total = total + loss
+        parts[key] = value
+
+    ok = m & y('sp_map_ok')[:, 0]
+    if ok.any():
+        lg, t = flat['egomap'][ok], y('sp_map')[ok]
+        add(F.binary_cross_entropy_with_logits(lg, t), 'sp_map_acc', ((lg > 0).float() == t).float().mean().item())
+    ok = m[:, None] & y('sp_odo_ok').repeat_interleave(3, 1)
+    if ok.any():
+        p, t = flat['odo'][ok], y('sp_odo')[ok]
+        add(F.smooth_l1_loss(p, t), 'sp_odo_err', (p - t).abs().mean().item())
+    if 'fwd' in flat:
+        ok = m & y('sp_fut_ok')[:, 0]
+        if ok.any():
+            p, t = flat['fwd'][ok, :3], y('sp_fut')[ok]
+            add(F.smooth_l1_loss(p, t), 'sp_fut_err', (p - t).abs().mean().item())
+        ok = m & y('sp_fut_depth_ok')[:, 0]
+        if ok.any():
+            mse = F.mse_loss(torch.sigmoid(flat['fwd'][ok, 3:]), y('sp_fut_depth')[ok])
+            add(mse, 'sp_fut_depth_mse', mse.item())
+    for name, key in (('goal_dir', 'sp_goal_dir'), ('goal_dist', 'sp_goal_dist'), ('mode', 'sp_mode')):
+        t = y(key)[:, 0].long()
+        ok = m & (t >= 0)
+        if ok.any():
+            lg = flat[name][ok]
+            add(F.cross_entropy(lg, t[ok]), key + '_acc', (lg.argmax(1) == t[ok]).float().mean().item())
+    parts['spatial'] = float(total.detach()) if torch.is_tensor(total) else 0.0
+    return total, parts
+
+
 def load_conv(model, path):
     # the three conv layers of the first section's final model (.pt StudentCNN or PPO .zip)
     if str(path).endswith('.zip'):
@@ -140,11 +201,11 @@ def gru_gates(gru, x, h):
 
 
 def save_model(model, path):
-    torch.save(dict(state=model.state_dict(), memory=model.memory, aux=model.aux_on), path)
+    torch.save(dict(state=model.state_dict(), memory=model.memory, aux=model.aux_on, spatial=model.spatial_on), path)
 
 
 def load_model(path, cfg=DM, map_location='cpu'):
     d = torch.load(path, map_location=map_location)
-    m = DMNet(cfg, memory=d['memory'], aux=d.get('aux', False))
+    m = DMNet(cfg, memory=d['memory'], aux=d.get('aux', False), spatial=d.get('spatial', False))
     m.load_state_dict(d['state'])
     return m

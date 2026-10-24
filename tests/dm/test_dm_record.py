@@ -58,7 +58,7 @@ def test_parallel_record_matches_serial(tmp_path):
     record_dataset(str(tmp_path / 'p'), plan, MatchNoise(0.1), cfg, workers=2)
     for s in (38000, 38001):
         a, b = (np.load(tmp_path / d / f'ep_base_{s}.npz') for d in 'sp')
-        assert all(np.array_equal(a[k], b[k]) for k in a.files)
+        assert all(np.array_equal(a[k], b[k], equal_nan=a[k].dtype.kind == 'f') for k in a.files)  # goal: NaN = none
         assert np.array_equal(*(np.load(tmp_path / d / f'ep_base_{s}.frames.npy') for d in 'sp'))
     assert (tmp_path / 'p' / 'meta.json').read_text() == (tmp_path / 's' / 'meta.json').read_text()
 
@@ -116,3 +116,54 @@ def test_record_keeps_the_aux_targets(tmp_path):
     z = np.load(tmp_path / 'ep_base_1.npz')
     assert z['enemy_x'].tolist() == [4, -1, 4, -1, 4, -1] and z['items'].shape == (6, 4)
     assert 'depth' not in z.files
+
+
+def test_burst_plays_a_detour_when_no_bot_is_in_sight():
+    # a burst replaces the label for a few steps; fire and weapon stay off; the next burst waits for its end
+    from doomagent.dm.env import DMPrivileged
+    f = MatchNoise(0.0, burst_p=1.0)
+    f.reset(3)
+    first = f(None, DMPrivileged(), LABEL)
+    rest = list(f.burst)
+    assert f.in_burst and first[2:] == (0, 0) and first != LABEL
+    assert 1 <= len(rest) <= 9 and all(a == first for a in rest)  # one detour, 2 to 10 steps
+    assert all(f(None, DMPrivileged(), LABEL) == first for _ in rest)
+
+
+def test_a_bot_in_sight_ends_the_burst():
+    from dmfiles import BOT_LABEL
+    from doomagent.dm.env import DMPrivileged
+    f = MatchNoise(0.0, burst_p=1.0)
+    f.reset(3)
+    f(None, DMPrivileged(), LABEL)
+    assert f(None, DMPrivileged(labels=[BOT_LABEL]), LABEL) == LABEL and not f.in_burst
+
+
+def test_no_bursts_keeps_the_noise_sequence():
+    a, b = MatchNoise(0.5), MatchNoise(0.5, burst_p=0.0)
+    a.reset(7)
+    b.reset(7)
+    assert [a(None, None, LABEL) for _ in range(50)] == [b(None, None, LABEL) for _ in range(50)]
+
+
+class _NavTeacher(StubTeacher):
+    # a teacher with a map and a goal, like DMTeacher after its first step
+    def __init__(self, action, mode='patrol'):
+        super().__init__(action)
+        from types import SimpleNamespace
+        self.mode, self.goal = mode, (300.0, 0.0)
+        self.nav = SimpleNamespace(x0=-1024.0, y0=-1024.0, cell=16.0, nx=128, ny=128, walk=np.ones((128, 128), bool))
+
+
+def test_record_keeps_the_spatial_targets(tmp_path):
+    from doomagent.dm.spatial import MAP_N
+    env = FakeMatchEnv([row(first=i == 0) for i in range(5)])
+    record_match(env, 1, lambda o, p, lab: lab, _NavTeacher(LABEL), str(tmp_path / 'ep_base_1'))
+    z = np.load(tmp_path / 'ep_base_1.npz')
+    assert z['egomap'].shape == (5, MAP_N, MAP_N) and z['egomap'].all()
+    assert z['goal'].tolist() == [[300.0, 0.0]] * 5 and not z['burst'].any()
+    record_match(env, 2, lambda o, p, lab: lab, _NavTeacher(LABEL, 'combat'), str(tmp_path / 'ep_base_2'))
+    assert np.isnan(np.load(tmp_path / 'ep_base_2.npz')['goal']).all()  # a fight has no navigation goal
+    record_match(env, 3, lambda o, p, lab: lab, StubTeacher(LABEL), str(tmp_path / 'ep_base_3'))
+    z = np.load(tmp_path / 'ep_base_3.npz')
+    assert 'egomap' not in z.files and np.isnan(z['goal']).all()

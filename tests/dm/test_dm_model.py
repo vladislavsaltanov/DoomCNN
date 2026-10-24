@@ -159,3 +159,69 @@ def test_save_load_keeps_the_aux_heads(tmp_path):
     m = load_model(str(tmp_path / 'a.pt'))
     assert m.aux_on and m.memory
     DMChooser(net.state_dict(), True)  # builds the same net from a state with aux heads
+
+
+def _sp_batch(B, T):
+    from doomagent.dm.spatial import FUT_K, GOAL_BINS, MAP_N
+    g = torch.Generator().manual_seed(1)
+    return dict(sp_map=torch.randint(0, 2, (B, T, MAP_N * MAP_N), generator=g).float(),
+                sp_map_ok=torch.ones(B, T, dtype=torch.bool), sp_odo=torch.randn(B, T, 6, generator=g),
+                sp_odo_ok=torch.ones(B, T, 2, dtype=torch.bool), sp_fut=torch.randn(B, T, 3, generator=g),
+                sp_fut_ok=torch.ones(B, T, dtype=torch.bool), sp_fut_depth=torch.rand(B, T, 128, generator=g),
+                sp_fut_depth_ok=torch.ones(B, T, dtype=torch.bool),
+                sp_fut_move=torch.randint(0, 9, (B, T, FUT_K), generator=g),
+                sp_fut_turn=torch.randint(0, 15, (B, T, FUT_K), generator=g),
+                sp_goal_dir=torch.randint(-1, GOAL_BINS, (B, T), generator=g),
+                sp_goal_dist=torch.randint(-1, 4, (B, T), generator=g), sp_mode=torch.randint(0, 5, (B, T), generator=g))
+
+
+@pytest.mark.parametrize('memory', [False, True])
+def test_spatial_heads_shapes_and_loss(memory):
+    from doomagent.dm.model import fut_input, spatial_loss
+    from doomagent.dm.spatial import FUT_OUT, SPATIAL_SIZES
+    f, v = torch.zeros(2, 3, DM.stack, DM.height, DM.width), torch.zeros(2, 3, VEC_DIM)
+    net = DMNet(DM, memory=memory, spatial=True)
+    b = _sp_batch(2, 3)
+    logits, h, out = net.forward_aux(f, v, fut=fut_input(b['sp_fut_move'], b['sp_fut_turn']))
+    assert {k: out[k].shape[-1] for k in SPATIAL_SIZES} == SPATIAL_SIZES and out['fwd'].shape == (2, 3, FUT_OUT)
+    loss, parts = spatial_loss(out, b, torch.ones(2, 3, dtype=torch.bool))
+    assert loss.item() > 0
+    assert {'sp_map_acc', 'sp_odo_err', 'sp_fut_err', 'sp_fut_depth_mse', 'sp_goal_dir_acc', 'sp_goal_dist_acc',
+            'sp_mode_acc', 'spatial'} <= set(parts)
+    loss.backward()
+    assert net.spatial.weight.grad is not None and net.fwd[0].weight.grad is not None
+    assert net.forward_aux(f, v)[2].keys() == SPATIAL_SIZES.keys()  # no forward model without the actions
+
+
+def test_spatial_loss_skips_missing_targets():
+    from doomagent.dm.model import spatial_loss
+    from doomagent.dm.spatial import FUT_OUT, SPATIAL_SIZES
+    out = {k: torch.zeros(1, 2, n) for k, n in SPATIAL_SIZES.items()}
+    out['fwd'] = torch.zeros(1, 2, FUT_OUT)
+    b = _sp_batch(1, 2)
+    off = torch.zeros(1, 2, dtype=torch.bool)
+    b.update(sp_map_ok=off, sp_odo_ok=torch.zeros(1, 2, 2, dtype=torch.bool), sp_fut_ok=off, sp_fut_depth_ok=off,
+             sp_goal_dir=torch.full((1, 2), -1), sp_goal_dist=torch.full((1, 2), -1))
+    b['sp_mode'] = torch.zeros(1, 2, dtype=torch.long)
+    loss, parts = spatial_loss(out, b, torch.ones(1, 2, dtype=torch.bool))
+    assert loss.item() == pytest.approx(__import__('math').log(5), rel=1e-4)  # only the mode head, uniform logits
+    assert 'sp_map_acc' not in parts and 'sp_fut_err' not in parts
+
+
+def test_fut_input_is_one_hot_and_ignores_padding():
+    from doomagent.dm.model import fut_input
+    from doomagent.dm.spatial import FUT_IN, FUT_K
+    x = fut_input(torch.tensor([[1, 2, 3, 4], [-1] * FUT_K]), torch.tensor([[0, 1, 2, 3], [-1] * FUT_K]))
+    assert x.shape == (2, FUT_IN) and x[0].sum() == 2 * FUT_K and x[1].sum() == 0
+
+
+def test_save_load_keeps_the_spatial_heads(tmp_path):
+    from doomagent.dm.agent import DMChooser
+    net = DMNet(DM, memory=False, aux=True, spatial=True)
+    save_model(net, tmp_path / 'm.pt')
+    m = load_model(tmp_path / 'm.pt')
+    assert m.spatial_on and m.aux_on and not m.memory
+    import numpy as np
+    from doomagent.dm.env import DMObs
+    obs = DMObs(np.zeros((DM.stack, DM.height, DM.width), np.uint8), np.zeros(VEC_DIM, np.float32), True)
+    assert len(DMChooser(net.state_dict(), False)(obs, None)) == 4  # builds the net from a state with them

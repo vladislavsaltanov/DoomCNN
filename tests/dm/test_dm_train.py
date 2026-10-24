@@ -68,3 +68,17 @@ def test_train_with_aux_heads(tmp_path, kind):
     assert {'holdout_aux_pos_acc', 'holdout_aux_x_acc', 'holdout_aux_enemy_acc', 'train_aux'} <= set(row)
     from doomagent.dm.model import load_model
     assert load_model(out).aux_on
+
+
+@pytest.mark.parametrize('kind', ['m0', 'm1'])
+def test_train_with_spatial_heads(tmp_path, kind):
+    for s in range(3):
+        make_match(tmp_path / 'd', s, T=70, first_at=(0, 30), aux=True, spatial=True)
+    out = str(tmp_path / f'{kind}.pt')
+    train(kind, [str(tmp_path / 'd')], out, epochs=1, val=[], workers=0, batch_steps=64, aux_w=1.0, spatial_w=1.0)
+    row = json.load(open(out + '.log.json'))['log'][-1]
+    assert {'holdout_sp_map_acc', 'holdout_sp_odo_err', 'holdout_sp_fut_err', 'holdout_sp_goal_dir_acc',
+            'holdout_aux_pos_acc', 'train_spatial'} <= set(row)
+    from doomagent.dm.model import load_model
+    m = load_model(out)
+    assert m.spatial_on and m.aux_on

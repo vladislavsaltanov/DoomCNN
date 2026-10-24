@@ -13,7 +13,8 @@ from doomagent.dm.actions import HEAD_SIZES, HEADS
 from doomagent.dm.config import DM, VAL_SEEDS, val_plan
 from doomagent.dm.data import MatchSegments, MatchSteps, mirror_batch, split_holdout
 from doomagent.dm.evaluate import evaluate_plan, summarize
-from doomagent.dm.model import DMNet, aux_loss, bc_loss, load_conv, load_model, save_model, split_logits
+from doomagent.dm.model import (DMNet, aux_loss, bc_loss, fut_input, load_conv, load_model, save_model,
+                                spatial_loss, split_logits)
 from doomagent.evaluate import val_score
 from doomagent.variants import BASE
 
@@ -85,7 +86,30 @@ class Live:
 
 
 def _aux_targets(batch, dev):
-    return {k: v.to(dev) for k, v in batch.items() if k.startswith('aux_')}
+    return {k: v.to(dev) for k, v in batch.items() if k.startswith(('aux_', 'sp_'))}
+
+
+def _fut(model, batch, memory, dev):
+    # the forward model's input: the moves and turns played next, (B, T, FUT_IN) like the frames
+    if not model.spatial_on:
+        return None
+    x = fut_input(batch['sp_fut_move'].to(dev), batch['sp_fut_turn'].to(dev))
+    return x if memory else x[:, None]
+
+
+def _extra_losses(model, out, batch, mask, dev, aux_w, spatial_w):
+    # weighted auxiliary and spatial losses and their parts
+    loss, parts = 0.0, {}
+    if out is None:
+        return loss, parts
+    b = _aux_targets(batch, dev)
+    if model.aux_on:
+        la, ap = aux_loss(out, b, mask)
+        loss, parts = loss + aux_w * la, dict(parts, **ap)
+    if model.spatial_on:
+        ls, sp = spatial_loss(out, b, mask)
+        loss, parts = loss + spatial_w * ls, dict(parts, **sp)
+    return loss, parts
 
 
 def _to_model(batch, memory, dev):
@@ -102,11 +126,10 @@ def holdout_metrics(model, ds, memory, dev, batch_size):
     conf, ce_sum, n, all_ok, aux_sum = _confusions(), 0.0, 0, 0, {}
     for batch in DataLoader(ds, batch_size=batch_size, num_workers=0):
         f, v, a, m = _to_model(batch, memory, dev)
-        logits, _, aux = model.forward_aux(f, v)
-        if aux is not None:
-            _, ap = aux_loss(aux, _aux_targets(batch, dev), m)
-            for k, x in ap.items():
-                aux_sum.setdefault(k, []).append(x)
+        logits, _, aux = model.forward_aux(f, v, fut=_fut(model, batch, memory, dev))
+        _, ap = _extra_losses(model, aux, batch, m, dev, 1.0, 1.0)
+        for k, x in ap.items():
+            aux_sum.setdefault(k, []).append(x)
         loss, _ = bc_loss(logits, a, m)
         k = int(m.sum())
         ce_sum, n = ce_sum + loss.item() * k, n + k
@@ -119,17 +142,18 @@ def holdout_metrics(model, ds, memory, dev, batch_size):
     out = dict(holdout_ce=ce_sum / max(n, 1), holdout_acc=all_ok / max(n, 1),
                holdout_acc_per_value=_acc_per_value(conf))
     out.update({f'holdout_acc_{h}': float(np.trace(m) / max(m.sum(), 1)) for h, m in conf.items()})
-    out.update({f'holdout_{k}': float(np.mean(x)) for k, x in aux_sum.items() if k != 'aux'})
+    out.update({f'holdout_{k}': float(np.mean(x)) for k, x in aux_sum.items() if k not in ('aux', 'spatial')})
     return out, conf
 
 
 def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=True, eval_every=2,
           val=None, init=None, conv_init=None, seed=0, workers=2, eval_workers=4, max_minutes=None,
-          holdout=0.05, clip=1.0, cfg=DM, live_dir=None, aux_w=0.0):
+          holdout=0.05, clip=1.0, cfg=DM, live_dir=None, aux_w=0.0, spatial_w=0.0):
     # behavior cloning of the teacher's labels: M0 on single steps, M1 on windows inside lives;
     # the checkpoint is chosen by frags on the val matches (val=[]: no games, the last one is kept);
     # live_dir: a folder (dm.livetap.LIVE_DIR) where the val matches are shown on the dashboard;
-    # aux_w > 0: auxiliary heads (dm.auxtargets) with this weight on their loss
+    # aux_w > 0: auxiliary heads (dm.auxtargets) with this weight on their loss; spatial_w > 0: the spatial
+    # heads and the forward model (dm.spatial) with this weight
     assert kind in ('m0', 'm1')
     torch.manual_seed(seed)
     dev, memory = pick_device(), kind == 'm1'
@@ -139,7 +163,7 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
     bs = max(1, batch_steps // cfg.seg_len) if memory else batch_steps
     dl = DataLoader(make(train_files), batch_size=bs, shuffle=True, num_workers=workers)
     hold = make(hold_files) if hold_files else None
-    model = DMNet(cfg, memory, aux=aux_w > 0).to(dev)
+    model = DMNet(cfg, memory, aux=aux_w > 0, spatial=spatial_w > 0).to(dev)
     if init:
         model.load_state_dict(load_model(init, cfg).state_dict())
     if conv_init:
@@ -148,12 +172,12 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(1, epochs * len(dl)))
     val = val_plan() if val is None else val
     config = dict(kind=kind, dirs=list(dirs), epochs=epochs, lr=lr, batch_steps=batch_steps, hflip=hflip,
-                  aug=aug, init=init, conv_init=conv_init, seed=seed, clip=clip, aux_w=aux_w,
+                  aug=aug, init=init, conv_init=conv_init, seed=seed, clip=clip, aux_w=aux_w, spatial_w=spatial_w,
                   val=[(v.name, len(s)) for v, s in val], train_files=train_files,
                   holdout_files=hold_files)
     live, log, best, t0, stop = Live(out, len(dl), epochs), [], -float('inf'), time.time(), False
     for epoch in range(1, epochs + 1):
-        sums, n = dict(ce=0.0, acc=0.0, aux=0.0), 0
+        sums, n = dict(ce=0.0, acc=0.0, aux=0.0, spatial=0.0), 0
         for i, batch in enumerate(dl, 1):
             if hflip and torch.rand(()) < 0.5:
                 batch = mirror_batch(batch)
@@ -162,12 +186,11 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
             if aug:
                 B, T = x.shape[:2]
                 x = frame_augment(x.reshape(B, -1, *x.shape[3:])).reshape(x.shape)
-            logits, _, aux = model.forward_aux(x, v)
+            logits, _, aux = model.forward_aux(x, v, fut=_fut(model, batch, memory, dev))
             loss, parts = bc_loss(logits, a, m)
-            parts['aux'] = 0.0
-            if aux is not None:
-                la, ap = aux_loss(aux, _aux_targets(batch, dev), m)
-                loss, parts['aux'] = loss + aux_w * la, ap['aux']
+            le, ep = _extra_losses(model, aux, batch, m, dev, aux_w, spatial_w)
+            loss = loss + le
+            parts['aux'], parts['spatial'] = ep.get('aux', 0.0), ep.get('spatial', 0.0)
             opt.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
@@ -185,7 +208,8 @@ def train(kind, dirs, out, epochs, lr=3e-4, batch_steps=256, hflip=True, aug=Tru
             continue
         row = dict(epoch=epoch, batches=live.total, minutes=(time.time() - t0) / 60,
                    lr=opt.param_groups[0]['lr'], train_ce=sums['ce'] / max(n, 1),
-                   train_acc=sums['acc'] / max(n, 1), train_aux=sums['aux'] / max(n, 1))
+                   train_acc=sums['acc'] / max(n, 1), train_aux=sums['aux'] / max(n, 1),
+                   train_spatial=sums['spatial'] / max(n, 1))
         if hold is not None:
             metrics, conf = holdout_metrics(model, hold, memory, dev, bs)
             row.update(metrics)
@@ -232,10 +256,11 @@ if __name__ == '__main__':  # loader and evaluation processes re-import this fil
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--no-live', action='store_true', help='no val match frames for the dashboard')
     ap.add_argument('--aux', type=float, default=0.0, help='weight of the auxiliary heads loss (0: none)')
+    ap.add_argument('--spatial', type=float, default=0.0, help='weight of the spatial heads loss (0: none)')
     a = ap.parse_args()
     val = {'full': None, 'base': [(BASE, VAL_SEEDS)], 'base10': [(BASE, VAL_SEEDS[:10])], 'none': []}[a.val]
     print('best val_score:', train(a.kind, a.dirs, a.out, a.epochs, a.lr, eval_every=a.eval_every,
                                    val=val, init=a.init, conv_init=a.conv_init, seed=a.seed,
                                    workers=a.workers, eval_workers=a.eval_workers,
                                    max_minutes=a.max_minutes, live_dir=None if a.no_live else 'runs/dm/live',
-                                   aux_w=a.aux))
+                                   aux_w=a.aux, spatial_w=a.spatial))

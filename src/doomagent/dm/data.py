@@ -9,8 +9,10 @@ from doomagent.dm.actions import MOVE_MIRROR, TURN_MIRROR
 from doomagent.dm.auxtargets import (AUX_SIZES, DEPTH_SHAPE, ENEMY_X_BINS, ITEM_KINDS, heading_bin,
                                      pos_cell)
 from doomagent.dm.config import DM
+from doomagent.dm.spatial import GOAL_BINS, MAP_N, MOTION_MIRROR, ODO_K, spatial_targets
 
 MOVE_T, TURN_T = torch.tensor(MOVE_MIRROR), torch.tensor(TURN_MIRROR)
+ODO_T, FUT_T = torch.tensor(np.tile(MOTION_MIRROR, len(ODO_K))), torch.tensor(MOTION_MIRROR)
 
 
 def life_starts(first):
@@ -72,6 +74,9 @@ def _aux(z):
 
 
 AUX_STEP = ('aux_enemy', 'aux_x', 'aux_pos', 'aux_head', 'aux_items')
+# per-step targets of the spatial heads (dm.spatial); the depth after the next steps is read at its index
+SP_STEP = ('sp_map', 'sp_map_ok', 'sp_odo', 'sp_odo_ok', 'sp_fut', 'sp_fut_ok', 'sp_fut_move', 'sp_fut_turn',
+           'sp_goal_dir', 'sp_goal_dist', 'sp_mode')
 
 
 class _Matches(Dataset):
@@ -82,10 +87,19 @@ class _Matches(Dataset):
         for p in self.files:
             z = np.load(p)
             self.eps.append(dict(actions=z['actions'], vec=z['vec'].astype(np.float32),
-                                 first=z['first'], starts=life_starts(z['first']), **_aux(z)))
+                                 first=z['first'], starts=life_starts(z['first']), **_aux(z),
+                                 **spatial_targets(z)))
 
     def __getstate__(self):
         return dict(self.__dict__, _mm={})
+
+    def _spatial(self, e, ts):
+        # the spatial targets of steps ts as float32 / int64 / bool arrays
+        out = {k: e[k][ts] for k in SP_STEP}
+        out['sp_map'] = out['sp_map'].astype(np.float32)
+        out['sp_fut_depth'] = e['aux_depth'][e['sp_fut_idx'][ts]].astype(np.float32) / 255.0
+        out['sp_fut_depth_ok'] = out['sp_fut_ok'] & e['depth_ok']
+        return out
 
     def _frames(self, i):
         if i not in self._mm:
@@ -111,6 +125,7 @@ class MatchSteps(_Matches):
                    aux_depth=torch.from_numpy(e['aux_depth'][t].astype(np.float32) / 255.0),
                    aux_items_ok=e['items_ok'], aux_depth_ok=e['depth_ok'])
         out.update({k: torch.as_tensor(e[k][t]) for k in AUX_STEP})
+        out.update({k: torch.as_tensor(np.asarray(v)) for k, v in self._spatial(e, t).items()})
         return out
 
 
@@ -145,6 +160,10 @@ class MatchSegments(_Matches):
             pad = np.full((L,) + src.shape[1:], -1 if src.dtype == np.int64 else 0, src.dtype)
             pad[:e - s] = src
             out[k] = torch.from_numpy(pad.astype(np.float32) / 255.0 if k == 'aux_depth' else pad)
+        for k, src in self._spatial(ep, np.arange(s, e)).items():
+            pad = np.full((L,) + src.shape[1:], -1 if src.dtype == np.int64 else 0, src.dtype)
+            pad[:e - s] = src
+            out[k] = torch.from_numpy(pad)
         return out
 
 
@@ -160,6 +179,20 @@ def mirror_batch(b):
         out['aux_x'] = torch.where(b['aux_x'] >= 0, ENEMY_X_BINS - 1 - b['aux_x'], b['aux_x'])
         out['aux_pos'] = torch.full_like(b['aux_pos'], -1)
         out['aux_head'] = torch.full_like(b['aux_head'], -1)
-        d = b['aux_depth']
-        out['aux_depth'] = torch.flip(d.reshape(*d.shape[:-1], *DEPTH_SHAPE), dims=[-1]).reshape(d.shape)
+        out['aux_depth'] = _flip_depth(b['aux_depth'])
+    if 'sp_map' in b:  # the egomap and the depth flip, left motion and turns change sign, moves and turns mirror
+        mp = b['sp_map']
+        out['sp_map'] = torch.flip(mp.reshape(*mp.shape[:-1], MAP_N, MAP_N), dims=[-1]).reshape(mp.shape)
+        out['sp_odo'] = b['sp_odo'] * ODO_T.to(mp.device)
+        out['sp_fut'] = b['sp_fut'] * FUT_T.to(mp.device)
+        out['sp_fut_depth'] = _flip_depth(b['sp_fut_depth'])
+        for k, table in (('sp_fut_move', MOVE_T), ('sp_fut_turn', TURN_T)):
+            v = b[k]
+            out[k] = torch.where(v >= 0, table.to(v.device)[v.clamp_min(0)], v)
+        g = b['sp_goal_dir']
+        out['sp_goal_dir'] = torch.where(g >= 0, (-g) % GOAL_BINS, g)
     return out
+
+
+def _flip_depth(d):
+    return torch.flip(d.reshape(*d.shape[:-1], *DEPTH_SHAPE), dims=[-1]).reshape(d.shape)

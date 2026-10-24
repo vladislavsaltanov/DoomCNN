@@ -24,6 +24,7 @@ class DMCfg:
     hud: bool = False
     map: str = 'map02'         # spec v2: full deathmatch with weapons
     noise_p: float = 0.10
+    burst_p: float = 0.02      # recording: chance per step with no bot in sight of a detour burst (record.MatchNoise)
     bots: int = 7
     timelimit: float = 2.0     # minutes per match: 4200 tics, 1050 agent steps
     safe_dist: float = 128.0   # no rocket at a target or wall closer than this
