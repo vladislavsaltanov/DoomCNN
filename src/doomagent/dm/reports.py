@@ -192,6 +192,67 @@ def models_figure(models, out_png, teacher=None):
     plt.close(fig)
 
 
+def _smooth(x, k):
+    import numpy as np
+    x = np.asarray(x, float)
+    return x if len(x) < k else np.convolve(x, np.ones(k) / k, mode='valid')
+
+
+def ppo_figure(rows, out_png, teacher_val=None, smooth=20):
+    # rows: dm.ppo log.jsonl. Val score by env step (dashed: the start, dotted: Gate B), the training matches'
+    # frags and stuck share, agreement with the teacher by head, the losses, and PPO's KL, clipped share, entropy
+    import numpy as np
+    from doomagent.dm.actions import HEADS
+    ev = [r for r in rows if r['kind'] == 'eval']
+    up = [r for r in rows if r['kind'] == 'update' and r['phase'] == 'ppo']
+    um = [r for r in rows if r['kind'] == 'update' and 'm_frags' in r]
+    fig, ax = plt.subplots(2, 3, figsize=(18, 8), facecolor=SURFACE)
+    ax = ax.ravel()
+    M = 1e6
+
+    def line(a, xs, ys, name, color, k=1, **kw):
+        if len(ys):
+            ys = _smooth(ys, k)
+            xs = np.asarray(xs[len(xs) - len(ys):]) / M
+            a.plot(xs, ys, color=color, linewidth=2, **kw)
+            _end_label(a, xs[-1], ys[-1], name)
+
+    if ev:
+        x = np.array([r['step'] for r in ev]) / M
+        f = [r['frags'] for r in ev]
+        ax[0].errorbar(x, [d['mean'] for d in f], yerr=[[d['mean'] - d['lo'] for d in f], [d['hi'] - d['mean'] for d in f]],
+                       fmt='o', color=ENTITY['ppo'], capsize=3, markersize=4)
+        line(ax[0], [r['step'] for r in ev], [r['val_score'] for r in ev], 'val score', ENTITY['m1'])
+        ax[0].axhline(ev[0]['val_score'], color=MUTED, linewidth=0.8, linestyle='--')
+        if teacher_val:
+            ax[0].axhline(0.5 * teacher_val, color=ENTITY['teacher'], linewidth=0.8, linestyle=':')
+    _style(ax[0], 'Val: frags (95% CI) and val score; dashed: start, dotted: Gate B')
+    line(ax[1], [r['step'] for r in um], [r['m_frags'] for r in um], 'frags', ENTITY['ppo'], smooth)
+    line(ax[1], [r['step'] for r in um], [r['m_deaths'] for r in um], 'deaths', ENTITY['bots'], smooth)
+    _style(ax[1], f'Training matches (sampled policy), mean of {smooth} updates')
+    line(ax[2], [r['step'] for r in um], [r['m_stuck_share'] for r in um], 'training', ENTITY['ppo'], smooth)
+    if ev:
+        line(ax[2], [r['step'] for r in ev], [r['stuck_share'] for r in ev], 'val', ENTITY['m1'], marker='o')
+    _style(ax[2], 'Share of steps stuck')
+    for i, h in enumerate(HEADS + ('',)):
+        key = f'agree_{h}' if h else 'agree'
+        line(ax[3], [r['step'] for r in up], [r[key] for r in up], h or 'all four', CATEGORICAL[1 + i % 6], smooth)
+    _style(ax[3], "Policy's argmax = teacher's label, on its own states")
+    for i, (k, name) in enumerate((('ks', 'teacher CE'), ('aux', 'auxiliary'), ('spatial', 'spatial'), ('v_loss', 'value'))):
+        line(ax[4], [r['step'] for r in up], [r[k] for r in up], name, CATEGORICAL[1 + i], smooth)
+    _style(ax[4], 'Losses')
+    for i, (k, name) in enumerate((('kl', 'KL x 10'), ('clipfrac', 'clipped'), ('ent_turn', 'entropy turn'),
+                                   ('ent_move', 'entropy move'), ('ks_w', 'teacher weight'))):
+        ys = [r[k] * (10 if k == 'kl' else 1) for r in up]
+        line(ax[5], [r['step'] for r in up], ys, name, CATEGORICAL[1 + i], 1 if k == 'ks_w' else smooth)
+    _style(ax[5], 'PPO')
+    for a in ax:
+        _xlabel(a, 'env steps, millions')
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=130, facecolor=SURFACE)
+    plt.close(fig)
+
+
 def teacher_figure(report, mode_share, out_png):
     t, r = report['teacher'], report.get('random')
     fig, ax = plt.subplots(1, 3, figsize=(14, 3.8), facecolor=SURFACE)

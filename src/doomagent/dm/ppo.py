@@ -5,8 +5,10 @@
   inside windows at life starts too (DMNet.features_seq).
 - An asymmetric critic: an MLP on the policy's features without gradient into them, the vector and the privileged
   vector of dm.rlenv.critic_vec. It exists only in training.
-- Kickstarting: cross-entropy to the teacher's label of every rollout step (dm.rlenv runs the teacher in the shadow),
-  its weight annealed from ks to ks_end: online DAgger first, a PPO anchor later.
+- An anchor to the start: KL(policy || start policy) on the rollout states, weight annealed from prior to prior_end
+  (fine-tuning after imitation as in AlphaStar or RLHF). Kickstarting, cross-entropy to the shadow teacher's label of
+  every step (ks), is there but off: with weight 1 it broke the policy in 250k steps (val 3.57 -> 1.06, stuck 42 %);
+  the teacher's labels on the student's states depend on its path, which the picture does not show.
 - The auxiliary and spatial heads keep training on the rollout steps: dm.rlenv gives their targets in the
   recorder's format, so dm.data._aux, dm.spatial.spatial_targets and the losses of dm.model are reused.
 - Reward: frags plus small shaping parts (dm.rlenv.PARTS) weighted by REWARD; the evaluation counts frags only.
@@ -53,8 +55,10 @@ class PPOCfg:
     lr_end: float = 0.3          # the policy's lr falls linearly to this share of lr by the end
     critic_lr: float = 3e-4
     ent: float = 0.001           # on the sum of the heads' entropies
-    ks: float = 1.0              # kickstarting weight after the warm-up ...
-    ks_end: float = 0.1          # ... falling linearly to this ...
+    prior: float = 0.1           # weight of KL(policy || start policy) after the warm-up, falling linearly ...
+    prior_end: float = 0.02      # ... to this by the end
+    ks: float = 0.0              # kickstarting weight after the warm-up (0: off) ...
+    ks_end: float = 0.0          # ... falling linearly to this ...
     ks_steps: int = 2_000_000    # ... over these steps
     aux_w: float = 1.0           # the BC weights of the auxiliary and spatial losses
     spatial_w: float = 1.0
@@ -319,8 +323,18 @@ def minibatch(b, idx, fbuf):
     return mb
 
 
-def update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg=DM, extra_losses=None):
-    # one PPO update on a rollout; frozen: the critic only (warm-up). Returns mean numbers for the log.
+def prior_kl(logits, prior_logits, temp=1.0):
+    # KL(policy || start policy) per step, summed over the heads
+    kl = 0.0
+    for lg, lp in zip(split_logits(logits / temp), split_logits(prior_logits / temp)):
+        a, b = torch.log_softmax(lg, -1), torch.log_softmax(lp, -1)
+        kl = kl + (a.exp() * (a - b)).sum(-1)
+    return kl
+
+
+def update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg=DM, extra_losses=None, prior=None, prior_w=0.0):
+    # one PPO update on a rollout; frozen: the critic only (warm-up); prior: the frozen start model, pulled towards
+    # with weight prior_w. Returns mean numbers for the log.
     from doomagent.dm.train import _extra_losses
     extra_losses = extra_losses or _extra_losses
     dev = roll['fbuf'].device
@@ -359,6 +373,13 @@ def update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg=DM, extra_lo
                 ks, kp = bc_loss(logits / pc.temp, mb['label'], mask)
                 ex, ep = extra_losses(model, out, mb, mask, dev, pc.aux_w, pc.spatial_w)
                 loss = pg - pc.ent * ent.sum(-1).mean() + ks_w * ks + ex
+                if prior is not None:
+                    with torch.no_grad():
+                        zp, _ = prior.trunk(mb['frames'], mb['vec'], h0, mb['first'])
+                        pl = prior.head(zp)
+                    pk = prior_kl(logits, pl, pc.temp).mean()
+                    loss = loss + prior_w * pk
+                    parts['prior_kl'] = pk.item()
                 opt_a.zero_grad()
                 loss.backward()
                 nn.utils.clip_grad_norm_(model.parameters(), pc.max_grad)
@@ -385,10 +406,10 @@ def update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg=DM, extra_lo
 
 
 def schedule(pc, step):
-    # (policy lr, kickstarting weight) at this env step; both start after the warm-up
+    # (policy lr, kickstarting weight, prior weight) at this env step; all start after the warm-up
     p = min(max(step - pc.warmup, 0) / max(pc.steps - pc.warmup, 1), 1.0)
     k = min(max(step - pc.warmup, 0) / max(pc.ks_steps, 1), 1.0)
-    return pc.lr * (1 - (1 - pc.lr_end) * p), pc.ks + (pc.ks_end - pc.ks) * k
+    return pc.lr * (1 - (1 - pc.lr_end) * p), pc.ks + (pc.ks_end - pc.ks) * k, pc.prior + (pc.prior_end - pc.prior) * p
 
 
 def evaluate(model, plan, cfg, workers):
@@ -430,6 +451,10 @@ def run(out, init, pc=PPOCfg(), reward=None, cfg=DM, plan=None, envs=None, varia
     torch.backends.cudnn.benchmark = True
     model = (load_model(init, cfg) if init else DMNet(cfg, memory=True, aux=True, spatial=True)).to(dev)
     critic = Critic(model.head.in_features).to(dev)
+    prior = None
+    if init and pc.prior > 0:
+        prior = load_model(init, cfg).to(dev).eval()
+        prior.requires_grad_(False)
     opt_a = torch.optim.Adam(model.parameters(), lr=pc.lr)
     opt_c = torch.optim.Adam(critic.parameters(), lr=pc.critic_lr)
     state_path = os.path.join(out, 'state.pt')
@@ -483,17 +508,17 @@ def run(out, init, pc=PPOCfg(), reward=None, cfg=DM, plan=None, envs=None, varia
     t_start, s_start = time.time(), step
     try:
         while step < pc.steps:
-            lr, ks_w = schedule(pc, step)
+            lr, ks_w, prior_w = schedule(pc, step)
             for g in opt_a.param_groups:
                 g['lr'] = lr
             frozen = step < pc.warmup
             t0 = time.time()
             roll = col.collect(model, critic, pc.horizon, reward)
             t1 = time.time()
-            u = update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg)
+            u = update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg, prior=prior, prior_w=prior_w)
             step += pc.n_envs * pc.horizon
             parts = roll['parts'].reshape(-1, N_PARTS).mean(0)
-            row = dict(kind='update', step=step, phase='warmup' if frozen else 'ppo', lr=lr, ks_w=ks_w,
+            row = dict(kind='update', step=step, phase='warmup' if frozen else 'ppo', lr=lr, ks_w=ks_w, prior_w=prior_w,
                        collect_s=t1 - t0, update_s=time.time() - t1,
                        fps=(step - s_start) / (time.time() - t_start), reward=float(roll['reward'].mean()),
                        **{'step_' + k: float(x) for k, x in zip(PARTS, parts)}, **u, **match_numbers(col.matches))

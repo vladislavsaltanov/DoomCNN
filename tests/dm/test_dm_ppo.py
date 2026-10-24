@@ -13,8 +13,8 @@ from doomagent.dm.config import DM
 from doomagent.dm.env import DMPrivileged
 from doomagent.dm.evaluate import stuck_steps
 from doomagent.dm.model import DMNet, split_logits
-from doomagent.dm.ppo import (REWARD, Collector, Critic, PPOCfg, gae, local_envs, schedule, stack_index,
-                              update)
+from doomagent.dm.ppo import (REWARD, Collector, Critic, PPOCfg, gae, local_envs, prior_kl, schedule,
+                              stack_index, update)
 from doomagent.dm.rlenv import N_PARTS, PARTS, PRIV_DIM, Runner, critic_vec, step_parts, stuck_now
 from doomagent.variants import BASE
 
@@ -145,13 +145,19 @@ def test_collect_and_update_train_the_policy_and_frozen_trains_the_critic_only()
     assert all(torch.equal(before[k], v) for k, v in model.state_dict().items()) and math.isfinite(out['v_loss'])
     roll = col.collect(model, critic, pc.horizon, REWARD)
     assert len(col.matches) == 2 and col.matches[0]['frags'] == 2.0
-    out = update(model, critic, opt_a, opt_c, roll, pc, 1.0, frozen=False, cfg=cfg)
+    prior = DMNet(cfg, memory=True, aux=True, spatial=True).eval()
+    out = update(model, critic, opt_a, opt_c, roll, pc, 1.0, frozen=False, cfg=cfg, prior=prior, prior_w=0.1)
     assert not torch.equal(before['head.weight'], model.state_dict()['head.weight'])
-    assert all(math.isfinite(out[k]) for k in ('pg', 'ks', 'aux', 'spatial', 'kl', 'agree_move'))
+    assert all(math.isfinite(out[k]) for k in ('pg', 'ks', 'aux', 'spatial', 'kl', 'agree_move', 'prior_kl'))
 
 
 def test_schedule_warms_up_then_anneals():
     pc = PPOCfg()
-    assert schedule(pc, 0) == (pc.lr, pc.ks)
-    lr, ks = schedule(pc, pc.steps)
-    assert lr == pytest.approx(pc.lr * pc.lr_end) and ks == pytest.approx(pc.ks_end)
+    assert schedule(pc, 0) == (pc.lr, pc.ks, pc.prior)
+    lr, ks, pw = schedule(pc, pc.steps)
+    assert lr == pytest.approx(pc.lr * pc.lr_end) and ks == pytest.approx(pc.ks_end) and pw == pytest.approx(pc.prior_end)
+
+
+def test_prior_kl_is_zero_at_the_start_and_positive_after():
+    lg = torch.randn(3, 5, 28)
+    assert prior_kl(lg, lg, 0.5).abs().max() < 1e-6 and (prior_kl(lg + torch.randn(3, 5, 28), lg) > 0).all()
