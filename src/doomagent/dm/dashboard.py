@@ -60,7 +60,7 @@ def dm_train(name):
 
 def _teacher_frags():
     # the teacher on the val matches: the final one (E3), else the E1 one
-    for p in ('reports/dm/e1_teacher_final.json', 'reports/dm/e1_teacher.json'):
+    for p in ('reports/dm/e1_teacher/e1_teacher_final.json', 'reports/dm/e1_teacher/e1_teacher.json'):
         frags = (_read_json(p) or {}).get('report', {}).get('teacher', {}).get('frags')
         if frags:
             return frags
@@ -177,7 +177,7 @@ def dm_neurons(run):
     kind = next((k for k in os.path.basename(run).split('_') if k in ('m0', 'm1')), None)
     if kind is None:
         return dict(images=[])
-    files = sorted(glob.glob(f'artifacts/dm/*_select_{kind}.png'), key=os.path.getmtime, reverse=True)
+    files = sorted(glob.glob(f'artifacts/dm/**/*_select_{kind}.png', recursive=True), key=os.path.getmtime, reverse=True)
     return dict(images=[dict(name=os.path.basename(f), mtime=os.path.getmtime(f)) for f in files])
 
 
@@ -274,8 +274,10 @@ def make_handler(dm, system=None):
                 return self._send(dm_neurons(q.get('run', '')))
             if u.path == '/artifact':
                 name = q.get('name', '')
-                path = os.path.join('artifacts', 'dm', name)
-                if re.fullmatch(r'[\w.-]+\.png', name) and '..' not in name and os.path.exists(path):
+                # artifacts sit in one folder per slice (artifacts/dm/e2_pilot/...): found by file name
+                found = glob.glob(f'artifacts/dm/**/{name}', recursive=True) if re.fullmatch(r'[\w.-]+\.png', name) else []
+                path = found[0] if found else ''
+                if path and '..' not in name:
                     with open(path, 'rb') as fh:
                         return self._send(fh.read(), 'image/png')
                 return self._send({'error': 'not found'}, code=404)

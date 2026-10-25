@@ -1,7 +1,7 @@
 """Paired frag differences between models of two dm_eval reports on the same plan (matched by variant and seed).
 
-    python scripts/dm/dm_compare_reports.py reports/dm/e4_fresh_phase4.json reports/dm/e4_fresh.json \
-        --pairs dm4_m1_sp:dm4_m1_aux dm4_m1_sp:dm3_m1_aux --out reports/dm/e4_phase4_vs_phase3.json
+    python scripts/dm/dm_compare_reports.py reports/dm/e4_bc/e4_fresh_phase4.json reports/dm/e4_bc/e4_fresh.json \
+        --pairs dm4_m1_sp:dm4_m1_aux dm4_m1_sp:dm3_m1_aux --out reports/dm/e4_bc/e4_phase4_vs_phase3.json
 """
 import argparse
 import json

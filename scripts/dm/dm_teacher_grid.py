@@ -3,7 +3,7 @@
 A value replaces the default only if the paired frag difference has its lower 95% bound above 0 and
 K/D does not drop.
 
-    python scripts/dm/dm_teacher_grid.py  ->  reports/dm/d1_grid.md
+    python scripts/dm/dm_teacher_grid.py  ->  reports/dm/v1/d1_teacher/d1_grid.md
 """
 import argparse
 import sys
@@ -21,7 +21,7 @@ GRID = {'safe_dist': (128.0, 224.0), 'chase_s': (1.0, 3.0), 'low_health': (30.0,
 if __name__ == '__main__':  # worker processes re-import this file
     ap = argparse.ArgumentParser()
     ap.add_argument('--workers', type=int, default=4)
-    ap.add_argument('--out', default='reports/dm/d1_grid.md')
+    ap.add_argument('--out', default='reports/dm/v1/d1_teacher/d1_grid.md')
     a = ap.parse_args()
     plan = [(BASE, VAL_SEEDS[:10])]
     base = evaluate_plan(plan, DMTeacher(DM), DM, workers=a.workers)

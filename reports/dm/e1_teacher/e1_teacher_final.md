@@ -1,6 +1,6 @@
 # E1: cheater teacher on the val matches (MAP02)
 
-Command: `python scripts/dm/dm_teacher_report.py --diag runs/dm/diag_final_val.json --workers 4 --out reports/dm/e1_teacher_final`
+Command: `python scripts/dm/dm_teacher_report.py --diag runs/dm/diag_final_val.json --workers 4 --out reports/dm/e1_teacher/e1_teacher_final`
 
 Matches: 20 (base graphics, VAL_SEEDS)
 

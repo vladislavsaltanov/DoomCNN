@@ -8,7 +8,7 @@ applies stop_rule. Finished recordings and trainings are skipped, so the script 
     python scripts/dm/dm_rounds.py --tag sp_w5 --start runs/dm/dagger_sp_r2.pt --spatial 1.0 --dagger-weight 5 \
         --prior-data data/dm/dagger_aux_r1 data/dm/dagger_sp_r2 --first-round 3
 
-Every round's model then plays the fresh seeds (reports/dm/e5_fresh_<tag>.json): the val choice is noisy.
+Every round's model then plays the fresh seeds (reports/dm/e5_dagger/e5_fresh_<tag>.json): the val choice is noisy.
 """
 import argparse
 import json
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         if stop:
             break
     # every round's model on the fresh seeds, paired later with e4_fresh.json (the same matches)
-    fresh = f'reports/dm/e5_fresh_{a.tag}.json'
+    fresh = f'reports/dm/e5_dagger/e5_fresh_{a.tag}.json'
     if not os.path.exists(fresh):
         run(py + ['scripts/dm/dm_eval.py', '--models', *models[1:], '--plan', 'fresh', '--workers', '4',
                   '--out', fresh],

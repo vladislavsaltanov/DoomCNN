@@ -1,4 +1,4 @@
-"""E6 curves of a PPO run (reports/dm/e6_<run>.png) from its log.jsonl; works while the run goes on.
+"""E6 curves of a PPO run (reports/dm/e6_ppo/e6_<run>.png) from its log.jsonl; works while the run goes on.
 
     python scripts/dm/dm_e6_report.py runs/dm/ppo_ks
 """
@@ -17,6 +17,6 @@ if __name__ == '__main__':
     a = ap.parse_args()
     with open(os.path.join(a.run, 'log.jsonl')) as fh:
         rows = [json.loads(line) for line in fh if line.strip()]
-    out = a.out or f'reports/dm/e6_{os.path.basename(os.path.normpath(a.run))}.png'
+    out = a.out or f'reports/dm/e6_ppo/e6_{os.path.basename(os.path.normpath(a.run))}.png'
     ppo_figure(rows, out, TEACHER_VAL)
     print(out)

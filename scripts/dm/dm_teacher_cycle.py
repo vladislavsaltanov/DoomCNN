@@ -1,6 +1,6 @@
 """One step of the teacher improvement cycle (plan v2, decision 9): a candidate change against the accepted
 teacher on the val seeds, then on the fresh seeds; accepted only if the lower bound of the paired frag
-difference on the fresh seeds is above 0. Appends a row to reports/dm/e1_teacher_cycle.md.
+difference on the fresh seeds is above 0. Appends a row to reports/dm/e1_teacher/e1_teacher_cycle.md.
 
     python scripts/dm/dm_teacher_cycle.py --name hitscan_tol --base "" --cand "hitscan_tol=3.0" [--why "..."]
 
@@ -18,7 +18,7 @@ import numpy as np
 
 from doomagent.evaluate import bootstrap_ci
 
-OUT = 'reports/dm/e1_teacher_cycle.md'
+OUT = 'reports/dm/e1_teacher/e1_teacher_cycle.md'
 FRESH_N = 40  # all FRESH_SEEDS: 20 matches leave a ±1.8 frag interval, too wide for most changes
 HEAD = ['# E1: teacher improvement cycle', '',
         'Each row: one change against the accepted teacher; 20 val matches, then 40 fresh matches (FRESH_SEEDS), '

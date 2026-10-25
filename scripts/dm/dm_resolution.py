@@ -1,7 +1,7 @@
 """Does 160x120 show bots wide enough? Teacher frags when it may not shoot bots narrower than w px,
 and the widths of the bots it does shoot.
 
-    python scripts/dm/dm_resolution.py  ->  reports/dm/d1_resolution.md, reports/dm/d1_resolution.png
+    python scripts/dm/dm_resolution.py  ->  reports/dm/v1/d1_teacher/d1_resolution.md, reports/dm/v1/d1_teacher/d1_resolution.png
 """
 import argparse
 import sys
@@ -46,7 +46,7 @@ class WidthLog:
 if __name__ == '__main__':  # worker processes re-import this file
     ap = argparse.ArgumentParser()
     ap.add_argument('--workers', type=int, default=4)
-    ap.add_argument('--out', default='reports/dm/d1_resolution')
+    ap.add_argument('--out', default='reports/dm/v1/d1_teacher/d1_resolution')
     a = ap.parse_args()
     plan = val_plan()
     res = {}

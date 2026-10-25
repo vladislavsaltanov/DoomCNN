@@ -33,4 +33,4 @@ Teacher on CHECK_SEEDS (6 matches per variant). Base: frags 14.00 [10.00, 17.67]
 
 26 of 26 variants kept.
 
-![variants](../../artifacts/dm/e3_variants.png)
+![variants](../../../artifacts/dm/e3_data/e3_variants.png)

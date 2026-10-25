@@ -1,6 +1,6 @@
 """The teacher's navigation grid on cig MAP01: walkable cells, walls, the patrol ring and one A* path.
 
-    python scripts/dm/dm_navgrid_png.py --out artifacts/dm/d1_navgrid.png
+    python scripts/dm/dm_navgrid_png.py --out artifacts/dm/v1/d1_teacher/d1_navgrid.png
 """
 import argparse
 from dataclasses import replace
@@ -14,7 +14,7 @@ from doomagent.dm.minimap import PATH, MapView
 from doomagent.dm.nav import NavGrid
 
 ap = argparse.ArgumentParser()
-ap.add_argument('--out', default='artifacts/dm/d1_navgrid.png')
+ap.add_argument('--out', default='artifacts/dm/v1/d1_teacher/d1_navgrid.png')
 a = ap.parse_args()
 env = DeathmatchEnv(replace(DM, bots=0, timelimit=0.1))
 env.reset(VAL_SEEDS[0])

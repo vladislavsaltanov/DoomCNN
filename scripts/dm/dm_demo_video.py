@@ -1,7 +1,7 @@
 """Demo video: the teacher, then each model, on the first seconds of the same match.
 
     python scripts/dm/dm_demo_video.py --models runs/dm/m0_pilot.pt runs/dm/m1_pilot.pt --seed 35000 \
-        --seconds 40 --out artifacts/dm/d2_demo.mp4 --brain-out artifacts/dm/d2_brain_m1.mp4
+        --seconds 40 --out artifacts/dm/v1/d2_pilot/d2_demo.mp4 --brain-out artifacts/dm/v1/d2_pilot/d2_brain_m1.mp4
 
 1280x720 at 35 frames per second: a 1.5 s title, then the game (boxes, status bar) on the left; on
 the right the minimap, the ten action probabilities (the teacher's mode for the teacher), the

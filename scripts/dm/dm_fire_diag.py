@@ -2,7 +2,7 @@
 a straight 3D line from the gun to the target's body passes every opening on the way, and whether the
 shot hit (HITCOUNT rose this step). Also how often a bot label sits behind a wall.
 
-    python scripts/dm/dm_fire_diag.py [--seeds val|fresh] [--n 10] [--out reports/dm/fire_diag] [--set key=value ...]
+    python scripts/dm/dm_fire_diag.py [--seeds val|fresh] [--n 10] [--out reports/dm/e3_data/fire_diag] [--set key=value ...]
 """
 import argparse
 import json
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('--seeds', choices=['val', 'fresh'], default='val')
     ap.add_argument('--n', type=int, default=10)
-    ap.add_argument('--out', default='reports/dm/fire_diag')
+    ap.add_argument('--out', default='reports/dm/e3_data/fire_diag')
     ap.add_argument('--set', nargs='*', default=[])
     a = ap.parse_args()
     seeds = list(VAL_SEEDS[:a.n]) if a.seeds == 'val' else list(FRESH_SEEDS[:a.n])

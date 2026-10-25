@@ -1,7 +1,7 @@
 """The cheater teacher and a random player on the 20 val matches (base graphics), Gate A v2.1.
 
     python scripts/dm/dm_teacher_report.py --diag runs/dm/diag_<name>.json [--set name=value ...] [--workers 4]
-    ->  reports/dm/e1_teacher.md, reports/dm/e1_teacher.png, reports/dm/e1_teacher.json
+    ->  reports/dm/e1_teacher/e1_teacher.md, reports/dm/e1_teacher/e1_teacher.png, reports/dm/e1_teacher/e1_teacher.json
 
 --diag is a dm_teacher_diag.py run of the same teacher (death causes and hits by weapon for the figure).
 The version 1.1 report (MAP01, Gate A) is at the tag deathmatch-v1.
@@ -39,7 +39,7 @@ if __name__ == '__main__':  # worker processes re-import this file
     ap.add_argument('--set', nargs='*', default=[])
     ap.add_argument('--diag', required=True)
     ap.add_argument('--workers', type=int, default=4)
-    ap.add_argument('--out', default='reports/dm/e1_teacher')
+    ap.add_argument('--out', default='reports/dm/e1_teacher/e1_teacher')
     a = ap.parse_args()
     cfg = with_overrides(DM, a.set)
     plan = [(BASE, VAL_SEEDS)]

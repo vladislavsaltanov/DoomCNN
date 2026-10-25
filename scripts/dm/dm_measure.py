@@ -1,7 +1,7 @@
 """E0 measurements on cig MAP02: turns and moves per step, the next-weapon key and auto-switch on pickup,
 projectile speeds, map specials (doors, lifts), repeatability, time per step and bot strength.
 
-    python scripts/dm/dm_measure.py   ->  reports/dm/e0_env.md, reports/dm/e0_env.png, reports/dm/e0_env.json
+    python scripts/dm/dm_measure.py   ->  reports/dm/e0_env/e0_env.md, reports/dm/e0_env/e0_env.png, reports/dm/e0_env/e0_env.json
 
 The D0 version for MAP01 is at the tag deathmatch-v1.
 """
@@ -169,10 +169,10 @@ if __name__ == '__main__':  # evaluation workers re-import this file
     out = dict(turns=t_turn, moves=t_move, weapon_walks=walks, projectiles=speeds, map=specials(),
                repeat=repeat(VAL_SEEDS[2]), ms_per_step=round(ms, 2), bots=bots,
                bot_frags=[r['bot_frags'] for r in res])
-    os.makedirs('reports/dm', exist_ok=True)
-    with open('reports/dm/e0_env.json', 'w') as fh:
+    os.makedirs('reports/dm/e0_env', exist_ok=True)
+    with open('reports/dm/e0_env/e0_env.json', 'w') as fh:
         json.dump(out, fh, indent=1)
-    e0_figure(t_turn, t_move, bots, 'reports/dm/e0_env.png')
+    e0_figure(t_turn, t_move, bots, 'reports/dm/e0_env/e0_env.png')
     worst = max(abs(v - k) for k, v in t_turn.items())
     ok_walks = [w for w in walks if 'auto_switch' in w]
     ci = lambda d: f"{d['mean']:.2f} [{d['lo']:.2f}, {d['hi']:.2f}]"  # noqa: E731
@@ -192,6 +192,6 @@ if __name__ == '__main__':  # evaluation workers re-import this file
              f'Random player on VAL_SEEDS[:{a.matches}]: player {ci(bots["player"])}, median bot '
              f'{ci(bots["bot_median"])}, best bot {ci(bots["bot_best"])} frags per match.', '',
              '![e0](e0_env.png)', '']
-    with open('reports/dm/e0_env.md', 'w', encoding='utf-8') as fh:
+    with open('reports/dm/e0_env/e0_env.md', 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(lines))
-    print('written reports/dm/e0_env.{md,png,json}; worst turn error %.3f' % worst)
+    print('written reports/dm/e0_env/e0_env.{md,png,json}; worst turn error %.3f' % worst)

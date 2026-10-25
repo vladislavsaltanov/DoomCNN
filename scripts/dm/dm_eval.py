@@ -1,7 +1,7 @@
 """Students and the teacher on the same matches: summary per model, paired frag differences with the teacher,
 M1 against M0 (every M1 model with every M0 model).
 
-    python scripts/dm/dm_eval.py --models runs/dm/dm2_m0_r0.pt runs/dm/dm2_m1_r0.pt --plan val --teacher --out reports/dm/e4_val.json
+    python scripts/dm/dm_eval.py --models runs/dm/dm2_m0_r0.pt runs/dm/dm2_m1_r0.pt --plan val --teacher --out reports/dm/e4_bc/e4_val.json
 """
 import argparse
 import json

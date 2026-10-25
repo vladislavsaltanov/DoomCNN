@@ -1,4 +1,4 @@
-"""E2 pilot report: reports/dm/e2_pilot.md and reports/dm/e2_pilot.png from the two pilot runs (four heads).
+"""E2 pilot report: reports/dm/e2_pilot/e2_pilot.md and reports/dm/e2_pilot/e2_pilot.png from the two pilot runs (four heads).
 
     python scripts/dm/dm_pilot_report.py
 """
@@ -18,8 +18,8 @@ def load(p):
 
 
 meta = load('data/dm/pilot/meta.json')
-teacher = load('reports/dm/e1_teacher.json')['report']['teacher']['frags']
-curves_figure({k: v + '.log.json' for k, v in RUNS.items()}, 'reports/dm/e2_pilot.png', teacher=teacher,
+teacher = load('reports/dm/e1_teacher/e1_teacher.json')['report']['teacher']['frags']
+curves_figure({k: v + '.log.json' for k, v in RUNS.items()}, 'reports/dm/e2_pilot/e2_pilot.png', teacher=teacher,
               confusion_of=RUNS['m1'] + '.live.json', head='turn')
 lines = ['# E2: pilot M0 and M1 with four heads', '',
          f'Data: data/dm/pilot, {meta["matches"]} teacher matches, {meta["steps"]} steps '
@@ -45,6 +45,6 @@ lines += ['', 'Held-out accuracy per head (best epoch) against the share of its 
 for h in HEADS:
     lines.append(f'| {h} | ' + ' | '.join(f'{heads[h][k][0]:.2f}' for k in RUNS) + f' | {heads[h]["m0"][1]:.2f} |')
 lines += ['', '![curves](e2_pilot.png)', '']
-with open('reports/dm/e2_pilot.md', 'w', encoding='utf-8') as fh:
+with open('reports/dm/e2_pilot/e2_pilot.md', 'w', encoding='utf-8') as fh:
     fh.write('\n'.join(lines))
-print('written reports/dm/e2_pilot.md, reports/dm/e2_pilot.png')  # the table has arrows a cp1251 console cannot print
+print('written reports/dm/e2_pilot/e2_pilot.md, reports/dm/e2_pilot/e2_pilot.png')  # the table has arrows a cp1251 console cannot print

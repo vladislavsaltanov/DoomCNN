@@ -4,8 +4,8 @@
 
 A variant is disabled (disabled, reason in its JSON) if the teacher's frags fall below 0.7 of the
 base on CHECK_SEEDS, or if a tex or mix variant changes the network frame by less than 8 on average.
-Writes artifacts/dm/e3_variants.png (one 320x240 frame per variant with a bot on screen) and
-reports/dm/e3_variants.md.
+Writes artifacts/dm/e3_data/e3_variants.png (one 320x240 frame per variant with a bot on screen) and
+reports/dm/e3_data/e3_variants.md.
 """
 import argparse
 import json
@@ -104,8 +104,8 @@ if __name__ == '__main__':  # evaluation workers re-import this file
         rows.append(f'| {v.name} | {v.split} | {v.kind} | {f["mean"]:.2f} [{f["lo"]:.2f}, {f["hi"]:.2f}] | '
                     f'{f["mean"] / base:.2f} | {by[v.name]["kd_total"]:.2f} | {diff:.1f} | {reason or "ok"} |')
         print(rows[-1], flush=True)
-    os.makedirs('artifacts/dm', exist_ok=True)
-    grid(tiles, 'artifacts/dm/e3_variants.png')
+    os.makedirs('artifacts/dm/e3_data', exist_ok=True)
+    grid(tiles, 'artifacts/dm/e3_data/e3_variants.png')
     b = by['base']
     head = ['# E3: graphics variants of cig MAP02', '',
             f'Teacher on CHECK_SEEDS ({len(CHECK_SEEDS)} matches per variant). Base: frags '
@@ -115,7 +115,7 @@ if __name__ == '__main__':  # evaluation workers re-import this file
             '| variant | split | kind | frags [95% CI] | of base | K/D | frame diff | status |',
             '|---|---|---|---|---|---|---|---|']
     ok = sum(r.endswith('| ok |') for r in rows)
-    with open('reports/dm/e3_variants.md', 'w', encoding='utf-8') as fh:
+    with open('reports/dm/e3_data/e3_variants.md', 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(head + rows + ['', f'{ok} of {len(rows)} variants kept.',
-                                          '', '![variants](../../artifacts/dm/e3_variants.png)', '']))
-    print(f'{ok} of {len(rows)} variants kept; written reports/dm/e3_variants.md, artifacts/dm/e3_variants.png')
+                                          '', '![variants](../../../artifacts/dm/e3_data/e3_variants.png)', '']))
+    print(f'{ok} of {len(rows)} variants kept; written reports/dm/e3_data/e3_variants.md, artifacts/dm/e3_data/e3_variants.png')
