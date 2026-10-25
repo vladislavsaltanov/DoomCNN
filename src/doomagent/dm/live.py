@@ -2,6 +2,7 @@
 on the CPU (training keeps the GPU). The teacher also plays in the shadow of every network step:
 it sees the same obs and priv and gives its label, the network gets frames, vec and first only.
 """
+import glob
 import os
 import threading
 import time
@@ -16,6 +17,15 @@ from doomagent.dm.config import DM, VARIANTS_DIR
 JPEG = [cv2.IMWRITE_JPEG_QUALITY, 82]
 WATCH_S = 3.0  # the network and memory views are drawn only while someone pulled them this recently
 BRAIN_EVERY_S = 0.4  # trace() runs ten backward passes: at most this often
+PLACE_EVERY_S = 6.0  # the live place maps are redrawn this often
+AUTO = 'auto'        # the player 'the newest network': the freshest model file, reloaded at every match start
+
+
+def newest_model():
+    # the most recently written model: BC and DAgger models in runs/dm, a PPO run's latest.pt or best.pt, the E6 copies
+    found = (glob.glob('runs/dm/*.pt') + glob.glob('runs/dm/*/latest.pt') + glob.glob('runs/dm/*/best.pt')
+             + glob.glob('runs/dm/e6/*.pt'))
+    return max(found, key=os.path.getmtime).replace(os.sep, '/') if found else 'teacher'
 
 
 def describe(a):
@@ -33,7 +43,9 @@ class DMLive:
         self.cfg, self.lock = cfg, threading.Lock()
         self.req = dict(model='teacher', variant='base', seed=35000, speed=1.0, running=False,
                         boxes=True, hud=True)
-        self.screen = self.map = self.brain = self.memory = None
+        self.screen = self.map = self.brain = self.memory = self.place = None
+        # live place maps (dm.liveplace) of the model file playing: a fresher save of the same file keeps adding up
+        self.places, self.places_of = None, None
         self.seen = dict(brain=0.0, memory=0.0)  # when a viewer last pulled each view
         self.state = dict(status='остановлено')
         self.history = deque(maxlen=30)
@@ -81,16 +93,17 @@ class DMLive:
                     self.state = dict(status='запуск ViZDoom...')
                     env = DeathmatchEnv(self.cfg, get_variant(req['variant'], VARIANTS_DIR))
                     env_name = req['variant']
-                key = (req['model'], os.path.getmtime(req['model']) if req['model'] != 'teacher' else 0)
+                path = newest_model() if req['model'] == AUTO else req['model']
+                key = (path, os.path.getmtime(path) if path != 'teacher' else 0)
                 if key != loaded:
                     self.state = dict(status='загрузка модели...')
-                    agent, loaded = self._agent(req['model']), key
+                    agent, loaded = self._agent(path), key
             except Exception as e:  # a bad model path or a broken variant
                 self.state = dict(status=f'ошибка: {e}')
                 with self.lock:
                     self.req['running'] = False
                 continue
-            self._match(env, agent, teacher, hud, req, env_name)
+            self._match(env, agent, teacher, hud, dict(req, model=path), env_name)
 
     def _match(self, env, agent, teacher, hud, req, env_name):
         from doomagent.dm.brain import render, trace
@@ -99,6 +112,13 @@ class DMLive:
         seed = int(req['seed'])
         obs, done, step = env.reset(seed), False, 0
         mapview = MapView(env.sectors)
+        if self.places is None:
+            from doomagent.dm.liveplace import PlaceMaps
+            self.places = PlaceMaps(env.sectors)
+        if self.places_of != req['model']:  # another model file: its place maps start over
+            self.places.reset()
+            self.places_of = req['model']
+        last_place = time.time()
         teacher.reset()
         if agent is not None:
             agent.reset()
@@ -138,6 +158,12 @@ class DMLive:
                     with self.lock:
                         self.memory = m
             prev = priv
+            self.places.add(priv.px, priv.py, None if info is None else info['h'])
+            if time.time() - last_place > PLACE_EVERY_S:
+                pl = _jpg(self.places.render())
+                last_place = time.time()
+                with self.lock:
+                    self.place = pl
             same = [int(a) == int(b) for a, b in zip(action, label)]
             for h, ok in zip(HEADS + ('all',), same + [all(same)]):
                 agree[h] += ok

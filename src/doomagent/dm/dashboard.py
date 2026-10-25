@@ -10,6 +10,7 @@ import glob
 import json
 import os
 import re
+import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -193,7 +194,51 @@ def dm_options():
         variants += [v.name for v in load_variants(root=VARIANTS_DIR)]
     except Exception:  # no deathmatch variants yet (D3)
         pass
-    return dict(models=['teacher'] + [m.replace('\\', '/') for m in models], variants=variants)
+    return dict(models=['auto', 'teacher'] + [m.replace('\\', '/') for m in models], variants=variants)
+
+
+_FIG_LOCK, _FIG_CACHE = threading.Lock(), {}
+
+
+def ppo_runs():
+    # PPO runs (runs/dm/<run>/log.jsonl), the most recently written first, with their last numbers
+    out = []
+    for p in sorted(glob.glob('runs/dm/*/log.jsonl'), key=os.path.getmtime, reverse=True):
+        run = os.path.basename(os.path.dirname(p))
+        last = ev = None
+        try:
+            with open(p, encoding='utf-8') as fh:
+                for line in fh:
+                    if '"kind": "eval"' in line:
+                        ev = line
+                    last = line
+            last, ev = json.loads(last) if last else None, json.loads(ev) if ev else None
+        except (OSError, ValueError):
+            pass
+        out.append(dict(run=run, mtime=os.path.getmtime(p), step=last and last.get('step'),
+                        val=ev and ev.get('val_score'), val_step=ev and ev.get('step')))
+    return out
+
+
+def ppo_figure_png(run):
+    # the PPO curves of a run (reports.ppo_figure) as PNG bytes, redrawn when its log grows; matplotlib is not
+    # thread-safe, so one drawing at a time
+    p = os.path.join('runs', 'dm', run, 'log.jsonl')
+    if not re.fullmatch(r'[\w.-]+', run) or not os.path.exists(p):
+        return None
+    key = (run, os.path.getmtime(p))
+    with _FIG_LOCK:
+        if key not in _FIG_CACHE:
+            import tempfile
+            from doomagent.dm.reports import ppo_figure
+            with open(p, encoding='utf-8') as fh:
+                rows = [json.loads(line) for line in fh if line.strip()]
+            tmp = os.path.join(tempfile.gettempdir(), f'dm_ppo_{run}.png')
+            ppo_figure(rows, tmp, 11.90)
+            with open(tmp, 'rb') as fh:
+                _FIG_CACHE.clear()
+                _FIG_CACHE[key] = fh.read()
+        return _FIG_CACHE[key]
 
 
 def make_handler(dm, system=None):
@@ -267,8 +312,11 @@ def make_handler(dm, system=None):
                 w, k = q.get('w', ''), q.get('k', '')
                 path = os.path.join(LIVE_DIR, f'{w}.{k}.jpg')
                 if re.fullmatch(r'[\w-]+', w) and k in ('screen', 'map') and os.path.exists(path):
-                    with open(path, 'rb') as fh:
-                        return self._send(fh.read(), 'image/jpeg')
+                    try:
+                        with open(path, 'rb') as fh:
+                            return self._send(fh.read(), 'image/jpeg')
+                    except OSError:  # the worker is replacing the file this instant (Windows): the next poll gets it
+                        pass
                 return self._send({'error': 'not found'}, code=404)
             if u.path == '/api/neurons':
                 return self._send(dm_neurons(q.get('run', '')))
@@ -283,6 +331,15 @@ def make_handler(dm, system=None):
                 return self._send({'error': 'not found'}, code=404)
             if u.path == '/api/system':
                 return self._send(dict(now=system.now if system else {}))
+            if u.path == '/api/place.jpg':  # the live game's place maps (dm.liveplace), redrawn every few seconds
+                with dm.lock:
+                    img = dm.place
+                return self._send(img, 'image/jpeg') if img else self._send({'error': 'not yet'}, code=404)
+            if u.path == '/api/ppo':
+                return self._send(dict(runs=ppo_runs()))
+            if u.path == '/api/ppo/figure.png':
+                png = ppo_figure_png(q.get('run', ''))
+                return self._send(png, 'image/png') if png else self._send({'error': 'no run'}, code=404)
             return self._send({'error': 'not found'}, code=404)
 
     return H

@@ -148,9 +148,15 @@
       <div class="note">вход и что влияет на движение и поворот, карты свёрток, 512 нейронов, вклад вектора, три самых вероятных значения каждой из четырёх голов. Только для сети, не для учителя.</div></div>
     <div class="card"><h2>Память M1</h2><img class="view" id="memimg" data-view="memory" alt="растр памяти">
       <div class="note" id="memnote">512 ячеек GRU за последние 20 с; есть только у M1</div></div>
+    <div class="card"><h2>Живая карта: где бывает сеть и её нейроны места</h2><img class="view" id="placeimg" alt="живая карта нейронов">
+      <div class="note">копится по матчам «Живой игры» одной сети (свежая сеть из того же файла продолжает копить): слева посещения клеток 64×64, справа три нейрона GRU, сильнее всего привязанных к месту на карте. Обновляется раз в несколько секунд, пока идёт игра</div></div>
   </section>
 
   <section class="col">
+    <div class="card"><h2>PPO — кривые обучения в реальном времени</h2>
+      <div class="row" style="margin-top:0"><label>прогон <select id="pporun"><option value="auto">последний (авто)</option></select></label><span class="note" id="ppoinfo"></span></div>
+      <img class="view" id="ppoimg" alt="кривые PPO">
+      <div class="note">val и фраги по оценкам, фраги и застревание в учебных матчах, совпадение с учителем, потери, KL и энтропия; перерисовывается, когда журнал прогона растёт</div></div>
     <div class="card">
       <h2>Обучение</h2>
       <div class="row" style="margin-top:0"><label>прогон <select id="run"></select></label><span class="note" id="runinfo"></span></div>
@@ -348,7 +354,7 @@ async function api(p) { const r = await fetch(p); return r.json(); }
 async function loadOptions() {
   opts = await api('/api/options');
   const sel = $('model'), cur = sel.value;
-  sel.innerHTML = opts.models.map(m => `<option value="${m}">${m === 'teacher' ? 'учитель' : m.replace('runs/dm/', '')}</option>`).join('');
+  sel.innerHTML = opts.models.map(m => `<option value="${m}">${m === 'teacher' ? 'учитель' : m === 'auto' ? 'самая свежая сеть (авто)' : m.replace('runs/dm/', '')}</option>`).join('');
   if (cur && opts.models.includes(cur)) sel.value = cur;
   $('variant').innerHTML = opts.variants.map(v => `<option>${v}</option>`).join('');
 }
@@ -558,6 +564,32 @@ async function tickSys() {
 
 loadOptions(); loadRuns().then(tickTrain).then(loadNeurons);
 $('run').addEventListener('change', loadNeurons);
+// the live place maps: a picture redrawn by the server every few seconds while the live game runs
+function tickPlace() {
+  const img = $('placeimg');
+  if (!streamsOn) return;
+  img.onerror = () => img.removeAttribute('src');
+  img.src = '/api/place.jpg?t=' + Date.now();
+}
+// PPO curves of the newest run (or the chosen one)
+let ppoRuns = [];
+async function tickPPO() {
+  let d;
+  try { d = await api('/api/ppo'); } catch (e) { return; }
+  const sel = $('pporun'), cur = sel.value, names = d.runs.map(r => r.run);
+  if (names.join() !== ppoRuns.join()) {
+    sel.innerHTML = '<option value="auto">последний (авто)</option>' + names.map(n => `<option>${n}</option>`).join('');
+    sel.value = names.includes(cur) ? cur : 'auto';
+    ppoRuns = names;
+  }
+  const r = sel.value === 'auto' ? d.runs[0] : d.runs.find(x => x.run === sel.value);
+  if (!r) { $('ppoinfo').textContent = 'прогонов PPO нет'; return; }
+  $('ppoinfo').textContent = `${r.run} · шаг ${(r.step || 0).toLocaleString('ru')}` +
+    (r.val != null ? ` · последняя оценка val ${fmt(r.val)} на ${(r.val_step || 0).toLocaleString('ru')}` : '');
+  $('ppoimg').src = `/api/ppo/figure.png?run=${encodeURIComponent(r.run)}&t=${Math.round(r.mtime)}`;
+}
+$('pporun').onchange = tickPPO;
+setInterval(tickPlace, 5000); setInterval(tickPPO, 20000); tickPPO();
 setInterval(tickRecord, 1000); tickRecord();
 setInterval(tickLive, 700); setInterval(tickTrain, 5000); setInterval(tickSys, 3000);
 setInterval(loadRuns, 15000); setInterval(loadOptions, 30000);
