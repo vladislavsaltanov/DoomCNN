@@ -38,9 +38,12 @@ def compare(results, kinds):
 
 if __name__ == '__main__':  # worker processes re-import this file
     ap = argparse.ArgumentParser()
-    ap.add_argument('--models', nargs='+', required=True)
-    ap.add_argument('--plan', choices=['val', 'fresh', 'confirm'], default='val')
+    ap.add_argument('--models', nargs='*', default=[])
+    ap.add_argument('--plan', choices=['val', 'fresh', 'confirm', 'test'], default='val')
     ap.add_argument('--teacher', action='store_true')
+    ap.add_argument('--random', action='store_true', help='also the random player (evaluate.RandomChooser)')
+    ap.add_argument('--no-memory', nargs='*', default=[], metavar='MODEL',
+                    help='also these M1 models with the memory zeroed at every step (named <model>_nomem)')
     ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
@@ -48,7 +51,9 @@ if __name__ == '__main__':  # worker processes re-import this file
     from doomagent.dm.model import load_model
     from doomagent.dm.teacher import DMTeacher
     from doomagent.variants import BASE
-    plan = {'val': val_plan, 'fresh': fresh_plan, 'confirm': lambda: [(BASE, CONFIRM_SEEDS)]}[a.plan]()
+    from doomagent.dm.config import test_plans
+    plan = {'val': val_plan, 'fresh': fresh_plan, 'confirm': lambda: [(BASE, CONFIRM_SEEDS)],
+            'test': lambda: test_plans()['id'] + test_plans()['ood']}[a.plan]()
     results, kinds = {}, {}
     if a.teacher:
         results['teacher'] = evaluate_plan(plan, DMTeacher(DM), DM, workers=a.workers)
@@ -58,6 +63,16 @@ if __name__ == '__main__':  # worker processes re-import this file
         kinds[name] = 'm1' if m.memory else 'm0'
         results[name] = evaluate_plan(plan, DMChooser(m.state_dict(), m.memory, DM), DM, workers=a.workers)
         print(name, 'frags', round(summarize(results[name])['frags']['mean'], 2), flush=True)
+    for path in a.no_memory:  # the memory question: the same network with its GRU state zeroed before every step
+        m = load_model(path, DM)
+        name = os.path.splitext(os.path.basename(path))[0] + '_nomem'
+        kinds[name] = 'm1'
+        results[name] = evaluate_plan(plan, DMChooser(m.state_dict(), m.memory, DM, reset_every_step=True), DM,
+                                      workers=a.workers)
+        print(name, 'frags', round(summarize(results[name])['frags']['mean'], 2), flush=True)
+    if a.random:
+        from doomagent.dm.evaluate import RandomChooser
+        results['random'] = evaluate_plan(plan, RandomChooser(), DM, workers=a.workers)
     out = compare(results, kinds)
     out.update(plan=a.plan, matches=sum(len(s) for _, s in plan), models_paths=a.models,
                per_match={n: [dict(variant=r['variant'], seed=r['seed'], frags=r['frags'], deaths=r['deaths'])
