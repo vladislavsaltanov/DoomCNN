@@ -46,7 +46,7 @@ def test_finetune_smoke_keeps_a_best_checkpoint(tmp_path):
 
 
 def test_flip_penalty_only_for_reversals_with_no_enemy():
-    # orchestrator decision: penalise left/right reversals while no enemy is on screen
+    # S7 decision: penalise left/right reversals while no enemy is on screen
     from doomagent.config import FINE_RIGHT, SHOOT, TURN_LEFT, TURN_RIGHT
     from doomagent.ppo import FlipPenalty
     f = FlipPenalty(0.1)
