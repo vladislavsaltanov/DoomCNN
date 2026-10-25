@@ -15,11 +15,12 @@ if __name__ == '__main__':
     ap.add_argument('--out', required=True)
     ap.add_argument('--scratch', action='store_true', help='a fresh model, no anchor, no warm-up, lr 2.5e-4')
     ap.add_argument('--reward', action='append', default=[], metavar='PART=W',
-                    help='weight of a reward part (frag, death, damage, item, weapon, stuck)')
+                    help='weight of a reward part (dm.rlenv.PARTS: frag, death, damage, ..., region, region_stay)')
     ap.add_argument('--no-eval', action='store_true', help='no val matches (smoke runs)')
     num = dict(steps=int, n_envs=int, horizon=int, warmup=int, lr=float, critic_lr=float, ks=float, ks_end=float,
-               ks_steps=int, prior=float, prior_end=float, temp=float, ent=float, clip=float, epochs=int,
-               mb_windows=int, eval_every=int, ckpt_every=int, eval_workers=int, base_share=float, gamma=float, seed=int)
+               ks_steps=int, prior=float, prior_end=float, temp=float, warp_p=float, ent=float, clip=float,
+               epochs=int, mb_windows=int, eval_every=int, ckpt_every=int, eval_workers=int, base_share=float,
+               gamma=float, seed=int)
     for k, t in num.items():
         ap.add_argument('--' + k.replace('_', '-'), type=t)
     a = ap.parse_args()

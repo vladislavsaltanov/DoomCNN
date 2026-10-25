@@ -45,6 +45,7 @@ class DMCfg:
     target: str = 'dist'       # 'dist': nearest bot; 'angle': nearest the crosshair, kept while seen
     run: bool = False          # the player always runs (+cl_run 1), as fast as the bots; set on every game
     autoaim: bool = False      # Doom's vertical autoaim for the player (sv_noautoaim 0): shots over steps
+    cheats: bool = False       # sv_cheats 1: lets PPO training move the player (DeathmatchEnv.teleport); never in evaluation
     depth: bool = False        # read the depth buffer for the coarse depth target (dm.auxtargets); recording only
     min_vis_px: float = 50.0   # a bot with fewer pixels on the 640x480 render is not seen (hidden by a wall or a sliver); 0: off (E3 fix: +1.65 [-0.05, +3.15] on 40 fresh seeds)
     seg_len: int = 32          # M1 training windows, steps

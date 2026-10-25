@@ -15,8 +15,8 @@ from doomagent.dm.evaluate import stuck_steps
 from doomagent.dm.model import DMNet, split_logits
 from doomagent.dm.ppo import (REWARD, Collector, Critic, PPOCfg, gae, local_envs, prior_kl, schedule,
                               stack_index, update)
-from doomagent.dm.rlenv import (CELL, LINGER_STEPS, N_PARTS, PARTS, PRIV_DIM, REVISIT_STEPS, Runner, critic_vec,
-                                explore_step, step_parts, stuck_now)
+from doomagent.dm.rlenv import (CELL, LINGER_STEPS, N_PARTS, PARTS, PRIV_DIM, REGION_SIZE, REGION_STAY_STEPS,
+                                REVISIT_STEPS, Regions, Runner, critic_vec, explore_step, step_parts, stuck_now)
 from doomagent.variants import BASE
 
 
@@ -84,7 +84,7 @@ def priv(**kw):
 
 def test_step_parts():
     p = priv()
-    assert step_parts(p, priv(frags=1.0, damage=40.0), False, 1.0).tolist() == [1, 0, 40, 0, 0, 0, 0, 0, 0, 0]
+    assert step_parts(p, priv(frags=1.0, damage=40.0), False, 1.0).tolist() == [1, 0, 40] + [0] * (N_PARTS - 3)
     assert step_parts(p, priv(health=125.0), False, 0.0)[PARTS.index('item')] == 1
     assert step_parts(p, priv(health=125.0, deaths=1.0), True, 0.0)[[1, 3]].tolist() == [1, 0]  # a respawn: no pickup
     got = step_parts(p, priv(weapon=4, owned=(0, 1, 1, 0, 1, 0, 0, 0), ammo=40.0), False, 0.0)
@@ -140,6 +140,54 @@ def test_blind_fire_is_fire_with_no_bot_in_sight():
     r.start()
     blind = [r.step((0, 0, 1, 0))['parts'][PARTS.index('blind_fire')] for _ in range(10)]
     assert blind[:5] == [1.0] * 5 and not any(blind[5:])
+
+
+def test_regions_pay_for_entering_a_rare_region_once_per_30_s_and_flag_holding_one():
+    g = Regions()
+    assert g.step(10, 10, True) == (0.0, 0.0)  # a life start: no reward
+    for _ in range(99):
+        g.step(20, 20, False)
+    assert g.step(REGION_SIZE + 10, 10, False)[0] == 1.0  # a region never visited
+    assert g.step(10, 10, False)[0] == 0.0  # home is not rare
+    assert g.step(REGION_SIZE + 10, 10, False)[0] == 0.0  # paid already within 30 s
+    g.reset()  # a new match: the counts stay, so the region keeps paying until it is visited often
+    g.step(10, 10, True)
+    assert g.step(REGION_SIZE + 10, 10, False)[0] == 1.0
+    for _ in range(200):
+        g.step(REGION_SIZE + 10, 10, False)
+    g.step(10, 10, False)
+    g.t += REVISIT_STEPS + 1
+    assert g.step(REGION_SIZE + 10, 10, False)[0] == 0.0  # visited as much as home now: not rare
+    g.reset()
+    stays = [g.step(10, 10, i == 0)[1] for i in range(REGION_STAY_STEPS + 5)]
+    assert not any(stays[:REGION_STAY_STEPS - 1]) and all(stays[REGION_STAY_STEPS - 1:])
+
+
+class WarpEnv(FakeMatchEnv):
+    sectors = [(0.0, 64.0, ((0.0, 0.0, 512.0, 0.0, True), (512.0, 0.0, 512.0, 512.0, True),
+                            (512.0, 512.0, 0.0, 512.0, True), (0.0, 512.0, 0.0, 0.0, True)))]
+
+    def __init__(self, rows):
+        super().__init__(rows)
+        self.warps = []
+
+    def teleport(self, x, y):
+        self.warps.append((x, y))
+        return self._obs()
+
+
+def test_runner_warps_at_match_and_life_starts_with_its_chance():
+    rows = [row(first=t in (0, 10, 20), deaths=float(t >= 10) + float(t >= 20)) for t in range(30)]
+    env = WarpEnv(rows)
+    r = Runner(DM, [BASE], (7,), 0, env_factory=lambda cfg, v: env, teacher=StubTeacher((0, 0, 0, 0)), warp_p=1.0)
+    r.start()
+    [r.step((0, 0, 0, 0)) for _ in range(25)]
+    assert len(env.warps) == 3 and all(0 < x < 512 and 0 < y < 512 for x, y in env.warps)
+    env2 = WarpEnv(rows)
+    r2 = Runner(DM, [BASE], (7,), 0, env_factory=lambda cfg, v: env2, teacher=StubTeacher((0, 0, 0, 0)))
+    r2.start()
+    [r2.step((0, 0, 0, 0)) for _ in range(25)]
+    assert env2.warps == []
 
 
 def test_critic_vec():

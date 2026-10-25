@@ -91,7 +91,8 @@ class DMPrivileged:
 
 def game_args(c):
     # cl_run is archived in _vizdoom.ini: every game sets it, or an earlier game's value leaks in
-    return GAME_ARGS.format(timelimit=c.timelimit, bots=BOTS_CFG, run=int(c.run), noautoaim=int(not c.autoaim))
+    args = GAME_ARGS.format(timelimit=c.timelimit, bots=BOTS_CFG, run=int(c.run), noautoaim=int(not c.autoaim))
+    return args + (' +sv_cheats 1' if c.cheats else '')
 
 
 def _is_self(name, x, y, px, py):
@@ -245,6 +246,14 @@ class DeathmatchEnv:
         else:
             self._frames.append(self._small)
         return self._obs(new_life), float(self._priv.frags - frags0), done
+
+    def teleport(self, x, y) -> DMObs:
+        # training only (cfg.cheats): the player moves to (x, y) and starts a new life there, its stack refilled
+        self.game.send_game_command(f'warp {x:.0f} {y:.0f}')
+        self.game.make_action(self._noop, 1)
+        self._read()
+        self._restack()
+        return self._obs(True)
 
     def privileged(self) -> DMPrivileged:
         return self._priv

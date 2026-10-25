@@ -39,7 +39,7 @@ from doomagent.evaluate import val_score
 from doomagent.variants import BASE, load_variants
 
 REWARD = dict(frag=1.0, death=-0.2, damage=0.005, item=0.02, weapon=0.1, stuck=-0.01, explore=0.0, linger=0.0,
-              territory=0.0, blind_fire=0.0)
+              territory=0.0, blind_fire=0.0, region=0.0, region_stay=0.0)
 
 
 @dataclass(frozen=True)
@@ -73,6 +73,7 @@ class PPOCfg:
     latest_every: int = 25_000   # runs/<out>/latest.pt this often: the dashboard's live game can play the network now
     eval_workers: int = 4
     live: bool = True            # the training games on the dashboard (runs/dm/live)
+    warp_p: float = 0.0          # chance that a match or a life starts at a random walkable spot (dm.rlenv.Runner)
     seed: int = 0
 
 
@@ -157,10 +158,10 @@ def step_targets(rec):
 class ProcEnvs:
     # n Runner processes (dm.rlenv.worker); start() and step(actions) give one record per env. A process that
     # fails is started again with a new match (its record says done, the step's reward parts are lost).
-    def __init__(self, n, cfg, variants, seeds, seed, base_share, live=None):
+    def __init__(self, n, cfg, variants, seeds, seed, base_share, live=None, warp_p=0.0):
         import multiprocessing as mp
         self.ctx, self.args = mp.get_context('spawn'), (cfg, list(variants), list(seeds), base_share)
-        self.live = live
+        self.live, self.warp_p = live, warp_p
         self.seed, self.restarts = seed, 0
         self.procs, self.conns = [None] * n, [None] * n
         for i in range(n):
@@ -171,7 +172,7 @@ class ProcEnvs:
         cfg, variants, seeds, base_share = self.args
         a, b = self.ctx.Pipe()
         p = self.ctx.Process(target=worker, args=(b, cfg, variants, seeds, 1000 * self.seed + i + 97 * self.restarts,
-                                                  base_share, self.live, f'ppo{i + 1}'), daemon=True)
+                                                  base_share, self.live, f'ppo{i + 1}', self.warp_p), daemon=True)
         p.start()
         self.procs[i], self.conns[i] = p, a
 
@@ -494,7 +495,8 @@ def run(out, init, pc=PPOCfg(), reward=None, cfg=DM, plan=None, envs=None, varia
             return
         torch.cuda.empty_cache()
         t0 = time.time()
-        row = dict(kind='eval', step=step, **evaluate(model, plan, replace(cfg, depth=False), pc.eval_workers),
+        ecfg = replace(cfg, depth=False, cheats=False)  # evaluation as always: no depth buffer, no teleports
+        row = dict(kind='eval', step=step, **evaluate(model, plan, ecfg, pc.eval_workers),
                    minutes=(time.time() - t0) / 60)
         save_model(model, os.path.join(out, f'step_{step // 1000:05d}k.pt'))
         if row['val_score'] > best:
@@ -514,7 +516,8 @@ def run(out, init, pc=PPOCfg(), reward=None, cfg=DM, plan=None, envs=None, varia
         live = LIVE_DIR
         write_plan(f'{os.path.basename(os.path.normpath(out))} · обучение PPO', out,
                    (pc.steps - step) // match_steps(cfg), kind='ppo')
-    envs = envs or ProcEnvs(pc.n_envs, cfg, variants, RL_SEEDS, pc.seed + step, pc.base_share, live)
+    envs = envs or ProcEnvs(pc.n_envs, replace(cfg, cheats=pc.warp_p > 0), variants, RL_SEEDS, pc.seed + step,
+                            pc.base_share, live, pc.warp_p)
     col = Collector(envs, pc.n_envs, cfg, dev, model.memory, pc.temp)
     t_start, s_start = time.time(), step
     try:

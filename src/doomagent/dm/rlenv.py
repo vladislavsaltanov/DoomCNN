@@ -19,10 +19,11 @@ from doomagent.dm.teacher import DMTeacher, visible_bots
 from doomagent.variants import BASE
 
 # raw parts of a step's reward; dm.ppo weighs them (frags count 1, the rest is shaping)
-PARTS = ('frag', 'death', 'damage', 'item', 'weapon', 'stuck', 'explore', 'linger', 'territory', 'blind_fire')
+PARTS = ('frag', 'death', 'damage', 'item', 'weapon', 'stuck', 'explore', 'linger', 'territory', 'blind_fire',
+         'region', 'region_stay')
 N_PARTS = len(PARTS)
-STUCK, EXPLORE, LINGER, TERRITORY, BLIND_FIRE = (PARTS.index(k) for k in ('stuck', 'explore', 'linger', 'territory',
-                                                                       'blind_fire'))
+STUCK, EXPLORE, LINGER, TERRITORY, BLIND_FIRE, REGION, REGION_STAY = (
+    PARTS.index(k) for k in ('stuck', 'explore', 'linger', 'territory', 'blind_fire', 'region', 'region_stay'))
 CELL = 128.0          # map units: the exploration grid
 REVISIT_STEPS = 262   # 30 s: a cell left this long ago counts as new again (items respawn in 30 s)
 LINGER_STEPS = 44     # 5 s ...
@@ -30,6 +31,10 @@ LINGER_DIST = 128.0   # ... spent within this distance with no bot around is lin
 TERRITORY_STEPS = 88   # 10 s ...
 TERRITORY_DIST = 192.0  # ... spent within this distance, bots in sight or not: holding one small patch
 # (the teacher does it in 15 % of steps, the DAgger student in 34 %)
+REGION_SIZE = 384.0   # map units: a region is about a room
+REGION_STAY_STEPS = 262  # 30 s ...
+REGION_STAY_SHARE = 0.95  # ... with this share of the steps in one region is holding it
+RARE_SHARE = 0.25     # a region with fewer steps than this share of the mean region is rare
 PRIV_NAMES = ('time', 'frags', 'deaths', 'lead', 'health', 'armor', 'ready', 'bots_seen', 'seen_dist', 'bot_dist',
               'bots_near', 'x', 'y', 'cos', 'sin', 'stuck') + tuple('mode_' + m for m in MODES)
 PRIV_DIM = len(PRIV_NAMES)
@@ -76,6 +81,42 @@ def stayed(track, steps, dist):
     return math.hypot(x1 - x0, y1 - y0) < dist
 
 
+class Regions:
+    # regions of REGION_SIZE, counted over all the matches this process plays (count-based exploration, Bellemare et
+    # al. 2016). step() gives (entry, stay): entry is 1 when the player walks into a rare region (its steps below
+    # RARE_SHARE of the mean of the regions it has been in), at most once per REVISIT_STEPS for a region; as a region
+    # gets visited its entries stop paying. stay is 1 while the last REGION_STAY_STEPS of this match were almost all in
+    # one region. A life start (respawn, teleport) puts the player somewhere without a reward.
+    def __init__(self):
+        self.counts = {}
+        self.reset()
+
+    def reset(self):
+        # a new match: the counts over all matches stay
+        self.cur, self.recent, self.paid, self.t = None, deque(maxlen=REGION_STAY_STEPS), {}, 0
+
+    def rare(self, r):
+        if not self.counts:
+            return False
+        mean = sum(self.counts.values()) / len(self.counts)
+        return self.counts.get(r, 0) < RARE_SHARE * mean
+
+    def step(self, x, y, first):
+        r = (int(x // REGION_SIZE), int(y // REGION_SIZE))
+        entry = 0.0
+        if (r != self.cur and self.cur is not None and not first and self.rare(r)
+                and self.t - self.paid.get(r, -REVISIT_STEPS - 1) > REVISIT_STEPS):
+            entry = 1.0
+            self.paid[r] = self.t
+        if first:
+            self.recent.clear()
+        self.cur, self.t = r, self.t + 1
+        self.counts[r] = self.counts.get(r, 0) + 1
+        self.recent.append(r)
+        stay = len(self.recent) == REGION_STAY_STEPS and self.recent.count(r) >= REGION_STAY_SHARE * REGION_STAY_STEPS
+        return entry, float(stay)
+
+
 def explore_step(visits, x, y, t):
     # 1 when the player enters a CELL it has not been in for REVISIT_STEPS (or ever this match), then marks it
     cell = (int(x // CELL), int(y // CELL))
@@ -112,8 +153,10 @@ class Runner:
     # of the observation the next action is chosen on; a step that ends the match returns the next match's first
     # record with done=True and the finished match's numbers in 'match'.
     # live: a folder (dm.livetap.LIVE_DIR) where the games are shown on the dashboard, as `name`
+    # warp_p: the chance that a match or a life starts at a random walkable spot instead of the game's spawn
+    # (training only, the env needs cfg.cheats): the player then sees the places it would never walk to
     def __init__(self, cfg, variants, seeds, rng_seed, base_share=0.5, env_factory=None, teacher=None, live=None,
-                 name=None):
+                 name=None, warp_p=0.0):
         if env_factory is None:
             from doomagent.dm.env import DeathmatchEnv
             env_factory = DeathmatchEnv
@@ -124,6 +167,7 @@ class Runner:
         self.teacher = DMTeacher(cfg) if teacher is None else teacher
         self.env, self.hist, self.stats, self.t = None, deque(maxlen=LINGER_STEPS + 1), None, 0
         self.visits, self.track = {}, deque(maxlen=TERRITORY_STEPS + 1)
+        self.regions, self.warp_p, self.wrng = Regions(), warp_p, np.random.default_rng(rng_seed + 7919)
         self.tap = None
         if live:
             from doomagent.dm.livetap import LiveTap
@@ -141,8 +185,9 @@ class Runner:
         if self.env is not None:
             self.env.close()
         self.env = self.env_factory(self.cfg, v)
-        obs = self.env.reset(seed)
+        obs = self._maybe_warp(self.env.reset(seed))
         self.teacher.reset()
+        self.regions.reset()
         self.hist.clear()
         self.track.clear()
         self.visits = {}
@@ -170,9 +215,20 @@ class Runner:
                 self.tap.match_done(match['seed'], frags=match['frags'], deaths=match['deaths'],
                                     best_bot=match['best_bot'], first=match['frags'] > match['best_bot'])
             return self.start(parts, True, match)
+        if obs.first:  # a new life
+            obs = self._maybe_warp(obs)
         rec = self._observe(obs, parts, False, None)  # sets the stuck part
         self.stats['parts'] += parts
         return rec
+
+    def _maybe_warp(self, obs):
+        if self.warp_p <= 0.0 or self.wrng.random() >= self.warp_p:
+            return obs
+        from doomagent.dm.nav import nav_for
+        nav = nav_for(self.env.sectors)
+        ii, jj = np.nonzero(nav.walk)
+        k = int(self.wrng.integers(len(ii)))
+        return self.env.teleport(nav.x0 + (jj[k] + 0.5) * nav.cell, nav.y0 + (ii[k] + 0.5) * nav.cell)
 
     def _summary(self, q):
         s, n = self.stats, max(self.t, 1)
@@ -193,7 +249,9 @@ class Runner:
             parts[EXPLORE] = explore_step(self.visits, p.px, p.py, self.t)
             parts[LINGER] = float(moved_less(self.hist, LINGER_STEPS, LINGER_DIST))
             parts[TERRITORY] = float(stayed(self.track, TERRITORY_STEPS, TERRITORY_DIST))
+            parts[REGION], parts[REGION_STAY] = self.regions.step(p.px, p.py, obs.first)
         else:
+            self.regions.step(p.px, p.py, True)
             explore_step(self.visits, p.px, p.py, self.t)
         mode = getattr(t, 'mode', 'patrol')
         goal = getattr(t, 'goal', None)
@@ -215,10 +273,10 @@ class Runner:
             self.env = None
 
 
-def worker(conn, cfg, variants, seeds, rng_seed, base_share, live=None, name=None):
+def worker(conn, cfg, variants, seeds, rng_seed, base_share, live=None, name=None, warp_p=0.0):
     # a spawn process: ('start', None) or ('step', action) -> a record; ('close', None) ends it
     import doomagent.env  # noqa: F401  the Windows timer fixes, before any game starts
-    runner = Runner(cfg, variants, seeds, rng_seed, base_share, live=live, name=name)
+    runner = Runner(cfg, variants, seeds, rng_seed, base_share, live=live, name=name, warp_p=warp_p)
     try:
         while True:
             cmd, arg = conn.recv()
