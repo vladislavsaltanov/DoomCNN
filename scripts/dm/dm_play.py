@@ -55,7 +55,7 @@ class TeacherChooser:
         return self.teacher(obs, priv), None
 
 
-def make_chooser(who, seed):
+def make_chooser(who, seed, no_memory=False):
     # chooser(obs, priv) -> (action, info for the overlay)
     if who == 'random':
         from doomagent.dm.evaluate import RandomChooser
@@ -70,15 +70,16 @@ def make_chooser(who, seed):
         return Random()
     if who == 'teacher':
         return TeacherChooser(DM)
-    return ModelChooser(who)
+    return ModelChooser(who, no_memory)
 
 
 class ModelChooser:
-    # a trained M0 or M1 on the CPU: it gets frames, vec and first only; probs go to the overlay
-    def __init__(self, path):
+    # a trained M0 or M1 on the CPU: it gets frames, vec and first only; probs go to the overlay. no_memory: the GRU
+    # state is zeroed before every step (the memory question, shown)
+    def __init__(self, path, no_memory=False):
         from doomagent.dm.agent import DMAgent
         from doomagent.dm.model import load_model
-        self.agent = DMAgent(load_model(path, DM))
+        self.agent = DMAgent(load_model(path, DM), reset_every_step=no_memory)
 
     def reset(self):
         self.agent.reset()
@@ -111,6 +112,7 @@ ap.add_argument('--hud', action='store_true', help='draw the Doom status bar for
 ap.add_argument('--speed', type=float, default=1.0)
 ap.add_argument('--map', action='store_true', help='minimap and the teacher state on the right')
 ap.add_argument('--snapshots', help='PNG: one frame per teacher mode (with --who teacher)')
+ap.add_argument('--no-memory', action='store_true', help='an M1 model with its memory zeroed before every step')
 a = ap.parse_args()
 cfg = DM
 env = DeathmatchEnv(cfg, get_variant(a.variant, VARIANTS_DIR))
@@ -123,7 +125,7 @@ if a.record:
     os.makedirs(os.path.dirname(a.record) or '.', exist_ok=True)
     sink = VideoSink(a.record, 35, (cfg.render_w + (320 if a.map else 0), cfg.render_h))
 show = Show(sink, not a.no_window, a.speed)
-choose = make_chooser(a.who, a.seed)
+choose = make_chooser(a.who, a.seed, a.no_memory)
 teacher = getattr(choose, 'teacher', None)
 mapview, snaps, last = None, {}, {}
 
