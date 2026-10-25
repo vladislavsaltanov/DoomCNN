@@ -1,0 +1,984 @@
+{
+ "models": {
+  "ppo_kl_02013k": {
+   "frags": {
+    "mean": 12.075,
+    "lo": 11.25,
+    "hi": 12.900624999999996
+   },
+   "deaths": {
+    "mean": 4.875,
+    "lo": 4.4,
+    "hi": 5.4
+   },
+   "kills": {
+    "mean": 12.95,
+    "lo": 12.125,
+    "hi": 13.75
+   },
+   "suicides": {
+    "mean": 0.875,
+    "lo": 0.625,
+    "hi": 1.125
+   },
+   "kd": {
+    "mean": 2.8114880952380954,
+    "lo": 2.423734375,
+    "hi": 3.2226019345238095
+   },
+   "hits_per_shot": {
+    "mean": 0.4437743888383238,
+    "lo": 0.3905591381460006,
+    "hi": 0.5027319414039076
+   },
+   "items": {
+    "mean": 5.95,
+    "lo": 5.125,
+    "hi": 6.825
+   },
+   "path": {
+    "mean": 21124.277385509566,
+    "lo": 20631.072258372405,
+    "hi": 21571.433447089537
+   },
+   "stuck_share": {
+    "mean": 0.021561170493856294,
+    "lo": 0.007190852807359418,
+    "hi": 0.04066892834423844
+   },
+   "enemy_share": {
+    "mean": 0.6050522914970863,
+    "lo": 0.5788127206148106,
+    "hi": 0.6301516677833418
+   },
+   "bot_median": {
+    "mean": 3.725,
+    "lo": 3.4,
+    "hi": 4.075
+   },
+   "bot_best": {
+    "mean": 7.5,
+    "lo": 6.95,
+    "hi": 8.075
+   },
+   "reward": {
+    "mean": 12.075,
+    "lo": 11.25,
+    "hi": 12.900624999999996
+   },
+   "kd_total": 2.476923076923077,
+   "shots": 275.05,
+   "length": 1049.175,
+   "first_share": 0.95,
+   "weapon_share": {
+    "1": 0.0528224865972994,
+    "2": 0.261626985152119,
+    "3": 0.14703563947974202,
+    "4": 0.3929630560721658,
+    "5": 0.11028774548227371,
+    "6": 0.0,
+    "7": 0.03526408721640003
+   },
+   "share_of_teacher": null
+  },
+  "ppo_kl_02265k": {
+   "frags": {
+    "mean": 12.975,
+    "lo": 11.725,
+    "hi": 14.1
+   },
+   "deaths": {
+    "mean": 4.4,
+    "lo": 3.875,
+    "hi": 4.875
+   },
+   "kills": {
+    "mean": 13.65,
+    "lo": 12.424375000000001,
+    "hi": 14.75
+   },
+   "suicides": {
+    "mean": 0.675,
+    "lo": 0.425,
+    "hi": 0.925
+   },
+   "kd": {
+    "mean": 3.3948214285714284,
+    "lo": 2.8719523809523806,
+    "hi": 3.978830357142857
+   },
+   "hits_per_shot": {
+    "mean": 0.3795413123241977,
+    "lo": 0.3436591567695411,
+    "hi": 0.42328898068686205
+   },
+   "items": {
+    "mean": 6.525,
+    "lo": 5.575,
+    "hi": 7.475
+   },
+   "path": {
+    "mean": 20710.684304235212,
+    "lo": 19588.907234048558,
+    "hi": 21625.302459070776
+   },
+   "stuck_share": {
+    "mean": 0.04430282921644924,
+    "lo": 0.004622169608616193,
+    "hi": 0.0937549904419885
+   },
+   "enemy_share": {
+    "mean": 0.5655710662800839,
+    "lo": 0.5316708908780549,
+    "hi": 0.5953647217341281
+   },
+   "bot_median": {
+    "mean": 4.05,
+    "lo": 3.65,
+    "hi": 4.45
+   },
+   "bot_best": {
+    "mean": 9.125,
+    "lo": 8.45,
+    "hi": 9.8
+   },
+   "reward": {
+    "mean": 12.975,
+    "lo": 11.725,
+    "hi": 14.1
+   },
+   "kd_total": 2.9488636363636362,
+   "shots": 311.875,
+   "length": 1049.1,
+   "first_share": 0.8,
+   "weapon_share": {
+    "1": 0.040124957030964394,
+    "2": 0.21646467819657572,
+    "3": 0.19638739288495147,
+    "4": 0.37433793296934403,
+    "5": 0.11501942252388334,
+    "6": 0.0,
+    "7": 0.0576656163942811
+   },
+   "share_of_teacher": null
+  },
+  "ppo_kl_03000k": {
+   "frags": {
+    "mean": 13.65,
+    "lo": 12.574375,
+    "hi": 14.725
+   },
+   "deaths": {
+    "mean": 5.3,
+    "lo": 4.85,
+    "hi": 5.75
+   },
+   "kills": {
+    "mean": 14.425,
+    "lo": 13.375,
+    "hi": 15.525
+   },
+   "suicides": {
+    "mean": 0.775,
+    "lo": 0.55,
+    "hi": 1.0
+   },
+   "kd": {
+    "mean": 2.8515178571428574,
+    "lo": 2.467022321428572,
+    "hi": 3.2778385416666667
+   },
+   "hits_per_shot": {
+    "mean": 0.38269076337422375,
+    "lo": 0.3400179630737444,
+    "hi": 0.43469968812593973
+   },
+   "items": {
+    "mean": 6.475,
+    "lo": 5.825,
+    "hi": 7.075624999999997
+   },
+   "path": {
+    "mean": 21356.84002302563,
+    "lo": 20712.05863114556,
+    "hi": 21839.092861899004
+   },
+   "stuck_share": {
+    "mean": 0.013417950236658894,
+    "lo": 0.0017399321015600878,
+    "hi": 0.03422385562997457
+   },
+   "enemy_share": {
+    "mean": 0.5995087360987373,
+    "lo": 0.5764577989568486,
+    "hi": 0.6217073114272251
+   },
+   "bot_median": {
+    "mean": 3.85,
+    "lo": 3.475,
+    "hi": 4.225
+   },
+   "bot_best": {
+    "mean": 8.05,
+    "lo": 7.5,
+    "hi": 8.65
+   },
+   "reward": {
+    "mean": 13.65,
+    "lo": 12.574375,
+    "hi": 14.725
+   },
+   "kd_total": 2.5754716981132075,
+   "shots": 333.625,
+   "length": 1048.9,
+   "first_share": 0.9,
+   "weapon_share": {
+    "1": 0.05930530989857574,
+    "2": 0.2544879817946434,
+    "3": 0.15125633589692145,
+    "4": 0.3732054439688973,
+    "5": 0.09594297051700412,
+    "6": 0.002642857142857143,
+    "7": 0.06315910078110083
+   },
+   "share_of_teacher": null
+  }
+ },
+ "vs_teacher": {},
+ "m1_vs_m0": {},
+ "plan": "confirm",
+ "matches": 40,
+ "models_paths": [
+  "runs/dm/e6/ppo_kl_02013k.pt",
+  "runs/dm/e6/ppo_kl_02265k.pt",
+  "runs/dm/e6/ppo_kl_03000k.pt"
+ ],
+ "per_match": {
+  "ppo_kl_02013k": [
+   {
+    "variant": "base",
+    "seed": 42000,
+    "frags": 9.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42001,
+    "frags": 9.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42002,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42003,
+    "frags": 11.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42004,
+    "frags": 16.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42005,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42006,
+    "frags": 18.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42007,
+    "frags": 11.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42008,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42009,
+    "frags": 14.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42010,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42011,
+    "frags": 15.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 42012,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42013,
+    "frags": 17.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42014,
+    "frags": 13.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42015,
+    "frags": 14.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42016,
+    "frags": 8.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 42017,
+    "frags": 13.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42018,
+    "frags": 15.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42019,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42020,
+    "frags": 9.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42021,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42022,
+    "frags": 7.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42023,
+    "frags": 11.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42024,
+    "frags": 11.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42025,
+    "frags": 14.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 42026,
+    "frags": 11.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42027,
+    "frags": 7.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42028,
+    "frags": 15.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42029,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42030,
+    "frags": 11.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42031,
+    "frags": 16.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42032,
+    "frags": 10.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42033,
+    "frags": 12.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42034,
+    "frags": 11.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42035,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42036,
+    "frags": 11.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42037,
+    "frags": 17.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42038,
+    "frags": 10.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42039,
+    "frags": 12.0,
+    "deaths": 6.0
+   }
+  ],
+  "ppo_kl_02265k": [
+   {
+    "variant": "base",
+    "seed": 42000,
+    "frags": 10.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42001,
+    "frags": 16.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 42002,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42003,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42004,
+    "frags": 16.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42005,
+    "frags": 15.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42006,
+    "frags": 17.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 42007,
+    "frags": 17.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42008,
+    "frags": 10.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42009,
+    "frags": 17.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42010,
+    "frags": 14.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42011,
+    "frags": 15.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42012,
+    "frags": 13.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42013,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42014,
+    "frags": 1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 42015,
+    "frags": 13.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42016,
+    "frags": 8.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42017,
+    "frags": 19.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42018,
+    "frags": 15.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42019,
+    "frags": 18.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42020,
+    "frags": 5.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 42021,
+    "frags": 7.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42022,
+    "frags": 11.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42023,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42024,
+    "frags": 13.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42025,
+    "frags": 17.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 42026,
+    "frags": 16.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42027,
+    "frags": 15.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42028,
+    "frags": 9.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42029,
+    "frags": 8.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42030,
+    "frags": 9.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42031,
+    "frags": 14.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 42032,
+    "frags": 17.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 42033,
+    "frags": 13.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42034,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42035,
+    "frags": 17.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42036,
+    "frags": 16.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42037,
+    "frags": 9.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 42038,
+    "frags": 14.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42039,
+    "frags": 11.0,
+    "deaths": 7.0
+   }
+  ],
+  "ppo_kl_03000k": [
+   {
+    "variant": "base",
+    "seed": 42000,
+    "frags": 21.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42001,
+    "frags": 13.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42002,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42003,
+    "frags": 13.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 42004,
+    "frags": 8.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42005,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42006,
+    "frags": 9.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42007,
+    "frags": 18.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 42008,
+    "frags": 13.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42009,
+    "frags": 17.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42010,
+    "frags": 20.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42011,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42012,
+    "frags": 19.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42013,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42014,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42015,
+    "frags": 16.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 42016,
+    "frags": 12.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42017,
+    "frags": 13.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 42018,
+    "frags": 7.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42019,
+    "frags": 16.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42020,
+    "frags": 15.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42021,
+    "frags": 13.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42022,
+    "frags": 15.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42023,
+    "frags": 14.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42024,
+    "frags": 13.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42025,
+    "frags": 12.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42026,
+    "frags": 16.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 42027,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42028,
+    "frags": 9.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42029,
+    "frags": 17.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42030,
+    "frags": 13.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 42031,
+    "frags": 19.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42032,
+    "frags": 14.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42033,
+    "frags": 18.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42034,
+    "frags": 9.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 42035,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42036,
+    "frags": 15.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42037,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 42038,
+    "frags": 9.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 42039,
+    "frags": 16.0,
+    "deaths": 6.0
+   }
+  ]
+ }
+}
