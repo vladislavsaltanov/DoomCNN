@@ -71,6 +71,7 @@ class PPOCfg:
     eval_every: int = 250_000
     ckpt_every: int = 100_000
     eval_workers: int = 4
+    live: bool = True            # the training games on the dashboard (runs/dm/live)
     seed: int = 0
 
 
@@ -155,9 +156,10 @@ def step_targets(rec):
 class ProcEnvs:
     # n Runner processes (dm.rlenv.worker); start() and step(actions) give one record per env. A process that
     # fails is started again with a new match (its record says done, the step's reward parts are lost).
-    def __init__(self, n, cfg, variants, seeds, seed, base_share):
+    def __init__(self, n, cfg, variants, seeds, seed, base_share, live=None):
         import multiprocessing as mp
         self.ctx, self.args = mp.get_context('spawn'), (cfg, list(variants), list(seeds), base_share)
+        self.live = live
         self.seed, self.restarts = seed, 0
         self.procs, self.conns = [None] * n, [None] * n
         for i in range(n):
@@ -168,7 +170,7 @@ class ProcEnvs:
         cfg, variants, seeds, base_share = self.args
         a, b = self.ctx.Pipe()
         p = self.ctx.Process(target=worker, args=(b, cfg, variants, seeds, 1000 * self.seed + i + 97 * self.restarts,
-                                                  base_share), daemon=True)
+                                                  base_share, self.live, f'ppo{i + 1}'), daemon=True)
         p.start()
         self.procs[i], self.conns[i] = p, a
 
@@ -504,7 +506,14 @@ def run(out, init, pc=PPOCfg(), reward=None, cfg=DM, plan=None, envs=None, varia
         eval_now()
         save_state()
     variants = [BASE] + load_variants('train', VARIANTS_DIR) if variants is None else variants
-    envs = envs or ProcEnvs(pc.n_envs, cfg, variants, RL_SEEDS, pc.seed + step, pc.base_share)
+    live = None
+    if pc.live and envs is None:
+        from doomagent.dm.livetap import LIVE_DIR, write_plan
+        from doomagent.dm.rlenv import match_steps
+        live = LIVE_DIR
+        write_plan(f'{os.path.basename(os.path.normpath(out))} · обучение PPO', out,
+                   (pc.steps - step) // match_steps(cfg), kind='ppo')
+    envs = envs or ProcEnvs(pc.n_envs, cfg, variants, RL_SEEDS, pc.seed + step, pc.base_share, live)
     col = Collector(envs, pc.n_envs, cfg, dev, model.memory, pc.temp)
     t_start, s_start = time.time(), step
     try:

@@ -108,7 +108,7 @@
   <section class="col">
     <div class="card">
       <h2>Живая игра</h2>
-      <img class="view" data-view="screen" src="/live/screen.mjpg" alt="кадр игры">
+      <img class="view" data-view="screen" alt="кадр игры">
       <div class="controls">
         <label>игрок<select id="model"></select></label>
         <label>графика<select id="variant"></select></label>
@@ -141,11 +141,11 @@
   </section>
 
   <section class="col">
-    <div class="card"><h2>Карта сверху</h2><img class="view" data-view="map" src="/live/map.mjpg" alt="мини-карта" style="max-width:360px;margin:auto">
+    <div class="card"><h2>Карта сверху</h2><img class="view" data-view="map" alt="мини-карта" style="max-width:360px;margin:auto">
       <div class="note">белый — игрок и его поле зрения, красные — боты, оранжевая линия — путь учителя; квадраты — оружие (цвет по виду), кольца — аптечки (зелёные), патроны (жёлтые), броня (розовая); закрашены — места, которые знает учитель. Карту знает только учитель, сеть — нет</div></div>
-    <div class="card"><h2>Нейросеть изнутри</h2><img class="view" data-view="brain" src="/live/brain.mjpg" alt="вид сети">
+    <div class="card"><h2>Нейросеть изнутри</h2><img class="view" data-view="brain" alt="вид сети">
       <div class="note">вход и что влияет на движение и поворот, карты свёрток, 512 нейронов, вклад вектора, три самых вероятных значения каждой из четырёх голов. Только для сети, не для учителя.</div></div>
-    <div class="card"><h2>Память M1</h2><img class="view" id="memimg" data-view="memory" src="/live/memory.mjpg" alt="растр памяти">
+    <div class="card"><h2>Память M1</h2><img class="view" id="memimg" data-view="memory" alt="растр памяти">
       <div class="note" id="memnote">512 ячеек GRU за последние 20 с; есть только у M1</div></div>
   </section>
 
@@ -364,20 +364,31 @@ function rolling(pts, k, key) {
   pts.forEach((p, i) => { s += p[key]; if (i >= k) s -= pts[i - k][key]; out.push([p.step, s / Math.min(i + 1, k)]); });
   return out;
 }
-// a picture stream is one long request: after a server restart or a broken connection it stays dead
-// (black or a broken icon) while the JSON polls recover, so it is reopened on error and on a new boot
-let boot = null;
+// a picture stream is one long request that holds a connection; a browser gives a site only six, so four streams
+// left open (two tabs, or a tab with nothing playing) starve the JSON polls and the page never loads. The streams
+// are open only while a live game runs and the tab is visible; after a server restart or a broken connection a
+// stream stays dead while the polls recover, so it is reopened on error and on a new boot
+let boot = null, streamsOn = false;
 function reconnectViews(only) {
+  if (!streamsOn) return;
   document.querySelectorAll('img[data-view]').forEach(img => {
     if (!only || img === only) img.src = `/live/${img.dataset.view}.mjpg?t=${Date.now()}`;
   });
 }
+function setStreams(on) {
+  if (on === streamsOn) return;
+  streamsOn = on;
+  if (on) reconnectViews();
+  else document.querySelectorAll('img[data-view]').forEach(img => img.removeAttribute('src'));
+}
 document.querySelectorAll('img[data-view]').forEach(img => {
-  img.onerror = () => setTimeout(() => reconnectViews(img), 2000);
+  img.onerror = () => { if (img.getAttribute('src')) setTimeout(() => reconnectViews(img), 2000); };
 });
+document.addEventListener('visibilitychange', () => { if (document.hidden) setStreams(false); });
 async function tickLive() {
   let d;
   try { d = await api('/api/live'); } catch (e) { $('status').textContent = 'нет связи с сервером'; return; }
+  setStreams(Boolean(d.req && d.req.running) && !document.hidden);
   if (boot !== null && d.boot !== boot) reconnectViews();
   boot = d.boot;
   const s = d.state;
@@ -455,8 +466,9 @@ async function tickRecord() {
   $('r-train').style.display = tr && busy ? '' : 'none'; $('r-train').textContent = trLine;
   if (showTrain) { trainStrip(tr, d.teacher); return; }
   if (!on) { $('r-title').textContent = 'Запись данных, проверки и обучение'; return; }
-  const ev = d.plan.kind === 'eval', net = ev && d.plan.name.includes('сеть');
-  $('r-title').textContent = net ? 'Проверка сети на val — играет сеть, учитель не подсказывает'
+  const ppo = d.plan.kind === 'ppo', ev = d.plan.kind === 'eval' || ppo, net = ppo || (ev && d.plan.name.includes('сеть'));
+  $('r-title').textContent = ppo ? 'Обучение PPO — играет сеть (действия с выборкой), учитель не подсказывает'
+    : net ? 'Проверка сети на val — играет сеть, учитель не подсказывает'
     : ev ? 'Проверка учителя — оценочные матчи, ничего не записывается'
          : 'Запись данных — учитель играет, каждый шаг пишется в датасет';
   const who = net ? 'сети' : 'учителя';

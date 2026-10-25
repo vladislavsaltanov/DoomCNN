@@ -124,7 +124,7 @@ def _record_plan():
             workers.append(w)
     if not plan:
         return dict(plan=None, workers=workers)
-    if plan.get('kind') == 'eval':
+    if plan.get('kind') in ('eval', 'ppo'):  # matches are listed by the workers, nothing is saved
         return _eval_progress(plan, workers, now)
     rows = []
     for p in glob.glob(os.path.join(plan['out'], 'ep_*.npz')):

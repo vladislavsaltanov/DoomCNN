@@ -110,7 +110,9 @@ class Runner:
     # match from its own generator; start() begins a match, step(action) plays one step. Both return the record
     # of the observation the next action is chosen on; a step that ends the match returns the next match's first
     # record with done=True and the finished match's numbers in 'match'.
-    def __init__(self, cfg, variants, seeds, rng_seed, base_share=0.5, env_factory=None, teacher=None):
+    # live: a folder (dm.livetap.LIVE_DIR) where the games are shown on the dashboard, as `name`
+    def __init__(self, cfg, variants, seeds, rng_seed, base_share=0.5, env_factory=None, teacher=None, live=None,
+                 name=None):
         if env_factory is None:
             from doomagent.dm.env import DeathmatchEnv
             env_factory = DeathmatchEnv
@@ -121,6 +123,10 @@ class Runner:
         self.teacher = DMTeacher(cfg) if teacher is None else teacher
         self.env, self.hist, self.stats, self.t = None, deque(maxlen=LINGER_STEPS + 1), None, 0
         self.visits, self.track = {}, deque(maxlen=TERRITORY_STEPS + 1)
+        self.tap = None
+        if live:
+            from doomagent.dm.livetap import LiveTap
+            self.tap = LiveTap(live, every_s=0.25, worker=name, cfg=cfg)
 
     def _pick(self):
         if self.base and (not self.other or self.rng.random() < self.base_share):
@@ -145,13 +151,21 @@ class Runner:
 
     def step(self, action):
         p = self.env.privileged()
-        obs, r, done = self.env.step(tuple(int(x) for x in action))
+        action = tuple(int(x) for x in action)
+        if self.tap is not None:  # what the network plays (no teacher on the picture)
+            self.tap(self.env, p, None, None, action, dict(seed=self.stats['seed'], step=self.t,
+                                                          variant=self.stats['variant']))
+        obs, r, done = self.env.step(action)
         q = self.env.privileged()
         parts = step_parts(p, q, obs.first, r)
         self.t += 1
         if done:
             self.stats['parts'] += parts
-            return self.start(parts, True, self._summary(q))
+            match = self._summary(q)
+            if self.tap is not None:
+                self.tap.match_done(match['seed'], frags=match['frags'], deaths=match['deaths'],
+                                    best_bot=match['best_bot'], first=match['frags'] > match['best_bot'])
+            return self.start(parts, True, match)
         rec = self._observe(obs, parts, False, None)  # sets the stuck part
         self.stats['parts'] += parts
         return rec
@@ -197,10 +211,10 @@ class Runner:
             self.env = None
 
 
-def worker(conn, cfg, variants, seeds, rng_seed, base_share):
+def worker(conn, cfg, variants, seeds, rng_seed, base_share, live=None, name=None):
     # a spawn process: ('start', None) or ('step', action) -> a record; ('close', None) ends it
     import doomagent.env  # noqa: F401  the Windows timer fixes, before any game starts
-    runner = Runner(cfg, variants, seeds, rng_seed, base_share)
+    runner = Runner(cfg, variants, seeds, rng_seed, base_share, live=live, name=name)
     try:
         while True:
             cmd, arg = conn.recv()
