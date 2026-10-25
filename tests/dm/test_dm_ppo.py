@@ -84,7 +84,7 @@ def priv(**kw):
 
 def test_step_parts():
     p = priv()
-    assert step_parts(p, priv(frags=1.0, damage=40.0), False, 1.0).tolist() == [1, 0, 40, 0, 0, 0, 0, 0]
+    assert step_parts(p, priv(frags=1.0, damage=40.0), False, 1.0).tolist() == [1, 0, 40, 0, 0, 0, 0, 0, 0]
     assert step_parts(p, priv(health=125.0), False, 0.0)[PARTS.index('item')] == 1
     assert step_parts(p, priv(health=125.0, deaths=1.0), True, 0.0)[[1, 3]].tolist() == [1, 0]  # a respawn: no pickup
     got = step_parts(p, priv(weapon=4, owned=(0, 1, 1, 0, 1, 0, 0, 0), ammo=40.0), False, 0.0)
@@ -122,6 +122,16 @@ def test_runner_explore_and_linger_parts():
     lin, exp, stk = (parts[:, PARTS.index(k)] for k in ('linger', 'explore', 'stuck'))
     assert lin[:LINGER_STEPS - 1].sum() == 0 and lin[LINGER_STEPS - 1:59].all() and not lin[60:].any()
     assert stk[16:59].all() and exp[:59].sum() == 0 and exp[59:].all()
+
+
+def test_territory_counts_holding_a_patch_even_with_bots_in_sight():
+    # 150 steps strafing within 100 units with a bot always in sight, then a long run east
+    rows = [row(px=50.0 * (t % 3) if t < 150 else 300.0 * (t - 149), bot=True, first=t == 0) for t in range(180)]
+    r = Runner(DM, [BASE], (7,), 0, env_factory=lambda cfg, v: FakeMatchEnv(rows), teacher=StubTeacher((0, 0, 0, 0)))
+    r.start()
+    parts = np.stack([r.step((0, 0, 0, 0))['parts'] for _ in range(179)])
+    ter, lin = parts[:, PARTS.index('territory')], parts[:, PARTS.index('linger')]
+    assert not ter[:87].any() and ter[87:149].all() and not ter[155:].any() and not lin.any()
 
 
 def test_critic_vec():

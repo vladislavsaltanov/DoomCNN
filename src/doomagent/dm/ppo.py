@@ -38,7 +38,8 @@ from doomagent.dm.spatial import spatial_targets
 from doomagent.evaluate import val_score
 from doomagent.variants import BASE, load_variants
 
-REWARD = dict(frag=1.0, death=-0.2, damage=0.005, item=0.02, weapon=0.1, stuck=-0.01, explore=0.0, linger=0.0)
+REWARD = dict(frag=1.0, death=-0.2, damage=0.005, item=0.02, weapon=0.1, stuck=-0.01, explore=0.0, linger=0.0,
+              territory=0.0)
 
 
 @dataclass(frozen=True)

@@ -19,13 +19,16 @@ from doomagent.dm.teacher import DMTeacher, visible_bots
 from doomagent.variants import BASE
 
 # raw parts of a step's reward; dm.ppo weighs them (frags count 1, the rest is shaping)
-PARTS = ('frag', 'death', 'damage', 'item', 'weapon', 'stuck', 'explore', 'linger')
+PARTS = ('frag', 'death', 'damage', 'item', 'weapon', 'stuck', 'explore', 'linger', 'territory')
 N_PARTS = len(PARTS)
-STUCK, EXPLORE, LINGER = (PARTS.index(k) for k in ('stuck', 'explore', 'linger'))
+STUCK, EXPLORE, LINGER, TERRITORY = (PARTS.index(k) for k in ('stuck', 'explore', 'linger', 'territory'))
 CELL = 128.0          # map units: the exploration grid
 REVISIT_STEPS = 262   # 30 s: a cell left this long ago counts as new again (items respawn in 30 s)
 LINGER_STEPS = 44     # 5 s ...
 LINGER_DIST = 128.0   # ... spent within this distance with no bot around is lingering
+TERRITORY_STEPS = 88   # 10 s ...
+TERRITORY_DIST = 192.0  # ... spent within this distance, bots in sight or not: holding one small patch
+# (the teacher does it in 15 % of steps, the DAgger student in 34 %)
 PRIV_NAMES = ('time', 'frags', 'deaths', 'lead', 'health', 'armor', 'ready', 'bots_seen', 'seen_dist', 'bot_dist',
               'bots_near', 'x', 'y', 'cos', 'sin', 'stuck') + tuple('mode_' + m for m in MODES)
 PRIV_DIM = len(PRIV_NAMES)
@@ -60,6 +63,15 @@ def moved_less(hist, steps, dist):
     if len(hist) <= steps or any(e for _, _, e in list(hist)[-steps:]):
         return False
     (x0, y0, _), (x1, y1, _) = hist[-steps - 1], hist[-1]
+    return math.hypot(x1 - x0, y1 - y0) < dist
+
+
+def stayed(track, steps, dist):
+    # track: (x, y, life start) of the last observations; True when the player is less than dist from where it was
+    # `steps` observations ago and no respawn came in between
+    if len(track) <= steps or any(f for _, _, f in list(track)[-steps:]):
+        return False
+    (x0, y0, _), (x1, y1, _) = track[-steps - 1], track[-1]
     return math.hypot(x1 - x0, y1 - y0) < dist
 
 
@@ -108,7 +120,7 @@ class Runner:
         self.rng = np.random.default_rng(rng_seed)
         self.teacher = DMTeacher(cfg) if teacher is None else teacher
         self.env, self.hist, self.stats, self.t = None, deque(maxlen=LINGER_STEPS + 1), None, 0
-        self.visits = {}
+        self.visits, self.track = {}, deque(maxlen=TERRITORY_STEPS + 1)
 
     def _pick(self):
         if self.base and (not self.other or self.rng.random() < self.base_share):
@@ -125,6 +137,7 @@ class Runner:
         obs = self.env.reset(seed)
         self.teacher.reset()
         self.hist.clear()
+        self.track.clear()
         self.visits = {}
         self.t = 0
         self.stats = dict(variant=v.name, seed=seed, parts=np.zeros(N_PARTS, np.float64))
@@ -155,11 +168,13 @@ class Runner:
         label = tuple(int(x) for x in t(obs, p))
         enemy_x, items, depth = aux_step(p, c)
         self.hist.append((p.px, p.py, obs.first or nearest_bot(p.labels, p.px, p.py, c.width) is not None))
+        self.track.append((p.px, p.py, obs.first))
         stuck = moved_less(self.hist, STUCK_STEPS, STUCK_DIST)
         if self.t:  # at a match start the parts are the last step's of the match before
             parts[STUCK] = float(stuck)
             parts[EXPLORE] = explore_step(self.visits, p.px, p.py, self.t)
             parts[LINGER] = float(moved_less(self.hist, LINGER_STEPS, LINGER_DIST))
+            parts[TERRITORY] = float(stayed(self.track, TERRITORY_STEPS, TERRITORY_DIST))
         else:
             explore_step(self.visits, p.px, p.py, self.t)
         mode = getattr(t, 'mode', 'patrol')
