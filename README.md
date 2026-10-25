@@ -121,3 +121,6 @@ PPO от DAgger-ученика: `.venv\Scripts\python scripts\dm\dm_ppo.py --ini
 
 [ViZDoom](https://github.com/Farama-Foundation/ViZDoom), [Freedoom](https://freedoom.github.io/),
 [Stable-Baselines3](https://github.com/DLR-RM/stable-baselines3), PyTorch.
+
+
+Отдельное спасибо [Claude Code](https://claude.com/claude-code) (Anthropic, модель Claude Opus 5.5) — напарнику по проекту: вместе продумывали решения, писали код и тесты, ставили и разбирали эксперименты, оформляли отчёты.
