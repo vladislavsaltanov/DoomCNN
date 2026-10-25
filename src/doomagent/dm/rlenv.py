@@ -19,8 +19,13 @@ from doomagent.dm.teacher import DMTeacher, visible_bots
 from doomagent.variants import BASE
 
 # raw parts of a step's reward; dm.ppo weighs them (frags count 1, the rest is shaping)
-PARTS = ('frag', 'death', 'damage', 'item', 'weapon', 'stuck')
+PARTS = ('frag', 'death', 'damage', 'item', 'weapon', 'stuck', 'explore', 'linger')
 N_PARTS = len(PARTS)
+STUCK, EXPLORE, LINGER = (PARTS.index(k) for k in ('stuck', 'explore', 'linger'))
+CELL = 128.0          # map units: the exploration grid
+REVISIT_STEPS = 262   # 30 s: a cell left this long ago counts as new again (items respawn in 30 s)
+LINGER_STEPS = 44     # 5 s ...
+LINGER_DIST = 128.0   # ... spent within this distance with no bot around is lingering
 PRIV_NAMES = ('time', 'frags', 'deaths', 'lead', 'health', 'armor', 'ready', 'bots_seen', 'seen_dist', 'bot_dist',
               'bots_near', 'x', 'y', 'cos', 'sin', 'stuck') + tuple('mode_' + m for m in MODES)
 PRIV_DIM = len(PRIV_NAMES)
@@ -35,7 +40,8 @@ def match_steps(cfg=DM):
 def step_parts(p, q, new_life, frag):
     # raw reward parts of one step from the privileged data before (p) and after (q) it: frags (a suicide is -1),
     # a death, damage dealt, an item picked up (the evaluator's rule: health, ammo of the same weapon or armor
-    # rose), a weapon not owned before; 'stuck' is set by the Runner when the next observation arrives
+    # rose), a weapon not owned before; 'stuck', 'explore' and 'linger' are set by the Runner when the next
+    # observation arrives
     died = float(q.deaths > p.deaths)
     damage = max(float(q.damage - p.damage), 0.0)
     item = weapon = 0.0
@@ -43,17 +49,32 @@ def step_parts(p, q, new_life, frag):
         same = q.weapon == p.weapon
         item = float(q.health > p.health or (same and q.ammo > p.ammo) or q.armor > p.armor)
         weapon = float(sum(o > 0 for o in q.owned[2:]) > sum(o > 0 for o in p.owned[2:]))
-    return np.array([frag, died, damage, item, weapon, 0.0], np.float32)
+    out = np.zeros(N_PARTS, np.float32)
+    out[:5] = frag, died, damage, item, weapon
+    return out
+
+
+def moved_less(hist, steps, dist):
+    # hist: (x, y, bot or life start) of the last observations; True when the last `steps` of them had no bot and
+    # no respawn and the player is less than dist from where it was `steps` observations ago
+    if len(hist) <= steps or any(e for _, _, e in list(hist)[-steps:]):
+        return False
+    (x0, y0, _), (x1, y1, _) = hist[-steps - 1], hist[-1]
+    return math.hypot(x1 - x0, y1 - y0) < dist
+
+
+def explore_step(visits, x, y, t):
+    # 1 when the player enters a CELL it has not been in for REVISIT_STEPS (or ever this match), then marks it
+    cell = (int(x // CELL), int(y // CELL))
+    new = t - visits.get(cell, -REVISIT_STEPS - 1) > REVISIT_STEPS
+    visits[cell] = t
+    return float(new)
 
 
 def stuck_now(hist):
-    # hist: (x, y, bot or life start) of the last STUCK_STEPS + 1 observations. The step is stuck when the
-    # player moved less than STUCK_DIST since the oldest one with no bot and no respawn in the last STUCK_STEPS:
-    # dm.evaluate.stuck_steps, one step at a time
-    if len(hist) <= STUCK_STEPS or any(e for _, _, e in list(hist)[1:]):
-        return False
-    (x0, y0, _), (x1, y1, _) = hist[0], hist[-1]
-    return math.hypot(x1 - x0, y1 - y0) < STUCK_DIST
+    # the evaluator's stuck rule (dm.evaluate.stuck_steps) one step at a time: moved less than STUCK_DIST over the
+    # last STUCK_STEPS with no bot and no respawn
+    return moved_less(hist, STUCK_STEPS, STUCK_DIST)
 
 
 def critic_vec(p, mode, step, stuck, cfg=DM):
@@ -86,7 +107,8 @@ class Runner:
         self.other = [v for v in variants if v.name != BASE.name]
         self.rng = np.random.default_rng(rng_seed)
         self.teacher = DMTeacher(cfg) if teacher is None else teacher
-        self.env, self.hist, self.stats, self.t = None, deque(maxlen=STUCK_STEPS + 1), None, 0
+        self.env, self.hist, self.stats, self.t = None, deque(maxlen=LINGER_STEPS + 1), None, 0
+        self.visits = {}
 
     def _pick(self):
         if self.base and (not self.other or self.rng.random() < self.base_share):
@@ -103,6 +125,7 @@ class Runner:
         obs = self.env.reset(seed)
         self.teacher.reset()
         self.hist.clear()
+        self.visits = {}
         self.t = 0
         self.stats = dict(variant=v.name, seed=seed, parts=np.zeros(N_PARTS, np.float64))
         return self._observe(obs, np.zeros(N_PARTS, np.float32) if parts is None else parts, done, match)
@@ -124,7 +147,7 @@ class Runner:
         s, n = self.stats, max(self.t, 1)
         bots = [float(f) for f in q.player_frags[1:]]
         return dict(variant=s['variant'], seed=s['seed'], length=self.t, frags=float(q.frags),
-                    deaths=float(q.deaths), best_bot=max(bots, default=0.0), stuck_share=float(s['parts'][-1] / n),
+                    deaths=float(q.deaths), best_bot=max(bots, default=0.0), stuck_share=float(s['parts'][STUCK] / n),
                     parts={k: float(x) for k, x in zip(PARTS, s['parts'])})
 
     def _observe(self, obs, parts, done, match):
@@ -132,8 +155,13 @@ class Runner:
         label = tuple(int(x) for x in t(obs, p))
         enemy_x, items, depth = aux_step(p, c)
         self.hist.append((p.px, p.py, obs.first or nearest_bot(p.labels, p.px, p.py, c.width) is not None))
-        stuck = stuck_now(self.hist)
-        parts[-1] = float(stuck)
+        stuck = moved_less(self.hist, STUCK_STEPS, STUCK_DIST)
+        if self.t:  # at a match start the parts are the last step's of the match before
+            parts[STUCK] = float(stuck)
+            parts[EXPLORE] = explore_step(self.visits, p.px, p.py, self.t)
+            parts[LINGER] = float(moved_less(self.hist, LINGER_STEPS, LINGER_DIST))
+        else:
+            explore_step(self.visits, p.px, p.py, self.t)
         mode = getattr(t, 'mode', 'patrol')
         goal = getattr(t, 'goal', None)
         nav = getattr(t, 'nav', None)

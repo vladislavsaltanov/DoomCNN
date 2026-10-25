@@ -15,7 +15,8 @@ from doomagent.dm.evaluate import stuck_steps
 from doomagent.dm.model import DMNet, split_logits
 from doomagent.dm.ppo import (REWARD, Collector, Critic, PPOCfg, gae, local_envs, prior_kl, schedule,
                               stack_index, update)
-from doomagent.dm.rlenv import N_PARTS, PARTS, PRIV_DIM, Runner, critic_vec, step_parts, stuck_now
+from doomagent.dm.rlenv import (CELL, LINGER_STEPS, N_PARTS, PARTS, PRIV_DIM, REVISIT_STEPS, Runner, critic_vec,
+                                explore_step, step_parts, stuck_now)
 from doomagent.variants import BASE
 
 
@@ -83,7 +84,7 @@ def priv(**kw):
 
 def test_step_parts():
     p = priv()
-    assert step_parts(p, priv(frags=1.0, damage=40.0), False, 1.0).tolist() == [1, 0, 40, 0, 0, 0]
+    assert step_parts(p, priv(frags=1.0, damage=40.0), False, 1.0).tolist() == [1, 0, 40, 0, 0, 0, 0, 0]
     assert step_parts(p, priv(health=125.0), False, 0.0)[PARTS.index('item')] == 1
     assert step_parts(p, priv(health=125.0, deaths=1.0), True, 0.0)[[1, 3]].tolist() == [1, 0]  # a respawn: no pickup
     got = step_parts(p, priv(weapon=4, owned=(0, 1, 1, 0, 1, 0, 0, 0), ammo=40.0), False, 0.0)
@@ -101,6 +102,26 @@ def test_stuck_now_counts_the_steps_the_evaluator_counts():
         hist.append((pos[t, 0], pos[t, 1], bool(enemy[t] or first[t])))
         n += stuck_now(hist)
     assert n == stuck_steps([tuple(x) for x in pos], list(enemy), list(first)) > 0
+
+
+def test_explore_rewards_a_cell_left_long_ago_and_not_staying_in_it():
+    visits = {}
+    assert explore_step(visits, 10.0, 10.0, 0) == 1.0
+    assert explore_step(visits, 20.0, 10.0, 1) == 0.0  # the same cell
+    assert explore_step(visits, CELL + 1.0, 10.0, 2) == 1.0
+    assert explore_step(visits, 10.0, 10.0, 3) == 0.0  # back after 3 steps
+    assert explore_step(visits, 10.0, 10.0, 3 + REVISIT_STEPS + 1) == 1.0  # back after 30 s
+
+
+def test_runner_explore_and_linger_parts():
+    # 60 steps in one spot (lingering after 5 s, stuck after 2 s), then a run east through new cells
+    rows = [row(px=0.0 if t < 60 else 200.0 * (t - 59), first=t == 0) for t in range(80)]
+    r = Runner(DM, [BASE], (7,), 0, env_factory=lambda cfg, v: FakeMatchEnv(rows), teacher=StubTeacher((0, 0, 0, 0)))
+    r.start()
+    parts = np.stack([r.step((0, 0, 0, 0))['parts'] for _ in range(79)])
+    lin, exp, stk = (parts[:, PARTS.index(k)] for k in ('linger', 'explore', 'stuck'))
+    assert lin[:LINGER_STEPS - 1].sum() == 0 and lin[LINGER_STEPS - 1:59].all() and not lin[60:].any()
+    assert stk[16:59].all() and exp[:59].sum() == 0 and exp[59:].all()
 
 
 def test_critic_vec():
