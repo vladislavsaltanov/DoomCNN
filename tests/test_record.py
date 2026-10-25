@@ -21,7 +21,7 @@ def test_noisy_without_noise_is_the_label():
 
 
 def test_noise_draws_coarse_and_fine_turns():
-    # S2 ruling: the random turn covers all four turn actions, so the data shows fine-turn recovery too
+    # S2 decision: the random turn covers all four turn actions, so the data shows fine-turn recovery too
     f = noisy(1.0, np.random.default_rng(0))
     assert {f(None, None, TURN_RIGHT) for _ in range(400)} == {TURN_LEFT, TURN_RIGHT,
                                                                FINE_LEFT, FINE_RIGHT}

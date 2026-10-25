@@ -21,7 +21,7 @@ from doomagent.variants import BASE, load_variants, val_plan
 
 
 class FlipPenalty:
-    # reward shaping (orchestrator decision, S7): a left/right reversal of the turn while no enemy
+    # reward shaping (S7 decision): a left/right reversal of the turn while no enemy
     # is on screen costs `penalty`; seeing an enemy resets the direction
     def __init__(self, penalty):
         self.penalty = penalty
