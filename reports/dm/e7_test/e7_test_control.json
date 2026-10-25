@@ -1,0 +1,624 @@
+{
+ "models": {
+  "e7_m1_r0": {
+   "frags": {
+    "mean": 3.0454545454545454,
+    "lo": 2.3636363636363638,
+    "hi": 3.7613636363636362
+   },
+   "deaths": {
+    "mean": 3.5681818181818183,
+    "lo": 3.1931818181818183,
+    "hi": 3.977272727272727
+   },
+   "kills": {
+    "mean": 3.4431818181818183,
+    "lo": 2.75,
+    "hi": 4.159090909090909
+   },
+   "suicides": {
+    "mean": 0.3977272727272727,
+    "lo": 0.2727272727272727,
+    "hi": 0.5340909090909091
+   },
+   "kd": {
+    "mean": 0.9677308802308802,
+    "lo": 0.7058940972222222,
+    "hi": 1.2583315295815292
+   },
+   "hits_per_shot": {
+    "mean": 0.3019851141591014,
+    "lo": 0.2563436320709145,
+    "hi": 0.35237147497914945
+   },
+   "items": {
+    "mean": 4.920454545454546,
+    "lo": 4.295170454545455,
+    "hi": 5.591193181818181
+   },
+   "path": {
+    "mean": 15700.71963939694,
+    "lo": 14542.330662481658,
+    "hi": 16853.680790503804
+   },
+   "stuck_share": {
+    "mean": 0.20833197164963516,
+    "lo": 0.1591494522583024,
+    "hi": 0.2600948462804015
+   },
+   "enemy_share": {
+    "mean": 0.3827330848878816,
+    "lo": 0.3411188463488677,
+    "hi": 0.42388792759191407
+   },
+   "bot_median": {
+    "mean": 3.784090909090909,
+    "lo": 3.522727272727273,
+    "hi": 4.034090909090909
+   },
+   "bot_best": {
+    "mean": 8.568181818181818,
+    "lo": 8.113636363636363,
+    "hi": 9.068181818181818
+   },
+   "reward": {
+    "mean": 3.0454545454545454,
+    "lo": 2.3636363636363638,
+    "hi": 3.7613636363636362
+   },
+   "kd_total": 0.8535031847133758,
+   "shots": 131.54545454545453,
+   "length": 1049.2045454545455,
+   "first_share": 0.11363636363636363,
+   "weapon_share": {
+    "1": 0.09436167928393804,
+    "2": 0.5491639137068671,
+    "3": 0.06486757854426262,
+    "4": 0.22206148541766704,
+    "5": 0.04350596257586012,
+    "6": 0.017059375516734945,
+    "7": 0.00898000495467003
+   },
+   "share_of_teacher": null
+  }
+ },
+ "vs_teacher": {},
+ "m1_vs_m0": {},
+ "plan": "test",
+ "matches": 88,
+ "models_paths": [
+  "runs/dm/e7_m1_r0.pt"
+ ],
+ "per_match": {
+  "e7_m1_r0": [
+   {
+    "variant": "base",
+    "seed": 39000,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 39001,
+    "frags": 10.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39002,
+    "frags": 3.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39003,
+    "frags": 3.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 39004,
+    "frags": 0.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 39005,
+    "frags": 4.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39006,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 39007,
+    "frags": 8.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39008,
+    "frags": 1.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 39009,
+    "frags": 5.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39010,
+    "frags": 7.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 39011,
+    "frags": 5.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39012,
+    "frags": 5.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 39013,
+    "frags": 5.0,
+    "deaths": 9.0
+   },
+   {
+    "variant": "base",
+    "seed": 39014,
+    "frags": 6.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39015,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 39016,
+    "frags": 8.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 39017,
+    "frags": 4.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39018,
+    "frags": 1.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39019,
+    "frags": 7.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39020,
+    "frags": 2.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 39021,
+    "frags": 8.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39022,
+    "frags": 12.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39023,
+    "frags": 3.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39024,
+    "frags": 3.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 39025,
+    "frags": 3.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 39026,
+    "frags": 8.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39027,
+    "frags": 6.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 39028,
+    "frags": 5.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 39029,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 39030,
+    "frags": 10.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 39031,
+    "frags": 10.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 39032,
+    "frags": 3.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 39033,
+    "frags": 6.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39034,
+    "frags": 4.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39035,
+    "frags": 3.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 39036,
+    "frags": 13.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39037,
+    "frags": 7.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 39038,
+    "frags": 5.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 39039,
+    "frags": 8.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "mix_test_00_vile",
+    "seed": 39000,
+    "frags": 0.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_test_00_vile",
+    "seed": 39001,
+    "frags": 0.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_test_00_vile",
+    "seed": 39002,
+    "frags": 0.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "mix_test_00_vile",
+    "seed": 39003,
+    "frags": 0.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_test_00_vile",
+    "seed": 39004,
+    "frags": 0.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_test_00_vile",
+    "seed": 39005,
+    "frags": 0.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_test_00_vile",
+    "seed": 39006,
+    "frags": 0.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "mix_test_00_vile",
+    "seed": 39007,
+    "frags": 0.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "mix_test_01_sswv",
+    "seed": 39000,
+    "frags": 1.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "mix_test_01_sswv",
+    "seed": 39001,
+    "frags": 0.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "mix_test_01_sswv",
+    "seed": 39002,
+    "frags": 0.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_test_01_sswv",
+    "seed": 39003,
+    "frags": -1.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_test_01_sswv",
+    "seed": 39004,
+    "frags": -1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_test_01_sswv",
+    "seed": 39005,
+    "frags": 0.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "mix_test_01_sswv",
+    "seed": 39006,
+    "frags": 0.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "mix_test_01_sswv",
+    "seed": 39007,
+    "frags": 0.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "spr_test_sswv",
+    "seed": 39000,
+    "frags": 4.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "spr_test_sswv",
+    "seed": 39001,
+    "frags": 1.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "spr_test_sswv",
+    "seed": 39002,
+    "frags": 1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_test_sswv",
+    "seed": 39003,
+    "frags": 5.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "spr_test_sswv",
+    "seed": 39004,
+    "frags": 1.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "spr_test_sswv",
+    "seed": 39005,
+    "frags": 2.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "spr_test_sswv",
+    "seed": 39006,
+    "frags": 2.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "spr_test_sswv",
+    "seed": 39007,
+    "frags": 2.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_test_vile",
+    "seed": 39000,
+    "frags": 0.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "spr_test_vile",
+    "seed": 39001,
+    "frags": 1.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "spr_test_vile",
+    "seed": 39002,
+    "frags": 0.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "spr_test_vile",
+    "seed": 39003,
+    "frags": 2.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "spr_test_vile",
+    "seed": 39004,
+    "frags": 2.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "spr_test_vile",
+    "seed": 39005,
+    "frags": 2.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "spr_test_vile",
+    "seed": 39006,
+    "frags": 4.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_test_vile",
+    "seed": 39007,
+    "frags": 3.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "tex_test_00",
+    "seed": 39000,
+    "frags": 1.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_test_00",
+    "seed": 39001,
+    "frags": 1.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_test_00",
+    "seed": 39002,
+    "frags": 3.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_test_00",
+    "seed": 39003,
+    "frags": 1.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_test_00",
+    "seed": 39004,
+    "frags": -1.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_test_00",
+    "seed": 39005,
+    "frags": 4.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_test_00",
+    "seed": 39006,
+    "frags": 2.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "tex_test_00",
+    "seed": 39007,
+    "frags": 2.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_test_01",
+    "seed": 39000,
+    "frags": 1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_test_01",
+    "seed": 39001,
+    "frags": 1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_test_01",
+    "seed": 39002,
+    "frags": 0.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "tex_test_01",
+    "seed": 39003,
+    "frags": 0.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_test_01",
+    "seed": 39004,
+    "frags": 0.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_test_01",
+    "seed": 39005,
+    "frags": 0.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_test_01",
+    "seed": 39006,
+    "frags": -1.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_test_01",
+    "seed": 39007,
+    "frags": 0.0,
+    "deaths": 0.0
+   }
+  ]
+ }
+}
