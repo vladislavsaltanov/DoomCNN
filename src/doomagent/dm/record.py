@@ -58,7 +58,26 @@ class MatchNoise:
         return tuple(a)
 
 
-def record_match(env, seed, executor, teacher, prefix, cfg=DM, live=None):
+class Warper:
+    # with probability p a match or a life starts at a random walkable spot (DeathmatchEnv.teleport, cfg.cheats): the
+    # teacher's data then shows the whole map, the rooms the game never spawns in included. Reseeded per match.
+    def __init__(self, p):
+        self.p, self.rng = p, np.random.default_rng(0)
+
+    def reset(self, seed):
+        self.rng = np.random.default_rng(seed + 7919)
+
+    def __call__(self, env, obs):
+        if self.p <= 0.0 or self.rng.random() >= self.p:
+            return obs
+        from doomagent.dm.nav import nav_for
+        nav = nav_for(env.sectors)
+        ii, jj = np.nonzero(nav.walk)
+        k = int(self.rng.integers(len(ii)))
+        return env.teleport(nav.x0 + (jj[k] + 0.5) * nav.cell, nav.y0 + (ii[k] + 0.5) * nav.cell)
+
+
+def record_match(env, seed, executor, teacher, prefix, cfg=DM, live=None, warp=None):
     from doomagent.dm.auxtargets import aux_step
     from doomagent.dm.spatial import egomap
     from doomagent.dm.teacher import visible_bots
@@ -68,6 +87,9 @@ def record_match(env, seed, executor, teacher, prefix, cfg=DM, live=None):
     if hasattr(executor, 'reset'):
         executor.reset(seed)
     obs, done = env.reset(seed), False
+    if warp is not None:
+        warp.reset(seed)
+        obs = warp(env, obs)
     rows = {k: [] for k in ('actions', 'executed', 'vec', 'first', 'rewards', 'modes', 'pose',
                             'stats', 'counters', 'bot_visible', 'weapon', 'enemy_x', 'items', 'depth', 'goal',
                             'egomap', 'burst')}
@@ -103,6 +125,8 @@ def record_match(env, seed, executor, teacher, prefix, cfg=DM, live=None):
         if live is not None:
             live(env, p, teacher, label, action, dict(seed=seed, step=len(frames) - 1, variant=env.variant.name))
         obs, r, done = env.step(action)
+        if warp is not None and obs.first and not done:  # a new life
+            obs = warp(env, obs)
         rows['rewards'].append(r)
     np.save(prefix + '.frames.npy', np.stack(frames).astype(np.uint8))
     dtypes = dict(actions=np.int64, executed=np.int64, vec=np.float32, first=bool, rewards=np.float32,
@@ -129,7 +153,7 @@ def write_meta(out_dir):
         json.dump(dict(matches=n, steps=steps, variants=dict(per)), fh, indent=1)
 
 
-def record_chunk(out_dir, variant, seeds, executor, cfg, live=False):
+def record_chunk(out_dir, variant, seeds, executor, cfg, live=False, warp_p=0.0):
     from doomagent.dm.env import DeathmatchEnv
     from doomagent.dm.livetap import LiveTap
     from doomagent.dm.teacher import DMTeacher
@@ -137,12 +161,13 @@ def record_chunk(out_dir, variant, seeds, executor, cfg, live=False):
     tap = LiveTap(cfg=cfg) if live else None
     try:
         for s in seeds:
-            record_match(env, s, executor, teacher, episode_prefix(out_dir, variant, s), cfg, tap)
+            record_match(env, s, executor, teacher, episode_prefix(out_dir, variant, s), cfg, tap,
+                         Warper(warp_p) if warp_p > 0 else None)
     finally:
         env.close()
 
 
-def record_dataset(out_dir, plan, executor, cfg=DM, resume=True, workers=1, live=False):
+def record_dataset(out_dir, plan, executor, cfg=DM, resume=True, workers=1, live=False, warp_p=0.0):
     # plan: [(variant, seeds)]; finished matches are skipped when resuming; live: the dashboard's record card
     os.makedirs(out_dir, exist_ok=True)
     if live:
@@ -156,7 +181,7 @@ def record_dataset(out_dir, plan, executor, cfg=DM, resume=True, workers=1, live
             chunks.append((variant, todo))
     if workers <= 1:
         for variant, todo in chunks:
-            record_chunk(out_dir, variant, todo, executor, cfg, live)
+            record_chunk(out_dir, variant, todo, executor, cfg, live, warp_p)
     else:
         import multiprocessing as mp
         from concurrent.futures import ProcessPoolExecutor
@@ -164,7 +189,7 @@ def record_dataset(out_dir, plan, executor, cfg=DM, resume=True, workers=1, live
         size = max(1, -(-total // (2 * workers)))
         parts = [(v, t[i:i + size]) for v, t in chunks for i in range(0, len(t), size)]
         with ProcessPoolExecutor(workers, mp_context=mp.get_context('spawn')) as ex:
-            for f in [ex.submit(record_chunk, out_dir, v, t, executor, cfg, live) for v, t in parts]:
+            for f in [ex.submit(record_chunk, out_dir, v, t, executor, cfg, live, warp_p) for v, t in parts]:
                 f.result()
     write_meta(out_dir)
 

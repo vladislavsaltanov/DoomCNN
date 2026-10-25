@@ -74,6 +74,10 @@ class PPOCfg:
     eval_workers: int = 4
     live: bool = True            # the training games on the dashboard (runs/dm/live)
     warp_p: float = 0.0          # chance that a match or a life starts at a random walkable spot (dm.rlenv.Runner)
+    demo_dirs: tuple = ()        # the teacher's recorded matches mixed into every update as BC (RLPD / DQfD style) ...
+    demo: float = 0.1            # ... with this weight, falling linearly ...
+    demo_end: float = 0.02       # ... to this by the end
+    demo_windows: int = 8        # windows of seg_len steps per update minibatch
     seed: int = 0
 
 
@@ -337,7 +341,32 @@ def prior_kl(logits, prior_logits, temp=1.0):
     return kl
 
 
-def update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg=DM, extra_losses=None, prior=None, prior_w=0.0):
+def demo_batches(dirs, cfg, n, dev):
+    # an endless stream of the teacher's M1 windows (the BC batch format of dm.train): the PPO update's demonstrations
+    from torch.utils.data import DataLoader
+    from doomagent.dm.data import MatchSegments, match_files
+    ds = MatchSegments(match_files(dirs), cfg.seg_len, cfg.burn_in, cfg.stack, compact=True)
+    dl = DataLoader(ds, batch_size=n, shuffle=True, num_workers=2, pin_memory=dev == 'cuda', persistent_workers=True,
+                    drop_last=True)
+    while True:
+        yield from dl
+
+
+def demo_loss(model, demo, temp, dev):
+    # BC on a batch of the teacher's own states, mirrored half of the time like in dm.train (cross-entropy of the
+    # policy softmax(logits / temp) to the teacher's labels, burn-in steps masked)
+    from doomagent.dm.data import mirror_batch
+    from doomagent.dm.train import _device, _to_model
+    b = _device(next(demo), dev)
+    if torch.rand(()) < 0.5:
+        b = mirror_batch(b)
+    f, v, a, m = _to_model(b, model.memory, dev)
+    logits, _ = model(f, v)
+    return bc_loss(logits / temp, a, m)
+
+
+def update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg=DM, extra_losses=None, prior=None, prior_w=0.0,
+           demo=None, demo_w=0.0):
     # one PPO update on a rollout; frozen: the critic only (warm-up); prior: the frozen start model, pulled towards
     # with weight prior_w. Returns mean numbers for the log.
     from doomagent.dm.train import _extra_losses
@@ -385,6 +414,10 @@ def update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg=DM, extra_lo
                     pk = prior_kl(logits, pl, pc.temp).mean()
                     loss = loss + prior_w * pk
                     parts['prior_kl'] = pk.item()
+                if demo is not None and demo_w > 0:
+                    dl, dp = demo_loss(model, demo, pc.temp, dev)
+                    loss = loss + demo_w * dl
+                    parts.update(demo_ce=dp['ce'], demo_acc=dp['acc'])
                 opt_a.zero_grad()
                 loss.backward()
                 nn.utils.clip_grad_norm_(model.parameters(), pc.max_grad)
@@ -414,7 +447,8 @@ def schedule(pc, step):
     # (policy lr, kickstarting weight, prior weight) at this env step; all start after the warm-up
     p = min(max(step - pc.warmup, 0) / max(pc.steps - pc.warmup, 1), 1.0)
     k = min(max(step - pc.warmup, 0) / max(pc.ks_steps, 1), 1.0)
-    return pc.lr * (1 - (1 - pc.lr_end) * p), pc.ks + (pc.ks_end - pc.ks) * k, pc.prior + (pc.prior_end - pc.prior) * p
+    return (pc.lr * (1 - (1 - pc.lr_end) * p), pc.ks + (pc.ks_end - pc.ks) * k, pc.prior + (pc.prior_end - pc.prior) * p,
+            pc.demo + (pc.demo_end - pc.demo) * p)
 
 
 def evaluate(model, plan, cfg, workers):
@@ -519,20 +553,23 @@ def run(out, init, pc=PPOCfg(), reward=None, cfg=DM, plan=None, envs=None, varia
     envs = envs or ProcEnvs(pc.n_envs, replace(cfg, cheats=pc.warp_p > 0), variants, RL_SEEDS, pc.seed + step,
                             pc.base_share, live, pc.warp_p)
     col = Collector(envs, pc.n_envs, cfg, dev, model.memory, pc.temp)
+    demo = demo_batches(list(pc.demo_dirs), cfg, pc.demo_windows, dev) if pc.demo_dirs else None
     t_start, s_start = time.time(), step
     try:
         while step < pc.steps:
-            lr, ks_w, prior_w = schedule(pc, step)
+            lr, ks_w, prior_w, demo_w = schedule(pc, step)
             for g in opt_a.param_groups:
                 g['lr'] = lr
             frozen = step < pc.warmup
             t0 = time.time()
             roll = col.collect(model, critic, pc.horizon, reward)
             t1 = time.time()
-            u = update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg, prior=prior, prior_w=prior_w)
+            u = update(model, critic, opt_a, opt_c, roll, pc, ks_w, frozen, cfg, prior=prior, prior_w=prior_w, demo=demo,
+                       demo_w=demo_w)
             step += pc.n_envs * pc.horizon
             parts = roll['parts'].reshape(-1, N_PARTS).mean(0)
             row = dict(kind='update', step=step, phase='warmup' if frozen else 'ppo', lr=lr, ks_w=ks_w, prior_w=prior_w,
+                       demo_w=demo_w if demo is not None else 0.0,
                        collect_s=t1 - t0, update_s=time.time() - t1,
                        fps=(step - s_start) / (time.time() - t_start), reward=float(roll['reward'].mean()),
                        **{'step_' + k: float(x) for k, x in zip(PARTS, parts)}, **u, **match_numbers(col.matches))

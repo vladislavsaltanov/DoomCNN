@@ -238,10 +238,29 @@ def test_collect_and_update_train_the_policy_and_frozen_trains_the_critic_only()
     assert all(math.isfinite(out[k]) for k in ('pg', 'ks', 'aux', 'spatial', 'kl', 'agree_move', 'prior_kl'))
 
 
+def test_update_mixes_in_the_teachers_demonstrations(tmp_path):
+    from dmfiles import make_match
+    from doomagent.dm.ppo import demo_batches
+    torch.manual_seed(0)
+    cfg = replace(DM, seg_len=8, burn_in=2)
+    for s in range(2):
+        make_match(tmp_path / 'demo', s, T=40, aux=True)
+    envs = local_envs(2, cfg, [BASE], (7,), env_factory=lambda c, v: FakeMatchEnv(fake_rows(30)),
+                      teacher_factory=lambda: StubTeacher((FORWARD, 0, 1, 0)))
+    model = DMNet(cfg, memory=True, aux=True)
+    critic = Critic(model.head.in_features)
+    pc = replace(PPOCfg(), horizon=16, mb_windows=2, epochs=1)
+    roll = Collector(envs, 2, cfg, 'cpu', True).collect(model, critic, pc.horizon, REWARD)
+    opts = torch.optim.Adam(model.parameters(), 1e-3), torch.optim.Adam(critic.parameters(), 1e-3)
+    out = update(model, critic, *opts, roll, pc, 0.0, frozen=False, cfg=cfg,
+                 demo=demo_batches([str(tmp_path / 'demo')], cfg, 2, 'cpu'), demo_w=0.1)
+    assert math.isfinite(out['demo_ce']) and 0.0 <= out['demo_acc'] <= 1.0
+
+
 def test_schedule_warms_up_then_anneals():
     pc = PPOCfg()
-    assert schedule(pc, 0) == (pc.lr, pc.ks, pc.prior)
-    lr, ks, pw = schedule(pc, pc.steps)
+    assert schedule(pc, 0) == (pc.lr, pc.ks, pc.prior, pc.demo)
+    lr, ks, pw, _ = schedule(pc, pc.steps)
     assert lr == pytest.approx(pc.lr * pc.lr_end) and ks == pytest.approx(pc.ks_end) and pw == pytest.approx(pc.prior_end)
 
 
