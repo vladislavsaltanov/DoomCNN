@@ -241,10 +241,11 @@ def ppo_figure(rows, out_png, teacher_val=None, smooth=20):
     for i, (k, name) in enumerate((('ks', 'teacher CE'), ('aux', 'auxiliary'), ('spatial', 'spatial'), ('v_loss', 'value'))):
         line(ax[4], [r['step'] for r in up], [r[k] for r in up], name, CATEGORICAL[1 + i], smooth)
     _style(ax[4], 'Losses')
+    anchor = ('prior_w', 'KL anchor weight') if up and 'prior_w' in up[0] else ('ks_w', 'teacher weight')
     for i, (k, name) in enumerate((('kl', 'KL x 10'), ('clipfrac', 'clipped'), ('ent_turn', 'entropy turn'),
-                                   ('ent_move', 'entropy move'), ('ks_w', 'teacher weight'))):
+                                   ('ent_move', 'entropy move'), anchor)):
         ys = [r[k] * (10 if k == 'kl' else 1) for r in up]
-        line(ax[5], [r['step'] for r in up], ys, name, CATEGORICAL[1 + i], 1 if k == 'ks_w' else smooth)
+        line(ax[5], [r['step'] for r in up], ys, name, CATEGORICAL[1 + i], 1 if k == anchor[0] else smooth)
     _style(ax[5], 'PPO')
     for a in ax:
         _xlabel(a, 'env steps, millions')

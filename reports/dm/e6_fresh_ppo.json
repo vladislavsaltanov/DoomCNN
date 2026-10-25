@@ -1,0 +1,1788 @@
+{
+ "models": {
+  "ppo_kl_01509k": {
+   "frags": {
+    "mean": 9.35,
+    "lo": 8.132916666666667,
+    "hi": 10.583333333333334
+   },
+   "deaths": {
+    "mean": 3.85,
+    "lo": 3.4166666666666665,
+    "hi": 4.283333333333333
+   },
+   "kills": {
+    "mean": 9.833333333333334,
+    "lo": 8.583333333333334,
+    "hi": 11.083749999999998
+   },
+   "suicides": {
+    "mean": 0.48333333333333334,
+    "lo": 0.3333333333333333,
+    "hi": 0.65
+   },
+   "kd": {
+    "mean": 2.74093253968254,
+    "lo": 2.3003601190476193,
+    "hi": 3.204552083333333
+   },
+   "hits_per_shot": {
+    "mean": 0.43270063806259085,
+    "lo": 0.39674525689966483,
+    "hi": 0.47313203401683684
+   },
+   "items": {
+    "mean": 6.1,
+    "lo": 5.483333333333333,
+    "hi": 6.75
+   },
+   "path": {
+    "mean": 19934.901812113032,
+    "lo": 18893.31774027848,
+    "hi": 20805.973952092023
+   },
+   "stuck_share": {
+    "mean": 0.05316459231337086,
+    "lo": 0.027289305194736945,
+    "hi": 0.0839065322701789
+   },
+   "enemy_share": {
+    "mean": 0.5193184110940043,
+    "lo": 0.4810232115012457,
+    "hi": 0.5569679058410975
+   },
+   "bot_median": {
+    "mean": 3.95,
+    "lo": 3.65,
+    "hi": 4.25
+   },
+   "bot_best": {
+    "mean": 8.483333333333333,
+    "lo": 7.833333333333333,
+    "hi": 9.133333333333333
+   },
+   "reward": {
+    "mean": 9.35,
+    "lo": 8.132916666666667,
+    "hi": 10.583333333333334
+   },
+   "kd_total": 2.4285714285714284,
+   "shots": 224.41666666666666,
+   "length": 1049.0833333333333,
+   "first_share": 0.6333333333333333,
+   "weapon_share": {
+    "1": 0.05132188783187371,
+    "2": 0.2902695551561284,
+    "3": 0.15378420667320677,
+    "4": 0.3572020042513933,
+    "5": 0.1100430791148887,
+    "6": 0.009669042380752552,
+    "7": 0.027710224591756625
+   },
+   "share_of_teacher": null
+  },
+  "ppo_kl_02013k": {
+   "frags": {
+    "mean": 10.783333333333333,
+    "lo": 9.5,
+    "hi": 12.083749999999998
+   },
+   "deaths": {
+    "mean": 4.316666666666666,
+    "lo": 3.933333333333333,
+    "hi": 4.716666666666667
+   },
+   "kills": {
+    "mean": 11.266666666666667,
+    "lo": 9.933333333333334,
+    "hi": 12.633333333333333
+   },
+   "suicides": {
+    "mean": 0.48333333333333334,
+    "lo": 0.31666666666666665,
+    "hi": 0.6666666666666666
+   },
+   "kd": {
+    "mean": 2.76760582010582,
+    "lo": 2.3086504629629627,
+    "hi": 3.2262460317460313
+   },
+   "hits_per_shot": {
+    "mean": 0.44421850841415833,
+    "lo": 0.400039160332814,
+    "hi": 0.49391302029143475
+   },
+   "items": {
+    "mean": 6.433333333333334,
+    "lo": 5.6,
+    "hi": 7.233333333333333
+   },
+   "path": {
+    "mean": 19947.90050294998,
+    "lo": 18989.683329733503,
+    "hi": 20751.40368370663
+   },
+   "stuck_share": {
+    "mean": 0.04047404297735221,
+    "lo": 0.015170552656445119,
+    "hi": 0.07512185523474892
+   },
+   "enemy_share": {
+    "mean": 0.5413081599469217,
+    "lo": 0.5059150532674545,
+    "hi": 0.5736905595830363
+   },
+   "bot_median": {
+    "mean": 3.6666666666666665,
+    "lo": 3.35,
+    "hi": 4.0
+   },
+   "bot_best": {
+    "mean": 8.683333333333334,
+    "lo": 8.066666666666666,
+    "hi": 9.3
+   },
+   "reward": {
+    "mean": 10.783333333333333,
+    "lo": 9.5,
+    "hi": 12.083749999999998
+   },
+   "kd_total": 2.498069498069498,
+   "shots": 241.96666666666667,
+   "length": 1049.0833333333333,
+   "first_share": 0.7166666666666667,
+   "weapon_share": {
+    "1": 0.02505490371413024,
+    "2": 0.2772118702365157,
+    "3": 0.14630663009909328,
+    "4": 0.4045519203693674,
+    "5": 0.09821850144448731,
+    "6": 0.01687721494116534,
+    "7": 0.03177895919524079
+   },
+   "share_of_teacher": null
+  },
+  "ppo_kl_02265k": {
+   "frags": {
+    "mean": 9.883333333333333,
+    "lo": 8.6,
+    "hi": 11.200416666666664
+   },
+   "deaths": {
+    "mean": 4.3,
+    "lo": 3.7666666666666666,
+    "hi": 4.85
+   },
+   "kills": {
+    "mean": 10.566666666666666,
+    "lo": 9.249583333333334,
+    "hi": 11.91708333333333
+   },
+   "suicides": {
+    "mean": 0.6833333333333333,
+    "lo": 0.5,
+    "hi": 0.8833333333333333
+   },
+   "kd": {
+    "mean": 2.596812770562771,
+    "lo": 2.186500360750361,
+    "hi": 3.0186824044011544
+   },
+   "hits_per_shot": {
+    "mean": 0.44409804844439627,
+    "lo": 0.3911809801648577,
+    "hi": 0.5048187868169391
+   },
+   "items": {
+    "mean": 6.066666666666666,
+    "lo": 5.232916666666667,
+    "hi": 6.933333333333334
+   },
+   "path": {
+    "mean": 19484.226575202807,
+    "lo": 18112.17411649817,
+    "hi": 20684.617769873304
+   },
+   "stuck_share": {
+    "mean": 0.07917322683753344,
+    "lo": 0.03806812079460583,
+    "hi": 0.12711881998537447
+   },
+   "enemy_share": {
+    "mean": 0.5286626535254496,
+    "lo": 0.4839387264726062,
+    "hi": 0.570573767861404
+   },
+   "bot_median": {
+    "mean": 3.8333333333333335,
+    "lo": 3.5166666666666666,
+    "hi": 4.166666666666667
+   },
+   "bot_best": {
+    "mean": 8.366666666666667,
+    "lo": 7.866666666666666,
+    "hi": 8.883333333333333
+   },
+   "reward": {
+    "mean": 9.883333333333333,
+    "lo": 8.6,
+    "hi": 11.200416666666664
+   },
+   "kd_total": 2.298449612403101,
+   "shots": 231.38333333333333,
+   "length": 1049.1,
+   "first_share": 0.6666666666666666,
+   "weapon_share": {
+    "1": 0.046208169326184295,
+    "2": 0.22568923602892219,
+    "3": 0.15092446240978938,
+    "4": 0.44088257460386693,
+    "5": 0.10125715425779826,
+    "6": 0.0019237544783957579,
+    "7": 0.03311464889504316
+   },
+   "share_of_teacher": null
+  },
+  "ppo_kl_03000k": {
+   "frags": {
+    "mean": 10.216666666666667,
+    "lo": 8.882916666666667,
+    "hi": 11.533333333333333
+   },
+   "deaths": {
+    "mean": 4.383333333333334,
+    "lo": 4.032916666666667,
+    "hi": 4.733333333333333
+   },
+   "kills": {
+    "mean": 10.9,
+    "lo": 9.583333333333334,
+    "hi": 12.2
+   },
+   "suicides": {
+    "mean": 0.6833333333333333,
+    "lo": 0.48333333333333334,
+    "hi": 0.9004166666666644
+   },
+   "kd": {
+    "mean": 2.464722222222223,
+    "lo": 2.1097132936507936,
+    "hi": 2.816697420634921
+   },
+   "hits_per_shot": {
+    "mean": 0.40664164024070454,
+    "lo": 0.3640229253550397,
+    "hi": 0.4529120683451412
+   },
+   "items": {
+    "mean": 6.666666666666667,
+    "lo": 5.983333333333333,
+    "hi": 7.433749999999998
+   },
+   "path": {
+    "mean": 19743.919123417763,
+    "lo": 18895.422318376295,
+    "hi": 20524.403639194014
+   },
+   "stuck_share": {
+    "mean": 0.058532571337551006,
+    "lo": 0.03078043487262973,
+    "hi": 0.09030155917535027
+   },
+   "enemy_share": {
+    "mean": 0.5353415026190899,
+    "lo": 0.4946632558435289,
+    "hi": 0.5746727775818471
+   },
+   "bot_median": {
+    "mean": 3.966666666666667,
+    "lo": 3.7,
+    "hi": 4.233333333333333
+   },
+   "bot_best": {
+    "mean": 8.716666666666667,
+    "lo": 8.16625,
+    "hi": 9.25
+   },
+   "reward": {
+    "mean": 10.216666666666667,
+    "lo": 8.882916666666667,
+    "hi": 11.533333333333333
+   },
+   "kd_total": 2.3307984790874525,
+   "shots": 242.65,
+   "length": 1049.1666666666667,
+   "first_share": 0.6833333333333333,
+   "weapon_share": {
+    "1": 0.03513606916143501,
+    "2": 0.3347339272127638,
+    "3": 0.1309728551491863,
+    "4": 0.35045501081329644,
+    "5": 0.09747620453930897,
+    "6": 0.012626250245887994,
+    "7": 0.03859968287812145
+   },
+   "share_of_teacher": null
+  }
+ },
+ "vs_teacher": {},
+ "m1_vs_m0": {},
+ "plan": "fresh",
+ "matches": 60,
+ "models_paths": [
+  "runs/dm/e6/ppo_kl_01509k.pt",
+  "runs/dm/e6/ppo_kl_02013k.pt",
+  "runs/dm/e6/ppo_kl_02265k.pt",
+  "runs/dm/e6/ppo_kl_03000k.pt"
+ ],
+ "per_match": {
+  "ppo_kl_01509k": [
+   {
+    "variant": "base",
+    "seed": 36000,
+    "frags": 8.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36001,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36002,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36003,
+    "frags": 12.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36004,
+    "frags": 13.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36005,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36006,
+    "frags": 13.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36007,
+    "frags": 15.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36008,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36009,
+    "frags": 8.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36010,
+    "frags": 9.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36011,
+    "frags": 11.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36012,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36013,
+    "frags": 6.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36014,
+    "frags": 6.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36015,
+    "frags": 5.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36016,
+    "frags": 14.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36017,
+    "frags": 17.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36018,
+    "frags": 17.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36019,
+    "frags": 13.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36020,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36021,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36022,
+    "frags": 18.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36023,
+    "frags": 19.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36024,
+    "frags": 14.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36025,
+    "frags": 11.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36026,
+    "frags": 6.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "base",
+    "seed": 36027,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36028,
+    "frags": 11.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36029,
+    "frags": 13.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 36030,
+    "frags": 4.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36031,
+    "frags": 13.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36032,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36033,
+    "frags": 9.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36034,
+    "frags": 10.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36035,
+    "frags": 12.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36036,
+    "frags": 14.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36037,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36038,
+    "frags": 14.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36039,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36000,
+    "frags": 3.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36001,
+    "frags": 4.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36002,
+    "frags": 4.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36003,
+    "frags": 4.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36004,
+    "frags": 0.0,
+    "deaths": 0.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36000,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36001,
+    "frags": 11.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36002,
+    "frags": 13.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36003,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36004,
+    "frags": 9.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36000,
+    "frags": -1.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36001,
+    "frags": 1.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36002,
+    "frags": -1.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36003,
+    "frags": 1.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36004,
+    "frags": 5.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36000,
+    "frags": 6.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36001,
+    "frags": 3.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36002,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36003,
+    "frags": 6.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36004,
+    "frags": 3.0,
+    "deaths": 1.0
+   }
+  ],
+  "ppo_kl_02013k": [
+   {
+    "variant": "base",
+    "seed": 36000,
+    "frags": 14.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36001,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36002,
+    "frags": 21.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36003,
+    "frags": 13.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36004,
+    "frags": 13.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36005,
+    "frags": 13.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36006,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36007,
+    "frags": 9.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36008,
+    "frags": 10.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "base",
+    "seed": 36009,
+    "frags": 20.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36010,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36011,
+    "frags": 10.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36012,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36013,
+    "frags": 18.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36014,
+    "frags": 8.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36015,
+    "frags": 11.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36016,
+    "frags": 16.0,
+    "deaths": 9.0
+   },
+   {
+    "variant": "base",
+    "seed": 36017,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36018,
+    "frags": 15.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36019,
+    "frags": 13.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36020,
+    "frags": 9.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36021,
+    "frags": 10.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36022,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36023,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36024,
+    "frags": 14.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36025,
+    "frags": 16.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36026,
+    "frags": 14.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36027,
+    "frags": 18.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36028,
+    "frags": 9.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36029,
+    "frags": 13.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36030,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36031,
+    "frags": 16.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36032,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36033,
+    "frags": 19.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36034,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36035,
+    "frags": 15.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36036,
+    "frags": 9.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36037,
+    "frags": 9.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36038,
+    "frags": 14.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36039,
+    "frags": 19.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36000,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36001,
+    "frags": 8.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36002,
+    "frags": 1.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36003,
+    "frags": 8.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36004,
+    "frags": 1.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36000,
+    "frags": 9.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36001,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36002,
+    "frags": 15.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36003,
+    "frags": 12.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36004,
+    "frags": 9.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36000,
+    "frags": 4.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36001,
+    "frags": 0.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36002,
+    "frags": 3.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36003,
+    "frags": 6.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36004,
+    "frags": 2.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36000,
+    "frags": 1.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36001,
+    "frags": 9.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36002,
+    "frags": 5.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36003,
+    "frags": 7.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36004,
+    "frags": 1.0,
+    "deaths": 2.0
+   }
+  ],
+  "ppo_kl_02265k": [
+   {
+    "variant": "base",
+    "seed": 36000,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36001,
+    "frags": 8.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36002,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36003,
+    "frags": 17.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36004,
+    "frags": 8.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36005,
+    "frags": 13.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36006,
+    "frags": 21.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36007,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36008,
+    "frags": 10.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36009,
+    "frags": 13.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36010,
+    "frags": 13.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 36011,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36012,
+    "frags": 13.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36013,
+    "frags": 10.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36014,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36015,
+    "frags": 17.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36016,
+    "frags": 16.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36017,
+    "frags": 14.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36018,
+    "frags": 9.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36019,
+    "frags": 6.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36020,
+    "frags": 12.0,
+    "deaths": 11.0
+   },
+   {
+    "variant": "base",
+    "seed": 36021,
+    "frags": 9.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36022,
+    "frags": 20.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36023,
+    "frags": 15.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36024,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36025,
+    "frags": 7.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36026,
+    "frags": 17.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36027,
+    "frags": 11.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "base",
+    "seed": 36028,
+    "frags": 9.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36029,
+    "frags": 17.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36030,
+    "frags": 10.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36031,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36032,
+    "frags": 11.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36033,
+    "frags": 11.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36034,
+    "frags": 15.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36035,
+    "frags": 8.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36036,
+    "frags": 14.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36037,
+    "frags": 16.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36038,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36039,
+    "frags": 8.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36000,
+    "frags": 0.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36001,
+    "frags": 3.0,
+    "deaths": 0.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36002,
+    "frags": 2.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36003,
+    "frags": 3.0,
+    "deaths": 8.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36004,
+    "frags": 10.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36000,
+    "frags": 8.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36001,
+    "frags": 9.0,
+    "deaths": 10.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36002,
+    "frags": 9.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36003,
+    "frags": 8.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36004,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36000,
+    "frags": 2.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36001,
+    "frags": -1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36002,
+    "frags": 1.0,
+    "deaths": 1.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36003,
+    "frags": 2.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36004,
+    "frags": 2.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36000,
+    "frags": 6.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36001,
+    "frags": 7.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36002,
+    "frags": 6.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36003,
+    "frags": 3.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36004,
+    "frags": 6.0,
+    "deaths": 1.0
+   }
+  ],
+  "ppo_kl_03000k": [
+   {
+    "variant": "base",
+    "seed": 36000,
+    "frags": 14.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36001,
+    "frags": 7.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36002,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36003,
+    "frags": 13.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36004,
+    "frags": 12.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36005,
+    "frags": 9.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36006,
+    "frags": 16.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36007,
+    "frags": 10.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36008,
+    "frags": 12.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36009,
+    "frags": 13.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "base",
+    "seed": 36010,
+    "frags": 11.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36011,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36012,
+    "frags": 18.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36013,
+    "frags": 16.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36014,
+    "frags": 14.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36015,
+    "frags": 17.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36016,
+    "frags": 18.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36017,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36018,
+    "frags": 10.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36019,
+    "frags": 14.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36020,
+    "frags": 14.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36021,
+    "frags": 19.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36022,
+    "frags": 7.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36023,
+    "frags": 10.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36024,
+    "frags": 17.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36025,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36026,
+    "frags": 16.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36027,
+    "frags": 13.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36028,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36029,
+    "frags": 11.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36030,
+    "frags": 10.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36031,
+    "frags": 6.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36032,
+    "frags": 13.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36033,
+    "frags": 20.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36034,
+    "frags": 14.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "base",
+    "seed": 36035,
+    "frags": 11.0,
+    "deaths": 7.0
+   },
+   {
+    "variant": "base",
+    "seed": 36036,
+    "frags": 19.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "base",
+    "seed": 36037,
+    "frags": 10.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "base",
+    "seed": 36038,
+    "frags": 12.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "base",
+    "seed": 36039,
+    "frags": 8.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36000,
+    "frags": 0.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36001,
+    "frags": 8.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36002,
+    "frags": 5.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36003,
+    "frags": -1.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "mix_val_00_cpos",
+    "seed": 36004,
+    "frags": 1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36000,
+    "frags": 12.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36001,
+    "frags": 10.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36002,
+    "frags": 8.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36003,
+    "frags": 15.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "spr_val_cpos",
+    "seed": 36004,
+    "frags": 13.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36000,
+    "frags": -1.0,
+    "deaths": 6.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36001,
+    "frags": 4.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36002,
+    "frags": 3.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36003,
+    "frags": 5.0,
+    "deaths": 3.0
+   },
+   {
+    "variant": "tex_val_00",
+    "seed": 36004,
+    "frags": 0.0,
+    "deaths": 4.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36000,
+    "frags": 12.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36001,
+    "frags": 1.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36002,
+    "frags": 4.0,
+    "deaths": 2.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36003,
+    "frags": 4.0,
+    "deaths": 5.0
+   },
+   {
+    "variant": "tex_val_01",
+    "seed": 36004,
+    "frags": 1.0,
+    "deaths": 1.0
+   }
+  ]
+ }
+}
