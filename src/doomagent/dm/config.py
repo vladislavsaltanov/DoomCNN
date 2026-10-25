@@ -18,7 +18,7 @@ class DMCfg:
     frame_skip: int = 4
     stack: int = 4
     height: int = 240          # network input: 2x the first section's 160x120, small bots are
-    width: int = 320           # 2x wider (D1 resolution check, user decision 2026-10-22)
+    width: int = 320           # 2x wider (D1 resolution check, decided 2026-10-22)
     render_w: int = 640        # game render: demo, video, labels
     render_h: int = 480
     hud: bool = False

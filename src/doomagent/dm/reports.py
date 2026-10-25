@@ -122,7 +122,7 @@ def gate_a(report):
 
 
 def gate_a2(report, diff_ci):
-    # spec v2 §1, revised 2026-10-23 (v2.1, user decision on the E1 numbers): K/D over all matches >= 3, first of 8
+    # spec v2 §1, revised 2026-10-23 (v2.1, decided on the E1 numbers): K/D over all matches >= 3, first of 8
     # in >= 50 % of matches, frags not significantly below the best bot of the match: diff_ci = (mean, lo, hi) of the
     # per-match difference teacher - best bot, its upper bound >= 0
     t = report['teacher']

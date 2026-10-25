@@ -22,7 +22,7 @@ PHASES = {1: [('dm2_m0_r0', 'm0', R0, []),
               ('dm2_m0_r0_conv', 'm0', R0, ['--conv-init', CONV])],
           2: [('dm2_m0_r01', 'm0', R01, []),
               ('dm2_m1_r01', 'm1', R01, [])],
-          # after the inventory and the auxiliary targets (E4 ruling): R0 of 300 matches + R1, conv init kept
+          # after the inventory and the auxiliary targets (E4 decision): R0 of 300 matches + R1, conv init kept
           3: [('dm3_m1_aux', 'm1', R01, ['--conv-init', CONV, '--aux', '1.0']),
               ('dm3_m1', 'm1', R01, ['--conv-init', CONV]),
               ('dm3_m0_aux', 'm0', R01, ['--conv-init', CONV, '--aux', '1.0'])],
