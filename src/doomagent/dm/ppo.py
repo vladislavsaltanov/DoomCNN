@@ -39,7 +39,7 @@ from doomagent.evaluate import val_score
 from doomagent.variants import BASE, load_variants
 
 REWARD = dict(frag=1.0, death=-0.2, damage=0.005, item=0.02, weapon=0.1, stuck=-0.01, explore=0.0, linger=0.0,
-              territory=0.0)
+              territory=0.0, blind_fire=0.0)
 
 
 @dataclass(frozen=True)
@@ -70,6 +70,7 @@ class PPOCfg:
     base_share: float = 0.5      # matches on the base map; the rest on the train variants
     eval_every: int = 250_000
     ckpt_every: int = 100_000
+    latest_every: int = 25_000   # runs/<out>/latest.pt this often: the dashboard's live game can play the network now
     eval_workers: int = 4
     live: bool = True            # the training games on the dashboard (runs/dm/live)
     seed: int = 0
@@ -536,6 +537,8 @@ def run(out, init, pc=PPOCfg(), reward=None, cfg=DM, plan=None, envs=None, varia
             log(row)
             if step - last_eval >= pc.eval_every or step >= pc.steps:
                 eval_now()
+            if step // pc.latest_every != (step - pc.n_envs * pc.horizon) // pc.latest_every:
+                save_model(model, os.path.join(out, 'latest.pt'))
             if step - last_ckpt >= pc.ckpt_every or step >= pc.steps:
                 save_state()
                 last_ckpt = step

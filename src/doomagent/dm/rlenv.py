@@ -19,9 +19,10 @@ from doomagent.dm.teacher import DMTeacher, visible_bots
 from doomagent.variants import BASE
 
 # raw parts of a step's reward; dm.ppo weighs them (frags count 1, the rest is shaping)
-PARTS = ('frag', 'death', 'damage', 'item', 'weapon', 'stuck', 'explore', 'linger', 'territory')
+PARTS = ('frag', 'death', 'damage', 'item', 'weapon', 'stuck', 'explore', 'linger', 'territory', 'blind_fire')
 N_PARTS = len(PARTS)
-STUCK, EXPLORE, LINGER, TERRITORY = (PARTS.index(k) for k in ('stuck', 'explore', 'linger', 'territory'))
+STUCK, EXPLORE, LINGER, TERRITORY, BLIND_FIRE = (PARTS.index(k) for k in ('stuck', 'explore', 'linger', 'territory',
+                                                                       'blind_fire'))
 CELL = 128.0          # map units: the exploration grid
 REVISIT_STEPS = 262   # 30 s: a cell left this long ago counts as new again (items respawn in 30 s)
 LINGER_STEPS = 44     # 5 s ...
@@ -158,6 +159,9 @@ class Runner:
         obs, r, done = self.env.step(action)
         q = self.env.privileged()
         parts = step_parts(p, q, obs.first, r)
+        # fire pressed with no bot in sight (as the teacher sees them): shooting at nothing; the teacher never does
+        parts[BLIND_FIRE] = float(action[2] == 1 and not visible_bots(p.labels, p.px, p.py, self.cfg.width, p.vis_px,
+                                                                         self.cfg.min_vis_px))
         self.t += 1
         if done:
             self.stats['parts'] += parts
