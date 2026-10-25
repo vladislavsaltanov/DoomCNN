@@ -22,6 +22,7 @@
   .card h2 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .9px; color: var(--muted); font-weight: 600; }
   .card .note { color: var(--muted); font-size: 11px; margin-top: 4px; }
   img.view { width: 100%; display: block; background: #000; border-radius: 6px; }
+  img.view:not([src]) { display: none; }  /* no stream while nothing plays (dashboard_dm.js: setStreams) */
   .controls { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
   .controls label { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .row { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
