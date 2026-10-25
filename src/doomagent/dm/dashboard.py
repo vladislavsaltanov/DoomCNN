@@ -182,7 +182,11 @@ def dm_neurons(run):
 
 
 def dm_options():
-    models = sorted(glob.glob('runs/dm/*.pt'), key=os.path.getmtime, reverse=True)
+    # BC and DAgger models sit in runs/dm, a PPO run's in its own folder (best.pt and copies like runs/dm/e6/*.pt);
+    # its periodic snapshots and its training state are left out
+    found = glob.glob('runs/dm/*.pt') + glob.glob('runs/dm/*/*.pt')
+    models = sorted((p for p in found if not os.path.basename(p).startswith(('step_', 'state'))),
+                    key=os.path.getmtime, reverse=True)
     variants = ['base']
     try:
         from doomagent.variants import load_variants
