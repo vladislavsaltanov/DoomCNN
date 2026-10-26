@@ -90,6 +90,38 @@ py -3.12 -m venv .venv
 
 Порядок этапов и команды каждого — в `research_log.md` (раздел «Команда» в каждой записи).
 
+## Список литературы
+
+Публикации:
+
+1. Kempka M. и др. ViZDoom: A Doom-based AI research platform for visual reinforcement learning // 2016 IEEE Conference on Computational Intelligence and Games (CIG). 2016. P. 1–8. arXiv:1605.02097.
+2. Wydmuch M., Kempka M., Jaśkowski W. ViZDoom Competitions: Playing Doom from Pixels // IEEE Transactions on Games. 2019. Vol. 11, № 3. P. 248–259. arXiv:1809.03470.
+3. Mnih V. и др. Human-level control through deep reinforcement learning // Nature. 2015. Vol. 518. P. 529–533.
+4. Pomerleau D. A. ALVINN: An Autonomous Land Vehicle in a Neural Network // Advances in Neural Information Processing Systems 1. 1989. P. 305–313.
+5. Ross S., Gordon G., Bagnell D. A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning // Proceedings of AISTATS, PMLR. 2011. Vol. 15. P. 627–635. arXiv:1011.0686.
+6. Chen D., Zhou B., Koltun V., Krähenbühl P. Learning by Cheating // Proceedings of the Conference on Robot Learning (CoRL), PMLR. 2019. Vol. 100. P. 66–75. arXiv:1912.12294.
+7. Schulman J. и др. Proximal Policy Optimization Algorithms. 2017. arXiv:1707.06347.
+8. Schulman J. и др. High-Dimensional Continuous Control Using Generalized Advantage Estimation // International Conference on Learning Representations (ICLR). 2016. arXiv:1506.02438.
+9. Jaderberg M. и др. Reinforcement Learning with Unsupervised Auxiliary Tasks // International Conference on Learning Representations (ICLR). 2017. arXiv:1611.05397.
+10. Ng A. Y., Harada D., Russell S. Policy invariance under reward transformations: Theory and application to reward shaping // Proceedings of the 16th International Conference on Machine Learning (ICML). 1999. P. 278–287.
+11. Kingma D. P., Ba J. Adam: A Method for Stochastic Optimization // International Conference on Learning Representations (ICLR). 2015. arXiv:1412.6980.
+12. Efron B., Tibshirani R. J. An Introduction to the Bootstrap. New York: Chapman & Hall, 1993. 436 p.
+
+Программные средства и данные:
+
+13. ViZDoom 1.3.2 [Электронный ресурс]. URL: https://github.com/Farama-Foundation/ViZDoom
+14. Freedoom: free content game based on the Doom engine [Электронный ресурс]. URL: https://freedoom.github.io/
+15. Doom Wiki. WAD [Электронный ресурс]. URL: https://doomwiki.org/wiki/WAD
+16. Paszke A. и др. PyTorch: An Imperative Style, High-Performance Deep Learning Library // Advances in Neural Information Processing Systems 32. 2019. arXiv:1912.01703. Версия 2.14.1.
+17. Raffin A. и др. Stable-Baselines3: Reliable Reinforcement Learning Implementations // Journal of Machine Learning Research. 2021. Vol. 22, № 268. P. 1–8. Версия 2.9.0.
+18. Towers M. и др. Gymnasium: A Standard Interface for Reinforcement Learning Environments. 2024. arXiv:2407.17032. Версия 1.4.0.
+19. Harris C. R. и др. Array programming with NumPy // Nature. 2020. Vol. 585. P. 357–362. Версия 2.5.4.
+20. Hunter J. D. Matplotlib: A 2D Graphics Environment // Computing in Science & Engineering. 2007. Vol. 9, № 3. P. 90–95. Версия 3.11.2.
+21. Bradski G. The OpenCV Library // Dr. Dobb's Journal of Software Tools. 2000. Версия opencv-python 5.0.0.93.
+22. Pillow (PIL Fork) 13.0.0 [Электронный ресурс]. URL: https://python-pillow.org/
+23. pytest 9.1.1 [Электронный ресурс]. URL: https://docs.pytest.org/
+24. FFmpeg [Электронный ресурс]. URL: https://ffmpeg.org/
+
 ## Благодарности
 
 [ViZDoom](https://github.com/Farama-Foundation/ViZDoom), [Freedoom](https://freedoom.github.io/) (графика и полоса статуса), [Stable-Baselines3](https://github.com/DLR-RM/stable-baselines3), PyTorch.
