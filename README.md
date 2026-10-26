@@ -142,6 +142,51 @@ PPO от DAgger-ученика: `.venv\Scripts\python scripts\dm\dm_ppo.py --ini
 (22.97 против 22.89), и на незнакомой (21.15 против 20.96). Отсюда в deathmatch перешли конвейер, проверка на
 свежих seed с парными разностями и свёртки итоговой модели как инициализация.
 
+## Список литературы
+
+Публикации:
+
+1. Kempka M. и др. ViZDoom: A Doom-based AI research platform for visual reinforcement learning // 2016 IEEE Conference on Computational Intelligence and Games (CIG). 2016. P. 1–8. arXiv:1605.02097.
+2. Wydmuch M., Kempka M., Jaśkowski W. ViZDoom Competitions: Playing Doom from Pixels // IEEE Transactions on Games. 2019. Vol. 11, № 3. P. 248–259. arXiv:1809.03470.
+3. Lample G., Chaplot D. S. Playing FPS Games with Deep Reinforcement Learning // Proceedings of the AAAI Conference on Artificial Intelligence. 2017. Vol. 31, № 1. arXiv:1609.05521.
+4. Dosovitskiy A., Koltun V. Learning to Act by Predicting the Future // International Conference on Learning Representations (ICLR). 2017. arXiv:1611.01779.
+5. Hausknecht M., Stone P. Deep Recurrent Q-Learning for Partially Observable MDPs // AAAI Fall Symposium Series. 2015. arXiv:1507.06527.
+6. Mnih V. и др. Human-level control through deep reinforcement learning // Nature. 2015. Vol. 518. P. 529–533.
+7. Cho K. и др. Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation // Proceedings of EMNLP. 2014. P. 1724–1734. arXiv:1406.1078.
+8. Pomerleau D. A. ALVINN: An Autonomous Land Vehicle in a Neural Network // Advances in Neural Information Processing Systems 1. 1989. P. 305–313.
+9. Ross S., Gordon G., Bagnell D. A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning // Proceedings of AISTATS, PMLR. 2011. Vol. 15. P. 627–635. arXiv:1011.0686.
+10. Chen D., Zhou B., Koltun V., Krähenbühl P. Learning by Cheating // Proceedings of the Conference on Robot Learning (CoRL), PMLR. 2019. Vol. 100. P. 66–75. arXiv:1912.12294.
+11. Codevilla F. и др. End-to-end Driving via Conditional Imitation Learning // 2018 IEEE International Conference on Robotics and Automation (ICRA). 2018. P. 4693–4700. arXiv:1710.02410.
+12. Weihs L. и др. Bridging the Imitation Gap by Adaptive Insubordination // Advances in Neural Information Processing Systems 34. 2021. arXiv:2007.12173.
+13. Schulman J. и др. Proximal Policy Optimization Algorithms. 2017. arXiv:1707.06347.
+14. Schulman J. и др. High-Dimensional Continuous Control Using Generalized Advantage Estimation // International Conference on Learning Representations (ICLR). 2016. arXiv:1506.02438.
+15. Pinto L. и др. Asymmetric Actor Critic for Image-Based Robot Learning // Robotics: Science and Systems. 2018. arXiv:1710.06542.
+16. Schmitt S. и др. Kickstarting Deep Reinforcement Learning. 2018. arXiv:1803.03835.
+17. Jaderberg M. и др. Reinforcement Learning with Unsupervised Auxiliary Tasks // International Conference on Learning Representations (ICLR). 2017. arXiv:1611.05397.
+18. Bellemare M. и др. Unifying Count-Based Exploration and Intrinsic Motivation // Advances in Neural Information Processing Systems 29. 2016. P. 1471–1479. arXiv:1606.01868.
+19. Ng A. Y., Harada D., Russell S. Policy invariance under reward transformations: Theory and application to reward shaping // Proceedings of the 16th International Conference on Machine Learning (ICML). 1999. P. 278–287.
+20. Kingma D. P., Ba J. Adam: A Method for Stochastic Optimization // International Conference on Learning Representations (ICLR). 2015. arXiv:1412.6980.
+21. Hart P. E., Nilsson N. J., Raphael B. A Formal Basis for the Heuristic Determination of Minimum Cost Paths // IEEE Transactions on Systems Science and Cybernetics. 1968. Vol. 4, № 2. P. 100–107.
+22. Efron B., Tibshirani R. J. An Introduction to the Bootstrap. New York: Chapman & Hall, 1993. 436 p.
+23. Matsumoto M., Nishimura T. Mersenne Twister: a 623-dimensionally equidistributed uniform pseudorandom number generator // ACM Transactions on Modeling and Computer Simulation. 1998. Vol. 8, № 1. P. 3–30.
+24. van der Maaten L., Hinton G. Visualizing Data using t-SNE // Journal of Machine Learning Research. 2008. Vol. 9. P. 2579–2605.
+
+Программные средства и данные:
+
+25. ViZDoom 1.3.2 [Электронный ресурс]. URL: https://github.com/Farama-Foundation/ViZDoom
+26. Freedoom: free content game based on the Doom engine [Электронный ресурс]. URL: https://freedoom.github.io/
+27. Doom Wiki. WAD [Электронный ресурс]. URL: https://doomwiki.org/wiki/WAD
+28. Paszke A. и др. PyTorch: An Imperative Style, High-Performance Deep Learning Library // Advances in Neural Information Processing Systems 32. 2019. arXiv:1912.01703. Версия 2.14.1.
+29. Raffin A. и др. Stable-Baselines3: Reliable Reinforcement Learning Implementations // Journal of Machine Learning Research. 2021. Vol. 22, № 268. P. 1–8. Версия 2.9.0.
+30. Towers M. и др. Gymnasium: A Standard Interface for Reinforcement Learning Environments. 2024. arXiv:2407.17032. Версия 1.4.0.
+31. Harris C. R. и др. Array programming with NumPy // Nature. 2020. Vol. 585. P. 357–362. Версия 2.5.4.
+32. Pedregosa F. и др. Scikit-learn: Machine Learning in Python // Journal of Machine Learning Research. 2011. Vol. 12. P. 2825–2830. Версия 1.9.1.
+33. Hunter J. D. Matplotlib: A 2D Graphics Environment // Computing in Science & Engineering. 2007. Vol. 9, № 3. P. 90–95. Версия 3.11.2.
+34. Bradski G. The OpenCV Library // Dr. Dobb's Journal of Software Tools. 2000. Версия opencv-python 5.0.0.93.
+35. Pillow (PIL Fork) 13.0.0 [Электронный ресурс]. URL: https://python-pillow.org/
+36. pytest 9.1.1 [Электронный ресурс]. URL: https://docs.pytest.org/
+37. FFmpeg [Электронный ресурс]. URL: https://ffmpeg.org/
+
 ## Благодарности
 
 [ViZDoom](https://github.com/Farama-Foundation/ViZDoom), [Freedoom](https://freedoom.github.io/),
